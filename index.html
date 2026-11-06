@@ -330,24 +330,6 @@ body{
   .leaf.turned{opacity:0}
 }
 
-/* several diaries on one day: pick a book */
-.chooser{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.3);opacity:0;transition:opacity .25s ease}
-.chooser.show{opacity:1}
-.chooser-card{width:min(560px, 100%);display:flex;flex-direction:column;gap:10px;padding:28px 28px 24px;border-radius:4px;
-  background:var(--noise), var(--paper);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(10px);transition:transform .25s ease}
-.chooser.show .chooser-card{transform:none}
-.chooser-card h3{margin:0;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-.02em}
-.chooser-card p{margin:0 0 8px;font-size:14px;line-height:1.5;opacity:.65}
-.chooser-books{display:flex;flex-wrap:wrap;gap:12px}
-.pick{appearance:none;border:2px solid transparent;background:transparent;font:inherit;color:var(--ink);cursor:pointer;border-radius:var(--radius-sm);
-  display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 12px;min-width:92px;transition:background var(--ease), border-color var(--ease), transform var(--ease)}
-.pick:hover{background:var(--white);border-color:var(--ink);transform:translateY(-3px)}
-.pick:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
-.pick .bk{width:64px;height:64px}
-.pick .bk svg{width:100%;height:100%;display:block;overflow:visible}
-.pick .bk [stroke]:not([stroke="none"]),.pick .bk [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke;stroke-width:2px}
-.pick b{font-size:15px;font-weight:600}
-.pick small{font-size:12px;font-weight:500;opacity:.6;font-variant-numeric:tabular-nums}
 /* delete the open diary (asks once more before deleting) */
 .page-nav .del{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;border-left:0;margin-left:4px}
 .page-nav .del.armed{background:var(--color-connect);color:var(--white)}
@@ -476,13 +458,6 @@ body{
 </div>
 <template id="bookIcon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--white)" d="m15.009 57.99l41.848-.38c1.653-.006 2.99-1.097 2.99-2.75V15.15a3 3 0 0 0-3-3H16.955a3 3 0 0 0-2.172.93l-1.954 2.051a3 3 0 0 0-.828 2.07v37.79a3 3 0 0 0 3.009 3"/><path style="fill:var(--cover)" d="M55.002 61H11.999a1 1 0 0 1-.999-.998V16.999c0-.552.447-.999.999-.999h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11.164 16.451L15.999 12h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/><path d="M55.002 61H11.999a1 1 0 0 1-.999-.998V16.999c0-.552.447-.999.999-.999h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/></g></svg></template>
 <div class="calpage" id="calpage" hidden>
-  <div class="chooser" id="chooser" hidden>
-    <div class="chooser-card" role="dialog" aria-modal="true" aria-labelledby="chooserTitle">
-      <h3 id="chooserTitle"></h3>
-      <p>이 날 쓴 그림일기가 여러 권 있어요. 펼칠 책을 골라 주세요.</p>
-      <div class="chooser-books" id="chooserBooks"></div>
-    </div>
-  </div>
   <section class="bigcal" id="bigcal" aria-labelledby="bigcalTitle">
     <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-learn)" d="M1.459 7.875V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v3.667z"/><path style="fill:var(--color-learn-3)" d="M1.459 5.583V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v1.375z"/><path style="fill:var(--white)" d="M1.459 7.875h21.083v13.75a.917.917 0 0 1-.917.917H2.375a.917.917 0 0 1-.916-.917z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M21.625 3.293H2.375a.917.917 0 0 0-.916.916v17.417c0 .506.41.917.916.917h19.25c.506 0 .917-.41.917-.917V4.209a.917.917 0 0 0-.917-.916M6.042 1.46v4.583M17.959 1.46v4.583m-16.5 1.833h21.083"/></g></svg>
     <h2 class="sr-only" id="bigcalTitle">2026년 11월</h2>
@@ -523,7 +498,7 @@ body{
   const pad = n => String(n).padStart(2,'0');
   const keyOf = (y,m,d) => `oneul-diary-${y}-${pad(m)}-${pad(d)}`;
   const TODAY_KEY = keyOf(now.getFullYear(), now.getMonth()+1, now.getDate());
-  // 하루에 여러 권: {books:[{id, color, entries}]}
+  // 하루에 한 권: {books:[{id, color, entries}]} (예전에 여러 권 저장된 날은 마지막 책만 씀)
   // 웹에 들어올 때마다 기록을 초기화: 지난 방문에서 남은 그림일기·메모를 모두 지우고 빈 상태로 시작
   try{ Object.keys(localStorage).forEach(k=>{
     if(k.startsWith('oneul-memo-') || k.startsWith('oneul-diary-')) localStorage.removeItem(k);
@@ -536,13 +511,11 @@ body{
   // 사용자가 직접 글을 쓴 책만 그림일기로 인정
   function writtenBooks(key){ return loadDay(key).books.filter(b => b.entries.some(en => en.who === 'user' && en.kind !== 'image')); }
   function latestBook(key){ const bs = writtenBooks(key); return bs[bs.length-1] || null; }
-  // 지금 쓰고 있는 책. 책장을 열 때마다 새 책으로 시작하고, 첫 글을 쓰는 순간 저장됨
+  // 지금 쓰고 있는 오늘의 책. 오늘 쓴 책이 있으면 이어서 쓰고, 없으면 새 책으로 시작해 첫 글을 쓰는 순간 저장됨
   let current = null;
   function record(entry){
     current.entries.push(entry);
-    const day = loadDay(TODAY_KEY), i = day.books.findIndex(b => b.id === current.id);
-    if(i < 0) day.books.push(current); else day.books[i] = current;
-    saveDay(TODAY_KEY, day);
+    saveDay(TODAY_KEY, {books:[current]});          // 하루에 한 권만 저장
     refreshCell(now.getDate());
   }
 
@@ -599,9 +572,11 @@ body{
   const fmtDate = (y,m,d) => `${y}. ${m}. ${d}. (${WD[new Date(y, m-1, d).getDay()]})`;
   function openChat(){
     if(!reader.hidden) return;
-    // 책을 펼 때마다 대화를 비우고 새 책을 씀
+    // 오늘 쓴 그림일기가 있으면 그 책을 이어서 쓰고, 없으면 새 책을 씀 (하루에 한 권)
     diaryRef = null;
-    current = {id: Date.now(), color: SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)], entries: []};
+    const todays = latestBook(TODAY_KEY);
+    current = todays ? {id: todays.id, color: todays.color, entries: todays.entries.slice()}
+                     : {id: Date.now(), color: SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)], entries: []};
     openBook('chat', current.entries, fmtDate(now.getFullYear(), now.getMonth()+1, now.getDate()), shelf, current.color);
   }
 
@@ -791,43 +766,15 @@ body{
     });
     c.setAttribute('aria-label', `11월 ${d}일 (${WD[(first+d-1)%7]})` + (d===todayDate?', 오늘':'') + (has?', 그림일기 있음':''));
   }
-  // 날짜를 누르면: 책이 한 권이면 바로, 여러 권이면 고르는 창, 없으면 빈 책
+  // 날짜를 누르면 그 날의 그림일기(한 권)를, 없으면 빈 책을 펼침
   let diaryRef = null;   // 지금 펼친 그림일기 {key, id, d}
   function openDiary(d, cell){
-    const key = keyOf(YEAR, MONTH+1, d), books = writtenBooks(key);
-    if(books.length > 1) return showChooser(d, books, cell);
-    openDiaryBook(d, books[0] || null, cell);
+    openDiaryBook(d, latestBook(keyOf(YEAR, MONTH+1, d)), cell);
   }
   function openDiaryBook(d, bk, opener){
     diaryRef = bk ? {key: keyOf(YEAR, MONTH+1, d), id: bk.id, d} : null;
     openBook('diary', [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null);
   }
-
-  // ---- 여러 권 중 고르기 ----
-  const chooser = document.getElementById('chooser'), chooserBooks = document.getElementById('chooserBooks');
-  let chooserCell = null;
-  const hhmm = id => { const t = new Date(id); return `${pad(t.getHours())}:${pad(t.getMinutes())}`; };
-  function showChooser(d, books, cell){
-    chooserCell = cell;
-    document.getElementById('chooserTitle').textContent = `11월 ${d}일의 그림일기`;
-    chooserBooks.innerHTML = '';
-    books.forEach((bk, i)=>{
-      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'pick';
-      btn.innerHTML = `<span class="bk">${BOOK_ICON}</span><b>${i+1}번째 책</b><small>${bk.id ? hhmm(bk.id) : ''}</small>`;
-      btn.querySelector('.bk').style.setProperty('--cover', `var(--${bk.color || 'color-jobs-3'})`);
-      btn.setAttribute('aria-label', `${i+1}번째 책 펼치기` + (bk.id ? `, ${hhmm(bk.id)}에 씀` : ''));
-      btn.addEventListener('click', ()=>{ hideChooser(true); openDiaryBook(d, bk, cell); });
-      chooserBooks.appendChild(btn);
-    });
-    chooser.hidden = false;
-    requestAnimationFrame(()=>{ chooser.classList.add('show'); chooserBooks.firstChild.focus({preventScroll:true}); });
-  }
-  function hideChooser(keepFocus){
-    if(chooser.hidden) return;
-    chooser.classList.remove('show');
-    setTimeout(()=>{ chooser.hidden = true; if(!keepFocus && chooserCell) chooserCell.focus({preventScroll:true}); }, reduce ? 0 : 250);
-  }
-  chooser.addEventListener('click', e=>{ if(e.target === chooser) hideChooser(); });
 
   // ---- 펼친 그림일기 지우기 (한 번 더 눌러야 지워짐) ----
   const delBtn = document.getElementById('delBook'); let delTimer;
@@ -840,7 +787,7 @@ body{
       return;
     }
     resetDel();
-    const day = loadDay(diaryRef.key); day.books = day.books.filter(b => b.id !== diaryRef.id); saveDay(diaryRef.key, day);
+    try{ localStorage.removeItem(diaryRef.key); }catch(e){}          // 하루에 한 권이므로 그 날의 기록을 통째로 지움
     const d = diaryRef.d; diaryRef = null;
     refreshCell(d); toast('그림일기를 지웠어요');
     closeBook();
@@ -870,7 +817,6 @@ body{
     later(()=>{ const t = cells[todayDate || 1]; t && t.focus({preventScroll:true}); }, 700);
   }
   function closeCalendarPage(){
-    hideChooser(true);
     homeCal.classList.add('at-rest');          // 벽 달력의 원래 자리(떠오르지 않은 상태)로 돌아가도록
     flipFromHome(true);
     calpage.classList.remove('show');
@@ -885,7 +831,6 @@ body{
     if(e.key !== 'Escape') return;
     if(!auth.hidden) closeAuth();                  // 로그인 창이 열려 있으면 그것부터
     else if(!reader.hidden) closeBook();               // 책이 열려 있으면 책부터 닫기
-    else if(!chooser.hidden) hideChooser();
     else if(!calpage.hidden) closeCalendarPage();
   });
 
