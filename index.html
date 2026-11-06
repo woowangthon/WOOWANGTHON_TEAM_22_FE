@@ -322,6 +322,10 @@ body{
 .leaf .lf{box-shadow:3px 0 0 #f1ede0, 6px 0 0 #e9e4d4}
 .leaf .lb{left:3px;transform:rotateY(180deg);border-radius:8px 2px 2px 8px;   /* stops 3px short of the spine, like the left page it lands on */box-shadow:-3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
 .leaf .lf .pno{right:28px}.leaf .lb .pno{left:28px}
+/* page 1 is the picture page: no ruled lines, just the picture (or the dashed spot where it goes) */
+.book.readonly.p1-left .inside::before,.book.readonly.p1-right .page,.leaf .plain{background:var(--noise), var(--paper)}
+.leaf .plain{display:flex;align-items:center;justify-content:center}
+.book .page > .art{margin:auto}
 .page-nav{position:fixed;left:50%;bottom:max(14px, env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:12px;
   padding:6px 8px;border-radius:var(--radius-pill);background:var(--white);border:2px solid var(--ink);opacity:0;transition:opacity .3s ease}
 .page-nav.show{opacity:1}
@@ -606,12 +610,22 @@ body{
   const perSpread = () => narrow.matches ? 1 : 2;
   const spreads = () => TOTAL / perSpread();
   function pagesOf(i){ return narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; }
-  function showNumbers(){
+  const insideEl = book.querySelector('.inside'), pageEl = book.querySelector('.page');
+  // 지금 보이는 왼쪽/오른쪽 쪽을 그림. 1쪽은 줄 없는 그림 쪽이라 그림(또는 그림 자리)을 그 쪽에 놓는다
+  function showPages(l, r){
+    pnoLeft.textContent = diaryOn && l ? l : ''; pnoRight.textContent = diaryOn && r ? r : '';
+    book.classList.toggle('p1-left', diaryOn && l === 1);
+    book.classList.toggle('p1-right', diaryOn && r === 1);
+    if(!diaryOn) return;
+    if(l === 1) insideEl.appendChild(art); else if(r === 1) pageEl.appendChild(art);
+    art.hidden = !(l === 1 || r === 1);
+  }
+  function showNav(){
     const [l, r] = pagesOf(spread);
-    pnoLeft.textContent = diaryOn && l ? l : ''; pnoRight.textContent = diaryOn ? r : '';
     pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${l}–${r} / ${TOTAL}`;
     prevBtn.disabled = spread === 0; nextBtn.disabled = spread === spreads() - 1;
   }
+  function showNumbers(){ const [l, r] = pagesOf(spread); showPages(l, r); showNav(); }
   function clearLeaves(){ book.querySelectorAll('.leaf').forEach(l => l.remove()); turning = false; }
   function setupPages(on){
     diaryOn = on; spread = 0; clearLeaves();
@@ -620,7 +634,12 @@ body{
   }
   function makeLeaf(front, back, turned){
     const leaf = document.createElement('div'); leaf.className = 'leaf' + (turned ? ' turned' : '');
-    leaf.innerHTML = `<div class="lf"><span class="pno">${front ?? ''}</span></div><div class="lb"><span class="pno">${back ?? ''}</span></div>`;
+    leaf.innerHTML = `<div class="lf${front === 1 ? ' plain' : ''}"><span class="pno">${front ?? ''}</span></div><div class="lb${back === 1 ? ' plain' : ''}"><span class="pno">${back ?? ''}</span></div>`;
+    // 넘어가는 종이가 1쪽이면 그 종이에도 같은 그림을 그려 둔다 (내려앉은 뒤 바뀌어 보이지 않도록)
+    leaf.querySelectorAll('.plain').forEach(face => {
+      const c = art.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+      c.hidden = false; c.classList.add('show'); face.appendChild(c);
+    });
     book.insertBefore(leaf, book.querySelector('.cover'));
     return leaf;
   }
@@ -631,12 +650,10 @@ body{
     const fwd = target > spread, [l0, r0] = pagesOf(spread), [l1, r1] = pagesOf(target);
     turning = true;
     const leaf = fwd ? makeLeaf(r0, l1, false) : makeLeaf(r1, l0, true);
-    if(fwd) pnoRight.textContent = r1; else if(l1) pnoLeft.textContent = l1;
+    if(fwd) showPages(l0, r1); else showPages(l1, r0);   // 앞으로: 오른쪽이 가려짐 / 뒤로: 왼쪽이 가려짐
     void leaf.offsetWidth;
     leaf.classList.toggle('turned', fwd);
-    spread = target;
-    showNumbers(); if(fwd && l1) pnoLeft.textContent = l0 ?? '';  // 왼쪽은 종이가 덮을 때까지 그대로
-    if(!fwd) pnoRight.textContent = r0;
+    spread = target; showNav();
     let done = false;
     const finish = ()=>{ if(done) return; done = true; leaf.remove(); turning = false; showNumbers(); };
     leaf.addEventListener('transitionend', e=>{ if(e.target === leaf && e.propertyName === 'transform') finish(); });
@@ -688,9 +705,29 @@ body{
     artImages.push(en); renderArt();
     addMsg('왼쪽 페이지에 그림을 그렸어요.', 'ai');
   }
+  // 그림일기 1쪽: 저장된 그림을 보여 주고, 없으면 그림이 들어갈 자리(점선 정사각형)를 표시
+  function renderDiaryArt(){
+    artGrid.innerHTML = '';
+    const imgs = artImages.length ? artImages : [null];
+    art.classList.toggle('multi', imgs.length > 1);
+    imgs.forEach(en=>{
+      const sq = document.createElement('div'); sq.className = 'square' + (en && en.url ? '' : ' blank');
+      if(en && en.url){ const img = new Image(); img.src = en.url; img.alt = en.prompt || '그림일기 그림'; sq.appendChild(img); }
+      if(en && en.prompt) sq.title = en.prompt;
+      artGrid.appendChild(sq);
+    });
+    artCaption.textContent = !artImages.length ? '그림이 들어갈 자리'
+      : artImages.length === 1 ? (artImages[0].prompt ? `“${artImages[0].prompt}”` : '') : `그림 ${artImages.length} / ${MAX_IMAGES}`;
+    art.classList.add('show');
+  }
   function renderEntries(entries, mode){
     messages.innerHTML = ''; clearArt();
-    if(mode === 'diary') return;            // 그림일기는 빈 책으로 표시
+    insideEl.appendChild(art);              // 대화에서는 그림이 항상 왼쪽 쪽에
+    if(mode === 'diary'){                   // 그림일기: 글 쪽은 빈 줄 종이, 1쪽에 그림
+      artImages = entries.filter(en => en.kind === 'image');
+      renderDiaryArt(); showNumbers();
+      return;
+    }
     if(!entries.length){
       const p = document.createElement('p'); p.className = 'empty-state';
       p.innerHTML = mode === 'diary' ? '이 날 작성한 그림일기가 없어요.' : '오늘 있었던 일이나 궁금한 것을<br>적어 보세요.';
@@ -787,7 +824,7 @@ body{
   }
   function openDiaryBook(d, bk, opener){
     diaryRef = bk ? {key: keyOf(YEAR, MONTH+1, d), id: bk.id, d} : null;
-    openBook('diary', [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null);
+    openBook('diary', bk ? bk.entries : [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null);
   }
 
   // ---- 펼친 그림일기 지우기 (한 번 더 눌러야 지워짐) ----
