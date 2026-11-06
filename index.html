@@ -31,6 +31,10 @@
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden;overflow:clip}
+/* no drag-selecting text or dragging pictures anywhere (e.g. while drawing or flipping pages); typing fields stay selectable */
+body{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+input,textarea{-webkit-user-select:text;user-select:text}
+img,svg,canvas{-webkit-user-drag:none;user-drag:none}
 body{
   background:var(--bg-primary); color:var(--ink); font-family:var(--sans);
   padding-left:max(16px, env(safe-area-inset-left, 0px));
@@ -792,6 +796,9 @@ body{
     typing.remove();
     addMsg(reply || '', 'ai'); record({who:'ai', text: reply || ''});
   });
+
+  // 그림·글자를 끌어서 옮기는 브라우저 기본 드래그를 막음 (입력칸 안에서 글을 고르는 것은 그대로)
+  document.addEventListener('dragstart', e=>{ if(!e.target.closest || !e.target.closest('input, textarea')) e.preventDefault(); });
 
   // ---- 달력 페이지 (방의 달력이 확대됨) ----
   const calpage = document.getElementById('calpage'), bigcal = document.getElementById('bigcal'), bigGrid = document.getElementById('bigGrid');
