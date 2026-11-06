@@ -178,7 +178,7 @@ body{
   box-shadow:3px 0 0 #f1ede0, 6px 0 0 #e9e4d4}
 .book .cover{position:absolute;inset:0;z-index:3;transform-origin:left center;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease, z-index 0s 0s}
 .book.open .cover{z-index:1;transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease, z-index 0s .9s}
-.book.open .cover{transform:rotateY(-178deg)}
+.book.open .cover{transform:rotateY(-180deg)}   /* lies fully flat: at -178deg perspective made the left page taller at its outer edge than the right page */
 .book .face,.book .inside{position:absolute;inset:-10px -10px -10px 0;border:3px solid var(--ink);border-radius:3px 14px 14px 3px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
 .book .face{background:var(--cover);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;color:var(--ink);
   box-shadow:inset 22px 0 0 rgba(34,34,34,.08)}
@@ -199,7 +199,8 @@ body{
 .book .cover-logo span{font-weight:300}
 /* left-hand page (inside of the cover): plain paper */
 .book .inside{background:var(--cover);transform:rotateY(180deg);padding:10px 0 10px 10px}
-.book .inside::before{content:"";position:absolute;inset:10px 0 10px 10px;border-radius:8px 2px 2px 8px;
+/* insets measured from inside the cover's 3px border, so the left page is exactly as tall as the right page (0 … book height) */
+.book .inside::before{content:"";position:absolute;inset:7px 0 7px 7px;border-radius:8px 2px 2px 8px;
   background:var(--noise), var(--paper);box-shadow:-3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
 
 /* chat contents fade in once the book is open */
@@ -311,12 +312,15 @@ body{
 .book.readonly .chat{display:none}
 .book .pno{position:absolute;bottom:18px;font-size:12px;font-weight:500;opacity:.45;font-variant-numeric:tabular-nums;z-index:1}
 .book .page .pno{right:28px}
-.book .inside .pno{left:28px}
+.book .inside .pno{left:28px;bottom:25px}   /* the cover box reaches 7px past the page, so lift the number to line up with the right page's */
 .leaf{position:absolute;inset:0;z-index:2;transform-origin:left center;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,0,.2,1), opacity .8s ease;cursor:pointer}
-.leaf.turned{transform:rotateY(-178deg)}
+.leaf.turned{transform:rotateY(-180deg)}   /* lands flat, exactly on the left page */
 .leaf .lf,.leaf .lb{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:2px 8px 8px 2px;
   background:var(--noise), repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)), var(--paper)}
-.leaf .lb{transform:rotateY(180deg);border-radius:8px 2px 2px 8px}
+/* the turning sheet carries the same stacked page edges (3px / 6px) as the page it lifts from and the page it lands on,
+   so it looks identical at the start, keeps that spacing all the way over, and lands without a jump */
+.leaf .lf{box-shadow:3px 0 0 #f1ede0, 6px 0 0 #e9e4d4}
+.leaf .lb{left:3px;transform:rotateY(180deg);border-radius:8px 2px 2px 8px;   /* stops 3px short of the spine, like the left page it lands on */box-shadow:-3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
 .leaf .lf .pno{right:28px}.leaf .lb .pno{left:28px}
 .page-nav{position:fixed;left:50%;bottom:max(14px, env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:12px;
   padding:6px 8px;border-radius:var(--radius-pill);background:var(--white);border:2px solid var(--ink);opacity:0;transition:opacity .3s ease}
@@ -620,7 +624,8 @@ body{
     book.insertBefore(leaf, book.querySelector('.cover'));
     return leaf;
   }
-  // 한 장을 넘기는 애니메이션: 넘어가는 종이를 만들고, 그 아래 쪽 번호를 미리 바꿔 둔다
+  // 한 장을 넘기는 애니메이션: 넘어가는 종이를 만들고, 그 종이에 가려지는 쪽만 미리 바꿔 둔다.
+  // 종이는 넘김(transform 전환)이 실제로 끝난 뒤에 지워서, 다 내려앉기 전에 화면이 바뀌어 보이지 않게 한다
   function goSpread(target){
     if(turning || target === spread || target < 0 || target >= spreads()) return;
     const fwd = target > spread, [l0, r0] = pagesOf(spread), [l1, r1] = pagesOf(target);
@@ -630,9 +635,12 @@ body{
     void leaf.offsetWidth;
     leaf.classList.toggle('turned', fwd);
     spread = target;
-    setTimeout(()=>{ leaf.remove(); turning = false; showNumbers(); }, reduce ? 0 : 820);
     showNumbers(); if(fwd && l1) pnoLeft.textContent = l0 ?? '';  // 왼쪽은 종이가 덮을 때까지 그대로
     if(!fwd) pnoRight.textContent = r0;
+    let done = false;
+    const finish = ()=>{ if(done) return; done = true; leaf.remove(); turning = false; showNumbers(); };
+    leaf.addEventListener('transitionend', e=>{ if(e.target === leaf && e.propertyName === 'transform') finish(); });
+    setTimeout(finish, reduce ? 0 : 1200);   // 전환 이벤트가 오지 않는 경우를 위한 대비
   }
   prevBtn.addEventListener('click', ()=> goSpread(spread - 1));
   nextBtn.addEventListener('click', ()=> goSpread(spread + 1));
