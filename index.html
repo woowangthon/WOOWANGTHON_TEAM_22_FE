@@ -330,6 +330,12 @@ body{
 .book.readonly.p1-left .inside::before,.book.readonly.p1-right .page,.leaf .plain{background:var(--noise), var(--paper)}
 .leaf .plain{display:flex;align-items:center;justify-content:center}
 .book .page > .art{margin:auto}
+/* end-chat button in the chat header (Awwwards solid button: ink fill, white label, pill) */
+.end-chat{appearance:none;border:0;flex:none;background:var(--ink);color:var(--white);font:inherit;font-size:14px;font-weight:500;
+  padding:9px 16px;border-radius:var(--radius-pill);cursor:pointer;transition:opacity var(--ease)}
+.end-chat:hover{opacity:.85}
+.end-chat.armed{background:var(--color-connect);color:var(--ink)}   /* first press: asks for a second press (ink on orange: 6.9:1) */
+.end-chat:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
 .page-nav{position:fixed;left:50%;bottom:max(14px, env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:12px;
   padding:6px 8px;border-radius:var(--radius-pill);background:var(--white);border:2px solid var(--ink);opacity:0;transition:opacity .3s ease}
 .page-nav.show{opacity:1}
@@ -346,6 +352,9 @@ body{
 .page-nav .del{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;border-left:0;margin-left:4px}
 .page-nav .del.armed{background:var(--color-connect);color:var(--white)}
 .page-nav .del[hidden]{display:none}
+
+/* empty AI reply (no AI connected yet): shown as a muted note instead of an empty bubble */
+.msg.ai.pending{opacity:.55;font-size:14px}
 
 /* ===== login / sign-up (UI only) ===== */
 .auth-btns{position:absolute;right:48px;top:44px;z-index:3;display:flex;gap:10px}
@@ -425,6 +434,7 @@ body{
       <div class="chat">
         <div class="chat-head">
           <div class="title"><span class="date" id="chatDate"></span><h2 id="chatTitle">AI와 대화</h2></div>
+          <button type="button" class="end-chat" id="endChat">대화 끝내기</button>
         </div>
         <div class="messages" id="messages" aria-live="polite">
           
@@ -567,7 +577,7 @@ body{
     setCover(color || SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)]);
     book.className = 'book' + (mode === 'diary' ? ' readonly' : '');
     setupPages(mode === 'diary');
-    resetDel(); delBtn.hidden = !(mode === 'diary' && diaryRef);
+    resetDel(); resetEnd(); delBtn.hidden = !(mode === 'diary' && diaryRef);
     chatTitle.textContent = mode === 'diary' ? '그림일기' : 'AI와 대화';
     chatDate.textContent = dateText;
     document.getElementById('coverDate').textContent = dateText;
@@ -679,37 +689,14 @@ body{
   });
 
   // ---- 페이지에 내용 그리기 ----
-  // 왼쪽 쪽: 그림이 1개면 크게, 2개 이상이면 2열로 최대 6개
-  function renderArt(){
-    artGrid.innerHTML = '';
-    art.classList.toggle('multi', artImages.length > 1);
-    artImages.forEach((en, i)=>{
-      const sq = document.createElement('div'); sq.className = 'square' + (i === artImages.length - 1 ? ' new' : '');
-      if(en.url){ const img = new Image(); img.src = en.url; img.alt = en.prompt || '그림일기 그림'; sq.appendChild(img); }
-      sq.title = en.prompt || '';
-      artGrid.appendChild(sq);
-    });
-    artCaption.textContent = artImages.length === 1 ? (artImages[0].prompt ? `“${artImages[0].prompt}”` : '') : `그림 ${artImages.length} / ${MAX_IMAGES}`;
-    if(art.hidden){ art.hidden = false; art.classList.remove('show'); requestAnimationFrame(()=> requestAnimationFrame(()=> art.classList.add('show'))); }
-  }
+  const AI_PENDING = 'AI 답변 기능은 아직 준비 중이에요.';
   function clearArt(){ artImages = []; art.hidden = true; art.classList.remove('show','multi'); artGrid.innerHTML = ''; }
   function addMsg(text, who){
     const el = document.createElement('div');
     el.className = 'msg ' + who; el.textContent = text;
-    if(who === 'ai' && !text) el.setAttribute('aria-label', 'AI 답변 (비어 있음)');
+    if(who === 'ai' && !text){ el.textContent = AI_PENDING; el.classList.add('pending'); }   // 빈 AI 답변도 대화 자리에 보이도록
     messages.appendChild(el); messages.scrollTop = messages.scrollHeight;
     return el;
-  }
-  function addImageBubble(url){
-    const el = addMsg('', 'ai image'); el.setAttribute('aria-label', '그림일기 그림');
-    const sq = document.createElement('div'); sq.className = 'square';
-    if(url){ const img = new Image(); img.src = url; img.alt = '그림일기 그림'; sq.appendChild(img); }
-    el.appendChild(sq);
-  }
-  function drawImageEntry(en){
-    if(narrow.matches){ addImageBubble(en.url); return; }          // 휴대폰: 왼쪽 페이지가 없으니 대화 안에
-    artImages.push(en); renderArt();
-    addMsg('왼쪽 페이지에 그림을 그렸어요.', 'ai');
   }
   // 그림일기 1쪽: 저장된 그림을 보여 주고, 없으면 그림이 들어갈 자리(점선 정사각형)를 표시
   function renderDiaryArt(){
@@ -736,10 +723,10 @@ body{
     }
     if(!entries.length){
       const p = document.createElement('p'); p.className = 'empty-state';
-      p.innerHTML = mode === 'diary' ? '이 날 작성한 그림일기가 없어요.' : '오늘 있었던 일이나 궁금한 것을<br>적어 보세요.<br>다 쓰면 “대화 종료”를 입력해 일기를 완성해요.';
+      p.innerHTML = '오늘 있었던 일이나 궁금한 것을<br>적어 보세요.<br>다 쓰면 “대화 끝내기”를 눌러 일기를 완성해요.';
       messages.appendChild(p);
     }
-    entries.forEach(en => en.kind === 'image' ? drawImageEntry(en) : addMsg(en.text, en.who));
+    entries.forEach(en => { if(en.kind !== 'image') addMsg(en.text, en.who); });
   }
 
   // ---- AI 대화 ----
@@ -747,11 +734,6 @@ body{
   // message: 사용자가 보낸 글 / 반환값: AI의 답변 글 (async 함수라서 서버 요청 결과를 기다려 반환해도 됩니다)
   async function getAIReply(message){
     return '';   // 아직 구현 전: 빈 답변
-  }
-  // 실제 이미지 생성 AI를 연결할 때 이 함수만 바꾸면 됩니다.
-  // prompt: "이미지 생성" 뒤에 적은 글 / 반환값: 이미지 주소(URL). 지금은 null을 돌려줘서 빈 정사각형만 표시됩니다.
-  async function generateImage(prompt){
-    return null;   // 아직 구현 전
   }
 
   input.addEventListener('input', ()=>{
@@ -761,37 +743,39 @@ body{
   input.addEventListener('keydown', e=>{
     if(e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); composer.requestSubmit(); }
   });
+  // ---- 대화 끝내기: 글을 쓴 책이면 작성 완료로 표시하고, 책을 덮은 뒤 달력을 열어 오늘의 그림일기를 펼침 ----
+  function endChat(){
+    if(bookMode !== 'chat' || !bookShown()) return;
+    const wrote = current.entries.some(en => en.who === 'user' && en.text);
+    if(wrote){ current.done = true; saveDay(TODAY_KEY, {books:[current]}); refreshCell(now.getDate()); }
+    closeBook(()=>{
+      openCalendarPage(shelf);
+      if(!wrote) return;                       // 쓴 글이 없으면 달력까지만
+      toast('그림일기를 완성했어요');
+      setTimeout(()=>{ if(todayDate && cells[todayDate] && !calpage.hidden) openDiary(todayDate, cells[todayDate]); }, reduce ? 0 : 800);   // 달력이 다 펼쳐진 뒤 책 열기
+    });
+  }
+  // 대화 끝내기는 두 번 눌러야 끝남: 첫 번째는 확인 문구로 바뀌고, 3초 안에 다시 누르지 않으면 원래대로
+  const endBtn = document.getElementById('endChat'); let endTimer;
+  function resetEnd(){ clearTimeout(endTimer); endBtn.classList.remove('armed'); endBtn.textContent = '대화 끝내기'; }
+  endBtn.addEventListener('click', ()=>{
+    if(!endBtn.classList.contains('armed')){
+      endBtn.classList.add('armed'); endBtn.textContent = '한 번 더 누르면 끝나요';
+      endTimer = setTimeout(resetEnd, 3000);
+      return;
+    }
+    resetEnd(); endChat();
+  });
+
+  // 입력한 글은 모두 그대로 대화로 보냄 (특별한 명령어 없음)
   composer.addEventListener('submit', async e=>{
     e.preventDefault();
     if(bookMode !== 'chat') return;
     const text = input.value.trim(); if(!text) return;
     const es = messages.querySelector('.empty-state'); if(es) es.remove();
     input.value = ''; input.style.height = 'auto'; sendBtn.disabled = true;
-    const command = text.replace(/[*\s]/g, '');
-    if(command === '대화종료'){                        // 대화를 마치고 달력 페이지로 이동 (명령은 일기에 남기지 않음)
-      addMsg(text, 'user');
-      // 글을 쓴 책이면 이 순간 작성 완료로 표시 → 이때부터 달력에서 확인 가능
-      const wrote = current.entries.some(en => en.who === 'user' && en.kind !== 'image');
-      if(wrote){ current.done = true; saveDay(TODAY_KEY, {books:[current]}); refreshCell(now.getDate()); }
-      closeBook(()=>{ openCalendarPage(shelf); if(wrote) toast('그림일기를 완성했어요'); });
-      return;
-    }
     addMsg(text, 'user'); record({who:'user', text});
     const typing = addMsg('', 'ai typing'); typing.innerHTML = '<i></i><i></i><i></i>'; typing.setAttribute('aria-label','AI가 답변을 작성하는 중');
-    if(command.startsWith('이미지생성')){             // 왼쪽 페이지에 그림 생성
-      if(current.entries.filter(en => en.kind === 'image').length >= MAX_IMAGES){   // 한 권에 최대 6개
-        typing.remove();
-        const msg = `그림은 책 한 권에 최대 ${MAX_IMAGES}개까지 그릴 수 있어요.`;
-        addMsg(msg, 'ai'); record({who:'ai', text: msg});
-        return;
-      }
-      const prompt = text.replace(/^[*\s]*이미지\s*생성[*\s:]*/, '');
-      const [url] = await Promise.all([generateImage(prompt), new Promise(r=>setTimeout(r, 600))]);
-      typing.remove();
-      const en = {who:'ai', kind:'image', url: url || null, prompt};
-      drawImageEntry(en); record(en);
-      return;
-    }
     const [reply] = await Promise.all([getAIReply(text), new Promise(r=>setTimeout(r, 600))]);
     typing.remove();
     addMsg(reply || '', 'ai'); record({who:'ai', text: reply || ''});
