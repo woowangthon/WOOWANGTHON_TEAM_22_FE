@@ -242,22 +242,8 @@ body{
   .book.open .cover{opacity:0}
 }
 
-/* ===== left page: generated picture (placeholder square for now) ===== */
+/* ===== left page (inside of the cover) ===== */
 .inside{display:flex;align-items:center;justify-content:center}
-.art{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;width:72%;opacity:0;transform:scale(.94);transition:opacity .4s ease, transform .4s ease}
-.art.show{opacity:1;transform:none}
-.art-grid{display:grid;grid-template-columns:1fr;gap:14px;width:100%}
-.art.multi{width:calc(var(--bw) * .64)}
-.art.multi .art-grid{grid-template-columns:repeat(2, minmax(0,1fr));gap:12px}
-.art.multi .square{box-shadow:4px 5px 0 rgba(34,34,34,.12)}
-.art .square.new{animation:pop .45s ease}
-@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
-.art .square{width:100%;aspect-ratio:1;background:var(--white);border:3px solid var(--ink);border-radius:4px;box-shadow:6px 8px 0 rgba(34,34,34,.12);overflow:hidden;display:grid;place-items:center}
-.art .square img{width:100%;height:100%;object-fit:cover;display:block}
-.art figcaption{font-size:13px;line-height:1.5;font-weight:500;text-align:center;opacity:.6;max-width:100%;overflow-wrap:anywhere}
-.msg.image{padding:8px;width:min(220px, 70%)}
-.msg.image .square{width:100%;aspect-ratio:1;background:var(--white);border:2px solid var(--ink);border-radius:4px;overflow:hidden}
-.msg.image .square img{width:100%;height:100%;object-fit:cover;display:block}
 
 /* ===== calendar page: the home calendar itself zooms up (same asset, same layout, scaled) ===== */
 .calpage{position:fixed;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden;
@@ -307,7 +293,6 @@ body{
 /* left page uses the same lined paper as the right page */
 .book.readonly .inside::before{background:var(--noise), repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)), var(--paper)}
 .book.readonly .composer{display:none}
-.art .square.blank{background:transparent;border:2px dashed rgba(34,34,34,.35);box-shadow:none}
 /* clock second hand */
 #secHand{stroke:var(--color-connect)}
 .asset #secHand{stroke-width:1.5px}
@@ -327,9 +312,43 @@ body{
 .leaf .lb{left:3px;transform:rotateY(180deg);border-radius:8px 2px 2px 8px;   /* stops 3px short of the spine, like the left page it lands on */box-shadow:-3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
 .leaf .lf .pno{right:28px}.leaf .lb .pno{left:28px}
 /* page 1 is the picture page: no ruled lines, just the picture (or the dashed spot where it goes) */
-.book.readonly.p1-left .inside::before,.book.readonly.p1-right .page,.leaf .plain{background:var(--noise), var(--paper)}
+.book.readonly.plain-left .inside::before,.book.readonly.plain-right .page,.leaf .plain{background:var(--noise), var(--paper)}
 .leaf .plain{display:flex;align-items:center;justify-content:center}
-.book .page > .art{margin:auto}
+/* diary page 1 (picture-diary form) and page 2 (4-cut comic) fill the page with the same margins
+   on the right page, on the cover's inside page (whose paper starts 7px into its box) and on a turning sheet */
+.dp1,.comic{position:absolute;top:30px;right:28px;bottom:50px;left:28px}
+.book .inside > .dp1,.book .inside > .comic{top:37px;left:35px;bottom:57px}
+/* page 1 follows a Korean picture-diary sheet: date line, weather + name line, picture box, then a writing grid (wongoji) */
+.dp1{display:flex;flex-direction:column;gap:10px;color:var(--ink);container-type:size}
+.dp1-date{display:flex;align-items:baseline;justify-content:space-between;padding:0 4% 8px;border-bottom:2px solid var(--ink);
+  font-size:16px;line-height:1.3;font-weight:500;white-space:nowrap}
+.dp1-date b{display:inline-block;min-width:1.6em;margin-right:4px;text-align:center;font-size:20px;font-weight:600;font-variant-numeric:tabular-nums}
+.dp1-meta{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:15px;font-weight:600;white-space:nowrap}
+.dp1-weather{display:flex;align-items:center;gap:6px}
+.dp1-weather .lbl{margin-right:6px}
+.wx{position:relative;display:inline-grid;place-items:center;width:30px;height:30px;border-radius:50%}
+.wx svg{width:24px;height:24px;display:block;overflow:visible}
+.wx.on{box-shadow:0 0 0 2.5px var(--color-connect)}   /* the chosen weather is circled, as a child would circle it */
+.dp1-name{display:flex;align-items:baseline;gap:6px}
+.dp1-name b{min-width:80px;padding:0 4px 2px;border-bottom:1.5px solid var(--ink);font-weight:500}
+/* picture box has the sketchbook canvas's 3:2 ratio, so the drawing shows whole, never cropped.
+   It takes the height left after the date/weather lines (~100px) and the 10:6 writing grid (60% of the width) */
+.dp1-pic{position:relative;flex:none;align-self:center;aspect-ratio:3 / 2;width:min(100%, max(150px, calc((100cqh - 60cqw - 100px) * 1.5)));
+  display:grid;place-items:center;overflow:hidden;background:var(--white);border:2px solid var(--ink);border-radius:10px}
+.dp1-pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.dp1-pic.blank{background:transparent}
+.dp1-pic.blank::after{content:"그린 그림이 없어요";font-size:13px;font-weight:500;opacity:.5}
+/* writing lines: six underlined lines (each 10cqw of the page width, so the box keeps the 10:6 height the picture box is sized against);
+   the lines scroll with the text when it runs longer */
+.dp1-grid{flex:none;height:60cqw;overflow-y:auto;overscroll-behavior:contain;padding:0 6px;
+  font-size:4.4cqw;line-height:10cqw;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere;
+  background:repeating-linear-gradient(to bottom, transparent 0 calc(10cqw - 1.5px), rgba(34,34,34,.6) calc(10cqw - 1.5px) 10cqw) local}
+.comic .panel.blank::after{content:"그림이 들어갈 자리";font-size:13px;font-weight:500;opacity:.5}
+.comic{display:grid;grid-template-columns:repeat(2, minmax(0,1fr));grid-template-rows:repeat(2, minmax(0,1fr));gap:14px}
+.comic .panel{position:relative;display:grid;place-items:center;overflow:hidden;background:var(--white);border:3px solid var(--ink);border-radius:4px;box-shadow:4px 5px 0 rgba(34,34,34,.12)}
+.comic .panel img{width:100%;height:100%;object-fit:cover;display:block}
+.comic .panel.blank{background:transparent;border:2px dashed rgba(34,34,34,.35);box-shadow:none}
+.comic .panel b{position:absolute;left:8px;top:6px;font-size:12px;font-weight:600;opacity:.55}
 /* end-chat button in the chat header (Awwwards solid button: ink fill, white label, pill) */
 .end-chat{appearance:none;border:0;flex:none;background:var(--ink);color:var(--white);font:inherit;font-size:14px;font-weight:500;
   padding:9px 16px;border-radius:var(--radius-pill);cursor:pointer;transition:opacity var(--ease)}
@@ -431,6 +450,7 @@ body{
     <div class="back-cover" aria-hidden="true"></div>
     <div class="page">
       <span class="pno" id="pnoRight"></span>
+      <div class="comic" id="comic" hidden role="img" aria-label="4컷 만화"></div>
       <div class="chat">
         <div class="chat-head">
           <div class="title"><span class="date" id="chatDate"></span><h2 id="chatTitle">AI와 대화</h2></div>
@@ -446,7 +466,7 @@ body{
         </form>
       </div>
     </div>
-    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span></div><div class="inside"><span class="pno" id="pnoLeft"></span><figure class="art" id="art" hidden><div class="art-grid" id="artGrid"></div><figcaption id="artCaption"></figcaption></figure></div></div>
+    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"></div></section></div></div>
   </div>
 </div>
 </div>
@@ -558,9 +578,7 @@ body{
   const messages = document.getElementById('messages');
   const composer = document.getElementById('composer'), input = document.getElementById('chatInput'), sendBtn = document.getElementById('sendBtn');
   const chatTitle = document.getElementById('chatTitle'), chatDate = document.getElementById('chatDate');
-  const art = document.getElementById('art'), artGrid = document.getElementById('artGrid'), artCaption = document.getElementById('artCaption');
-  const MAX_IMAGES = 6;   // 책 한 권에 그릴 수 있는 그림 수
-  let artImages = [];
+  const comic = document.getElementById('comic');
   const narrow = window.matchMedia('(max-width:700px), (max-aspect-ratio:1/1)');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   let timers = [], bookMode = 'chat', bookOpener = null;
@@ -569,7 +587,7 @@ body{
   // 책이 덮이는 중(closing)에는 화면을 막지 않음: 덮이는 애니메이션은 계속되지만 터치는 아래(방/달력)로 바로 전달되고,
   // 그 사이에 다른 책을 열면 덮던 것을 멈추고 새로 연다
   const bookShown = () => !reader.hidden && !reader.classList.contains('closing');
-  function openBook(mode, entries, dateText, opener, color){
+  function openBook(mode, entries, dateText, opener, color, bk){
     if(bookShown()) return;
     timers.forEach(clearTimeout); timers = [];
     reader.classList.remove('closing');
@@ -581,7 +599,7 @@ body{
     chatTitle.textContent = mode === 'diary' ? '그림일기' : 'AI와 대화';
     chatDate.textContent = dateText;
     document.getElementById('coverDate').textContent = dateText;
-    renderEntries(entries, mode);
+    renderEntries(entries, mode, bk);
     reader.hidden = false;
     requestAnimationFrame(()=>{ reader.classList.add('show');
       later(()=> book.classList.add('open'), 200);                                          // 표지가 넘어가며 책이 펼쳐짐
@@ -618,7 +636,7 @@ body{
 
   // ---- 그림일기: 넘길 수 있는 4쪽짜리 빈 책 ----
   // PC: 두 쪽씩 펼침 (1–2, 3–4) / 휴대폰: 한 쪽씩 (1, 2, 3, 4)
-  const TOTAL = 4;
+  const TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 2쪽: 4컷 만화
   const pageNav = document.getElementById('pageNav'), pageInfo = document.getElementById('pageInfo');
   const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
   const pnoLeft = document.getElementById('pnoLeft'), pnoRight = document.getElementById('pnoRight');
@@ -627,19 +645,24 @@ body{
   const spreads = () => TOTAL / perSpread();
   function pagesOf(i){ return narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; }
   const insideEl = book.querySelector('.inside'), pageEl = book.querySelector('.page');
-  // 지금 보이는 왼쪽/오른쪽 쪽을 그림. 1쪽은 줄 없는 그림 쪽이라 그림(또는 그림 자리)을 그 쪽에 놓는다
+  // 그림일기의 내용이 있는 쪽: 1쪽 = 날짜·그림·일기 글, 2쪽 = 4컷 만화 (둘 다 줄 없는 종이)
+  const PAGE_CONTENT = {1: document.getElementById('dp1'), 2: comic};
+  // 지금 보이는 왼쪽/오른쪽 쪽을 그림. 내용이 있는 쪽이면 그 내용을 해당 쪽에 놓는다
   function showPages(l, r){
     pnoLeft.textContent = diaryOn && l ? l : ''; pnoRight.textContent = diaryOn && r ? r : '';
-    book.classList.toggle('p1-left', diaryOn && l === 1);
-    book.classList.toggle('p1-right', diaryOn && r === 1);
+    book.classList.toggle('plain-left', diaryOn && l in PAGE_CONTENT);
+    book.classList.toggle('plain-right', diaryOn && r in PAGE_CONTENT);
     if(!diaryOn) return;
-    if(l === 1) insideEl.appendChild(art); else if(r === 1) pageEl.appendChild(art);
-    art.hidden = !(l === 1 || r === 1);
+    for(const [n, el] of Object.entries(PAGE_CONTENT)){
+      if(l === +n) insideEl.appendChild(el); else if(r === +n) pageEl.appendChild(el);
+      el.hidden = !(l === +n || r === +n);
+    }
   }
   function showNav(){
     const [l, r] = pagesOf(spread);
     pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${l}–${r} / ${TOTAL}`;
     prevBtn.disabled = spread === 0; nextBtn.disabled = spread === spreads() - 1;
+    prevBtn.hidden = nextBtn.hidden = spreads() === 1;   // PC는 두 쪽이 한 번에 다 보여서 넘길 쪽이 없음
   }
   function showNumbers(){ const [l, r] = pagesOf(spread); showPages(l, r); showNav(); }
   function clearLeaves(){ book.querySelectorAll('.leaf').forEach(l => l.remove()); turning = false; }
@@ -650,11 +673,12 @@ body{
   }
   function makeLeaf(front, back, turned){
     const leaf = document.createElement('div'); leaf.className = 'leaf' + (turned ? ' turned' : '');
-    leaf.innerHTML = `<div class="lf${front === 1 ? ' plain' : ''}"><span class="pno">${front ?? ''}</span></div><div class="lb${back === 1 ? ' plain' : ''}"><span class="pno">${back ?? ''}</span></div>`;
-    // 넘어가는 종이가 1쪽이면 그 종이에도 같은 그림을 그려 둔다 (내려앉은 뒤 바뀌어 보이지 않도록)
-    leaf.querySelectorAll('.plain').forEach(face => {
-      const c = art.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
-      c.hidden = false; c.classList.add('show'); face.appendChild(c);
+    leaf.innerHTML = `<div class="lf"><span class="pno">${front ?? ''}</span></div><div class="lb"><span class="pno">${back ?? ''}</span></div>`;
+    // 넘어가는 종이가 1쪽·2쪽이면 그 종이에도 같은 내용을 그려 둔다 (내려앉은 뒤 바뀌어 보이지 않도록)
+    [[leaf.querySelector('.lf'), front], [leaf.querySelector('.lb'), back]].forEach(([face, n]) => {
+      const src = PAGE_CONTENT[n]; if(!src) return;
+      const c = src.cloneNode(true); c.removeAttribute('id'); c.querySelectorAll('[id]').forEach(e => e.removeAttribute('id'));
+      c.hidden = false; c.classList.add('show'); face.classList.add('plain'); face.appendChild(c);
     });
     book.insertBefore(leaf, book.querySelector('.cover'));
     return leaf;
@@ -690,7 +714,6 @@ body{
 
   // ---- 페이지에 내용 그리기 ----
   const AI_PENDING = 'AI 답변 기능은 아직 준비 중이에요.';
-  function clearArt(){ artImages = []; art.hidden = true; art.classList.remove('show','multi'); artGrid.innerHTML = ''; }
   function addMsg(text, who){
     const el = document.createElement('div');
     el.className = 'msg ' + who; el.textContent = text;
@@ -698,27 +721,58 @@ body{
     messages.appendChild(el); messages.scrollTop = messages.scrollHeight;
     return el;
   }
-  // 그림일기 1쪽: 저장된 그림을 보여 주고, 없으면 그림이 들어갈 자리(점선 정사각형)를 표시
-  function renderDiaryArt(){
-    artGrid.innerHTML = '';
-    const imgs = artImages.length ? artImages : [null];
-    art.classList.toggle('multi', imgs.length > 1);
-    imgs.forEach(en=>{
-      const sq = document.createElement('div'); sq.className = 'square' + (en && en.url ? '' : ' blank');
-      if(en && en.url){ const img = new Image(); img.src = en.url; img.alt = en.prompt || '그림일기 그림'; sq.appendChild(img); }
-      if(en && en.prompt) sq.title = en.prompt;
-      artGrid.appendChild(sq);
-    });
-    artCaption.textContent = !artImages.length ? '그림이 들어갈 자리'
-      : artImages.length === 1 ? (artImages[0].prompt ? `“${artImages[0].prompt}”` : '') : `그림 ${artImages.length} / ${MAX_IMAGES}`;
-    art.classList.add('show');
+  // 그림일기에 들어갈 일기 글. AI와 나눈 대화 내용은 그림일기에 보이지 않음 (대화는 "대화 기록 보기"에서만).
+  // AI가 대화를 일기로 정리하는 기능을 붙이면 그 결과를 책의 diary에 저장하면 밑줄 칸에 표시됩니다.
+  const diaryTextOf = bk => (bk && bk.diary) || '';
+
+  // ---- 날씨 (그림일기장 양식의 해·구름·눈·비) ----
+  const WEATHER = {
+    sunny:  {label:'맑음', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="#222222" stroke-width="1.8" stroke-linecap="round"><path d="M12 1.8v2.6M12 19.6v2.6M1.8 12h2.6M19.6 12h2.6M4.8 4.8l1.8 1.8M17.4 17.4l1.8 1.8M4.8 19.2l1.8-1.8M17.4 6.6l1.8-1.8"/></g><circle cx="12" cy="12" r="4.6" style="fill:var(--color-learn)" stroke="#222222" stroke-width="1.8"/></svg>'},
+    cloudy: {label:'흐림', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 19h11a4.2 4.2 0 0 0 .6-8.35A6 6 0 0 0 6.6 9.6 4.7 4.7 0 0 0 6.5 19z" style="fill:var(--color-jobs-3)" stroke="#222222" stroke-width="1.8" stroke-linejoin="round"/></svg>'},
+    snowy:  {label:'눈', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#222222" stroke-width="1.8" stroke-linecap="round"><path d="M12 2.5v19M3.8 7.25l16.4 9.5M3.8 16.75l16.4-9.5"/><path d="M9.6 4.2 12 6.4l2.4-2.2M9.6 19.8 12 17.6l2.4 2.2M4.4 10.6l3.1-.9-.7-3.2M19.6 13.4l-3.1.9.7 3.2M4.4 13.4l3.1.9-.7 3.2M19.6 10.6l-3.1-.9.7-3.2"/></g></svg>'},
+    rainy:  {label:'비', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12.5a9.5 9.5 0 0 1 19 0z" style="fill:var(--color-connect)" stroke="#222222" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 3v1M12 12.5v6.3a2.2 2.2 0 0 1-4.4 0" fill="none" stroke="#222222" stroke-width="1.8" stroke-linecap="round"/></svg>'},
+  };
+
+  // ---- 그림일기 1쪽: 그림일기장 양식 (년 월 일 요일 / 날씨·이름 / 그림 칸 / 원고지 칸) ----
+  const dp1 = document.getElementById('dp1'), dpPic = document.getElementById('dpPic'), dpGrid = document.getElementById('dpGrid');
+  const dpWeather = document.getElementById('dpWeather'), dpName = document.getElementById('dpName');
+  Object.entries(WEATHER).forEach(([k, w])=>{
+    const s = document.createElement('span'); s.className = 'wx'; s.dataset.w = k; s.title = w.label; s.innerHTML = w.svg; dpWeather.appendChild(s);
+  });
+  let diaryDate = now;
+  function renderDiaryPage(entries, bk){
+    const d = diaryDate;
+    document.getElementById('dpY').textContent = d.getFullYear();
+    document.getElementById('dpM').textContent = d.getMonth() + 1;
+    document.getElementById('dpD').textContent = d.getDate();
+    document.getElementById('dpW').textContent = WD[d.getDay()];
+    const w = bk && WEATHER[bk.weather] ? bk.weather : null;
+    dpWeather.querySelectorAll('.wx').forEach(s => s.classList.toggle('on', s.dataset.w === w));
+    dpWeather.setAttribute('aria-label', '날씨: ' + (w ? WEATHER[w].label : '고르지 않음'));
+    dpName.textContent = (bk && bk.name) || '';
+    dpPic.innerHTML = '';
+    dpPic.classList.toggle('blank', !(bk && bk.drawing));
+    if(bk && bk.drawing){ const img = new Image(); img.src = bk.drawing; img.alt = '내가 그린 그림'; dpPic.appendChild(img); }
+    // 밑줄 칸: 일기 글을 줄 위에 씀 (대화 내용은 넣지 않음)
+    const text = diaryTextOf(bk);
+    dpGrid.textContent = text;
+    dpGrid.setAttribute('aria-label', text ? '일기: ' + text : '일기 글 칸 (비어 있음)');
   }
-  function renderEntries(entries, mode){
-    messages.innerHTML = ''; clearArt();
-    insideEl.appendChild(art);              // 대화에서는 그림이 항상 왼쪽 쪽에
-    if(mode === 'diary'){                   // 그림일기: 글 쪽은 빈 줄 종이, 1쪽에 그림
-      artImages = entries.filter(en => en.kind === 'image');
-      renderDiaryArt(); showNumbers();
+  // 그림일기 2쪽: 쪽 전체에 4컷 만화. 만화 생성 기능을 붙이면 그림 주소 4개를 책의 comic에 저장하면 됩니다 (없으면 점선 자리)
+  function renderComic(bk){
+    comic.innerHTML = '';
+    const urls = (bk && bk.comic) || [];
+    for(let i = 0; i < 4; i++){
+      const p = document.createElement('div'); p.className = 'panel' + (urls[i] ? '' : ' blank');
+      if(urls[i]){ const img = new Image(); img.src = urls[i]; img.alt = `4컷 만화 ${i+1}컷`; p.appendChild(img); }
+      const n = document.createElement('b'); n.textContent = i + 1; p.appendChild(n);
+      comic.appendChild(p);
+    }
+  }
+  function renderEntries(entries, mode, bk){
+    messages.innerHTML = ''; dp1.hidden = true; comic.hidden = true;
+    if(mode === 'diary'){                   // 그림일기: 1쪽 그림일기장 양식, 2쪽 4컷 만화
+      renderDiaryPage(entries, bk); renderComic(bk); showNumbers();
       return;
     }
     if(!entries.length){
@@ -820,7 +874,8 @@ body{
   }
   function openDiaryBook(d, bk, opener){
     diaryRef = bk ? {key: keyOf(YEAR, MONTH+1, d), id: bk.id, d} : null;
-    openBook('diary', bk ? bk.entries : [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null);
+    diaryDate = new Date(YEAR, MONTH, d);
+    openBook('diary', bk ? bk.entries : [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null, bk);
   }
 
   // ---- 펼친 그림일기 지우기 (한 번 더 눌러야 지워짐) ----
