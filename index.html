@@ -741,12 +741,13 @@ body{
   const fmtDate = (y,m,d) => `${y}. ${m}. ${d}. (${WD[new Date(y, m-1, d).getDay()]})`;
   function openChat(){
     if(bookShown()) return;
-    // 오늘 쓴 그림일기가 있으면 그 책을 이어서 쓰고, 없으면 새 책을 씀 (하루에 한 권)
+    // 일기는 하루에 한 권: 오늘 쓴 책이 있으면 그 책을 다시 펼치고, 이미 완성한 일기면 "수정"으로 연다 (대화를 더 하고 그림·날씨를 고침)
     diaryRef = null;
     const todays = latestBook(TODAY_KEY);
-    current = todays ? {id: todays.id, color: todays.color, done: !!todays.done, entries: todays.entries.slice()}
+    current = todays ? {...todays, done: !!todays.done, entries: todays.entries.slice()}
                      : {id: Date.now(), color: SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)], entries: []};
     openBook('chat', current.entries, fmtDate(now.getFullYear(), now.getMonth()+1, now.getDate()), shelf, current.color);
+    if(current.done){ chatTitle.textContent = '오늘의 일기 수정하기'; toast('오늘 쓴 그림일기를 수정해요'); }
   }
 
   shelf.addEventListener('click', openChat);
@@ -1091,10 +1092,16 @@ body{
   document.getElementById('skUndo').addEventListener('click', ()=>{ if(skUndo.length) skCtx.putImageData(skUndo.pop(), 0, 0); skDirty = skUndo.length > 0; });
   document.getElementById('skReset').addEventListener('click', ()=>{ skSnapshot(); skClear(); });
   // 열기 / 완성
+  let skEditing = false;   // 이미 완성한 오늘의 일기를 고치는 중인지
   function openSketch(){
+    skEditing = !!current.done;
     skClear(); skUndo = []; skDirty = false; skErase = false; skEraser.setAttribute('aria-pressed', 'false');
-    skWeather = null;
-    skWeatherEl.querySelectorAll('.wx').forEach(x => x.setAttribute('aria-checked', 'false'));
+    // 수정할 때는 전에 그린 그림·날씨를 그대로 불러와서 이어서 고침
+    if(skEditing && current.drawing){ const img = new Image(); img.onload = ()=> skCtx.drawImage(img, 0, 0, SK_W, SK_H); img.src = current.drawing; skDirty = true; }
+    skWeather = skEditing && WEATHER[current.weather] ? current.weather : null;
+    skWeatherEl.querySelectorAll('.wx').forEach(x => x.setAttribute('aria-checked', String(x.dataset.w === skWeather)));
+    document.getElementById('sketchTitle').textContent = skEditing ? '오늘의 그림 고치기' : '오늘의 그림 그리기';
+    document.getElementById('skDone').textContent = skEditing ? '그림일기 수정 완료' : '그림일기 완성';
     sketch.hidden = false;
     toggleBrushMenu(false);
     requestAnimationFrame(()=>{ sketch.classList.add('show'); showThick(); skColorsEl.querySelector('[aria-pressed="true"]').focus({preventScroll:true}); });
@@ -1108,7 +1115,7 @@ body{
     sketch.classList.remove('show');
     setTimeout(()=>{
       sketch.hidden = true;
-      openCalendarPage(shelf); toast('그림일기를 완성했어요');
+      openCalendarPage(shelf); toast(skEditing ? '그림일기를 수정했어요' : '그림일기를 완성했어요');
       setTimeout(()=>{ if(todayDate && cells[todayDate] && !calpage.hidden) openDiary(todayDate, cells[todayDate]); }, reduce ? 0 : 800);   // 달력이 다 펼쳐진 뒤 오늘의 그림일기 펼치기
     }, reduce ? 0 : 300);
   }
@@ -1142,6 +1149,10 @@ body{
       if(mark) mark.style.setProperty('--cover', `var(--${lb.color || 'color-jobs-3'})`);
     });
     c.setAttribute('aria-label', `11월 ${d}일 (${WD[(first+d-1)%7]})` + (d===todayDate?', 오늘':'') + (has?', 그림일기 있음':''));
+    if(d === todayDate){                       // 오늘 일기를 완성했으면 책장 안내도 "수정"으로
+      shelf.querySelector('.hint').textContent = has ? '오늘의 일기 수정하기' : '오늘의 일기 쓰기';
+      shelf.setAttribute('aria-label', (has ? '오늘의 일기 수정하기' : '오늘의 일기 쓰기') + ': 책장 열기');
+    }
   }
   // 날짜를 누르면 그 날의 그림일기(한 권)를, 없으면 빈 책을 펼침
   let diaryRef = null;   // 지금 펼친 그림일기 {key, id, d}
