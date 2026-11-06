@@ -389,6 +389,22 @@ body{
 .auth-card{width:min(420px, 100%);max-height:100%;overflow:auto;border-radius:6px;padding:10px 30px 28px;
   background:var(--noise), var(--paper);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(12px);transition:transform .3s ease}
 .auth.show .auth-card{transform:none}
+/* chat log of a diary (opened from the diary book's page nav): same card as the login dialog */
+.page-nav .log-btn{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;margin-left:4px}
+.page-nav .log-btn,.page-nav .del{white-space:nowrap}   /* keep each label on one line on narrow screens */
+.log{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.5);opacity:0;transition:opacity .3s ease}
+.log.show{opacity:1}
+.log-card{width:min(520px, 100%);max-height:min(80vh, 100%);display:flex;flex-direction:column;border-radius:6px;overflow:hidden;
+  background:var(--noise), var(--paper);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(12px);transition:transform .3s ease}
+.log.show .log-card{transform:none}
+.log-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:24px 24px 14px;border-bottom:2px solid rgba(34,34,34,.12)}
+.log-head .date{display:block;font-size:12px;font-weight:500;letter-spacing:.06em;opacity:.6;margin-bottom:4px}
+.log-head h2{margin:0;font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.02em}
+.log-close{appearance:none;flex:none;border:2px solid var(--ink);background:transparent;color:var(--ink);font:inherit;font-size:14px;font-weight:500;
+  padding:7px 16px;border-radius:var(--radius-pill);cursor:pointer;transition:background var(--ease)}
+.log-close:hover{background:var(--color-learn)}
+.log-close:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.log-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px 24px 24px;display:flex;flex-direction:column;gap:12px}
 .auth-tabs{display:flex;gap:4px;border-bottom:2px solid rgba(34,34,34,.12);margin:0 -8px 20px}
 .auth-tabs button{appearance:none;border:0;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--ink);opacity:.5;padding:14px 12px 12px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
 .auth-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-bottom-color:var(--ink)}
@@ -445,7 +461,7 @@ body{
 </div>
 
 <div class="reader" id="reader" hidden>
-  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="del" id="delBook">이 책 지우기</button></nav>
+  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="log-btn" id="logBtn">대화 기록 보기</button><button type="button" class="del" id="delBook">이 책 지우기</button></nav>
   <div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
     <div class="back-cover" aria-hidden="true"></div>
     <div class="page">
@@ -496,6 +512,15 @@ body{
       <button type="submit" class="auth-submit">가입하기</button>
       <p class="auth-switch">이미 계정이 있나요? <button type="button" class="link" data-go="login">로그인</button></p>
     </form>
+  </div>
+</div>
+<div class="log" id="chatLog" hidden>
+  <div class="log-card" role="dialog" aria-modal="true" aria-labelledby="logTitle">
+    <div class="log-head">
+      <div><span class="date" id="logDate"></span><h2 id="logTitle">AI와 나눈 대화</h2></div>
+      <button type="button" class="log-close" id="logClose">닫기</button>
+    </div>
+    <div class="log-list" id="logList"></div>
   </div>
 </div>
 <template id="bookIcon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--white)" d="m15.009 57.99l41.848-.38c1.653-.006 2.99-1.097 2.99-2.75V15.15a3 3 0 0 0-3-3H16.955a3 3 0 0 0-2.172.93l-1.954 2.051a3 3 0 0 0-.828 2.07v37.79a3 3 0 0 0 3.009 3"/><path style="fill:var(--cover)" d="M55.002 61H11.999a1 1 0 0 1-.999-.998V16.999c0-.552.447-.999.999-.999h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11.164 16.451L15.999 12h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/><path d="M55.002 61H11.999a1 1 0 0 1-.999-.998V16.999c0-.552.447-.999.999-.999h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/></g></svg></template>
@@ -596,6 +621,7 @@ body{
     book.className = 'book' + (mode === 'diary' ? ' readonly' : '');
     setupPages(mode === 'diary');
     resetDel(); resetEnd(); delBtn.hidden = !(mode === 'diary' && diaryRef);
+    logBtn.hidden = mode !== 'diary';   // 그림일기에서는 항상 대화 기록을 볼 수 있음 (기록이 없으면 없다고 표시)
     chatTitle.textContent = mode === 'diary' ? '그림일기' : 'AI와 대화';
     chatDate.textContent = dateText;
     document.getElementById('coverDate').textContent = dateText;
@@ -872,8 +898,10 @@ body{
   function openDiary(d, cell){
     openDiaryBook(d, doneBook(keyOf(YEAR, MONTH+1, d)), cell);
   }
+  let diaryEntries = [];   // 지금 펼친 그림일기를 쓸 때 나눈 대화 (대화 기록 보기에 사용)
   function openDiaryBook(d, bk, opener){
     diaryRef = bk ? {key: keyOf(YEAR, MONTH+1, d), id: bk.id, d} : null;
+    diaryEntries = bk ? bk.entries : [];
     diaryDate = new Date(YEAR, MONTH, d);
     openBook('diary', bk ? bk.entries : [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null, bk);
   }
@@ -894,6 +922,33 @@ body{
     refreshCell(d); toast('그림일기를 지웠어요');
     closeBook();
   });
+
+  // ---- 대화 기록 보기: 이 그림일기를 쓸 때 AI와 나눈 대화를 읽기 전용으로 보여 줌 ----
+  const logEl = document.getElementById('chatLog'), logList = document.getElementById('logList');
+  const logBtn = document.getElementById('logBtn'), logClose = document.getElementById('logClose');
+  function openLog(){
+    logList.innerHTML = '';
+    document.getElementById('logDate').textContent = chatDate.textContent;
+    const shown = diaryEntries.filter(en => en.kind !== 'image');
+    if(!shown.length){
+      const p = document.createElement('p'); p.className = 'empty-state'; p.textContent = '대화 기록이 없어요.'; logList.appendChild(p);
+    }
+    shown.forEach(en=>{
+      const el = document.createElement('div');
+      el.className = 'msg ' + en.who; el.textContent = en.text;
+      if(en.who === 'ai' && !en.text){ el.textContent = AI_PENDING; el.classList.add('pending'); }   // 빈 AI 답변도 대화 자리에 보이도록
+      logList.appendChild(el);
+    });
+    logEl.hidden = false;
+    requestAnimationFrame(()=>{ logEl.classList.add('show'); logClose.focus({preventScroll:true}); });
+  }
+  function closeLog(){
+    logEl.classList.remove('show');
+    setTimeout(()=>{ logEl.hidden = true; if(bookShown()) logBtn.focus({preventScroll:true}); }, reduce ? 0 : 300);
+  }
+  logBtn.addEventListener('click', e=>{ e.stopPropagation(); openLog(); });
+  logClose.addEventListener('click', closeLog);
+  logEl.addEventListener('click', e=>{ if(e.target === logEl) closeLog(); });   // 창 바깥을 누르면 닫힘
 
   // 방의 달력 위치에서 화면 크기로 확대 (FLIP 애니메이션)
   function flipFromHome(reverse){
@@ -935,6 +990,7 @@ body{
   document.addEventListener('keydown', e=>{
     if(e.key !== 'Escape') return;
     if(!auth.hidden) closeAuth();                  // 로그인 창이 열려 있으면 그것부터
+    else if(!logEl.hidden) closeLog();             // 대화 기록 창이 열려 있으면 그것부터
     else if(bookShown()) closeBook();               // 책이 열려 있으면 책부터 닫기
     else if(!calpage.hidden) closeCalendarPage();
   });
