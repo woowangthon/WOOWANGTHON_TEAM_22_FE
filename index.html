@@ -1,0 +1,970 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘, 그리고</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;500;600&display=swap">
+<!--
+  일러스트 출처 (모두 디자인 시스템 색으로 변경)
+  - 창문, 소파(Couch and Lamp, 조명 제외), 액자(Framed Picture), 달력의 책 아이콘(Closed Book), 표지 크레용(Crayon): OpenMoji (https://openmoji.org) — CC BY-SA 4.0
+  - 화분(Potted Plant): Fluent Emoji (https://github.com/microsoft/fluentui-emoji) — MIT
+  - 책장(Shelf Books 1), 달력(Calendar Date), 벽시계(Time Clock Circle):
+    Streamline Ultimate Color (https://streamlinehq.com) — CC BY 4.0
+-->
+<style>
+/* Layout: room wall on a fixed stage that scales to fit the screen, so the page never scrolls.
+   Landscape stage 1440×900, portrait stage 600×1000. Colors from the Awwwards design system. */
+:root{
+  --bg-primary:#f8f8f8; --ink:#222222; --white:#ffffff;
+  --color-learn:#fff083; --color-learn-3:#fffbe2;
+  --color-jobs-3:#b4d7f8; --color-read:#c0ab3c; --color-read-3:#dbd6c0;
+  --color-inspire-3:#e2f4e9; --color-connect:#ff602c;
+  --border-gray:#ededed; --neutral:#a7a7a7; --error:#c2410c; /* color-connect darkened for small text */
+  --sans:"Inter Tight", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --radius-sm:8px; --radius-pill:72px;
+  --ease:.3s ease;
+  color-scheme:light;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{height:100%;margin:0;overflow:hidden;overflow:clip}
+body{
+  background:var(--bg-primary); color:var(--ink); font-family:var(--sans);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));
+  padding-right:max(16px, env(safe-area-inset-right, 0px));
+  padding-block:0; overscroll-behavior:none; word-break:keep-all;
+}
+.viewport{position:relative;width:100%;height:100%}
+.stage{position:absolute;left:50%;top:50%;width:1440px;height:900px;transform-origin:0 0}
+.stage.portrait{width:600px;height:1000px}
+.asset{position:absolute;display:block}
+.asset svg{display:block;width:100%;height:100%;overflow:visible}
+.asset [stroke]:not([stroke="none"]){vector-effect:non-scaling-stroke;stroke-width:3px}
+.asset [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke}
+
+/* light + shadow tokens (derived from ink and color-learn) */
+:root{ --shadow:rgba(34,34,34,.18); --shadow-strong:rgba(34,34,34,.32); --sun:rgba(255,240,131,.55); --sun-soft:rgba(255,251,226,.75); --screen:rgba(180,215,248,.55) }
+
+/* wall shading: brightest around the window, darker toward the corners */
+.wall{position:absolute;left:-2000px;top:-2000px;width:5440px;height:2780px;
+  background:radial-gradient(ellipse 1500px 1100px at 3190px 2270px, var(--sun-soft) 0%, rgba(255,251,226,.35) 30%, rgba(248,248,248,0) 60%, rgba(34,34,34,.07) 100%), var(--bg-primary)}
+.portrait .wall{width:4600px;height:2905px;background:radial-gradient(ellipse 800px 900px at 2525px 2230px, var(--sun-soft) 0%, rgba(248,248,248,0) 42%, rgba(34,34,34,.09) 100%), var(--bg-primary)}
+
+/* floor */
+.floor{position:absolute;left:-2000px;right:-2000px;top:780px;height:2000px;border-top:3px solid var(--ink);
+  background:linear-gradient(to bottom, rgba(34,34,34,.10) 0, rgba(34,34,34,0) 14px, rgba(34,34,34,.03) 40px, rgba(34,34,34,.16) 220px), var(--color-read-3)}
+.portrait .floor{top:905px}
+
+/* sunlight from the window: soft, diffused, spreading across the room */
+.light{position:absolute;inset:0;pointer-events:none;filter:blur(36px);animation:breathe 8s ease-in-out infinite alternate}
+.beam{position:absolute;inset:0;mix-blend-mode:multiply;
+  clip-path:polygon(1040px 130px, 1340px 130px, 1480px 800px, 360px 800px);
+  background:linear-gradient(200deg, rgba(255,240,131,.55) 0%, rgba(255,240,131,.25) 45%, rgba(255,240,131,.08) 100%)}
+.floor-light{position:absolute;left:300px;top:770px;width:1240px;height:200px;
+  background:radial-gradient(ellipse 50% 60% at 65% 20%, rgba(255,251,226,.95), rgba(255,251,226,.4) 55%, rgba(255,251,226,0) 100%)}
+.glow{position:absolute;left:880px;top:-120px;width:620px;height:660px;pointer-events:none;
+  background:radial-gradient(closest-side, var(--sun) 0%, rgba(255,240,131,.25) 55%, rgba(255,240,131,0) 100%)}
+.portrait .light{display:none}
+.portrait .glow{left:360px;top:30px;width:330px;height:400px}
+@keyframes breathe{from{opacity:.75}to{opacity:1}}
+
+/* contact shadows on the floor */
+.cshadow{position:absolute;pointer-events:none;background:radial-gradient(closest-side, var(--shadow-strong), rgba(34,34,34,0))}
+.cs-sofa{left:40px;top:764px;width:420px;height:32px}
+.cs-shelf{left:485px;top:764px;width:480px;height:32px}
+.cs-plant{left:1170px;top:768px;width:140px;height:22px}
+.portrait .cs-sofa,.portrait .cs-plant{display:none}
+.portrait .cs-shelf{left:30px;top:889px;width:540px;height:32px}
+
+/* logo */
+.logo{position:absolute;left:48px;top:40px;margin:0;font-size:46px;line-height:1.1;font-weight:600;letter-spacing:-.02em;color:var(--ink);z-index:3}
+.logo span{font-weight:300}
+.portrait .logo{left:24px;top:28px;font-size:40px}
+
+/* cast shadows: the window is on the right, so shadows fall to the left */
+.window svg{filter:drop-shadow(-6px 14px 14px var(--shadow))}
+.calendar svg{filter:drop-shadow(-14px 12px 14px var(--shadow))}
+.clock svg{filter:drop-shadow(-12px 12px 12px var(--shadow))}
+.shelf svg{filter:drop-shadow(-16px 10px 14px var(--shadow))}
+.sofa svg{filter:drop-shadow(-12px 8px 14px var(--shadow))}
+.picture svg{filter:drop-shadow(-12px 12px 12px var(--shadow))}
+.plant svg{filter:drop-shadow(-8px 6px 10px var(--shadow))}
+.portrait .calendar svg{filter:drop-shadow(-12px 12px 12px var(--shadow))}
+.portrait .clock svg{filter:drop-shadow(-10px 10px 10px var(--shadow))}
+
+/* wall items (1m ≈ 325px: floor-to-ceiling ≈ 2.4m) */
+.window{left:1010px;top:80px;width:360px;height:360px}
+.portrait .window{left:445px;top:150px;width:160px;height:160px}
+.clock{left:60px;top:175px;width:110px;height:110px}
+.picture{left:190px;top:120px;width:230px;height:230px}
+.portrait .clock{left:30px;top:170px;width:96px;height:96px}
+
+/* calendar */
+.calendar{left:550px;top:30px;width:340px;height:340px}
+.portrait .calendar{left:140px;top:95px;width:320px;height:320px}
+.cal-head{position:absolute;left:27%;width:46%;top:13.7%;height:19%;display:flex;align-items:center;justify-content:center;gap:10px;color:var(--ink)}
+.cal-head b{font-size:36px;line-height:1;font-weight:600;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.cal-head small{font-size:11px;line-height:1.3;font-weight:500;letter-spacing:.12em}
+.portrait .cal-head b{font-size:30px}
+.portrait .cal-head small{font-size:8px}
+.cal-grid{position:absolute;left:8%;width:84%;top:35%;display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.cal-dow{font-size:11px;font-weight:500;text-align:center;padding:0 0 4px}
+.cal-dow.sun{color:var(--color-connect)}
+.day{display:grid;place-items:center;font-size:14px;font-weight:500;color:var(--ink);
+  height:30px;border-radius:var(--radius-sm);font-variant-numeric:tabular-nums}
+.portrait .day{font-size:13px;height:29px}
+.portrait .cal-dow{font-size:9px;padding-bottom:2px}
+.day.sun{font-weight:600}
+.day.today{background:var(--color-learn);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1.5px var(--ink)}
+.day.empty{visibility:hidden}
+.calendar{cursor:pointer;outline:none;transition:transform var(--ease)}
+.calendar:hover{transform:translateY(-6px)}
+.calendar:active{transform:translateY(-2px)}
+.calendar:focus-visible svg{outline:3px solid var(--color-connect);outline-offset:-20px;border-radius:var(--radius-sm)}
+
+/* floor furniture: sofa ≈ 1.15m wide, shelf ≈ 1.2m tall */
+.sofa{left:20px;top:329px;width:520px;height:520px}
+.plant{left:1110px;top:537px;width:260px;height:260px}
+.portrait .sofa,.portrait .plant,.portrait .picture{display:none}
+
+/* bookshelf (one button) */
+.shelf{left:480px;top:339px;width:480px;height:480px;cursor:pointer;outline:none;transition:transform var(--ease)}
+.shelf:hover{transform:translateY(-6px)}
+.shelf:active{transform:translateY(-2px)}
+.shelf:focus-visible svg{outline:3px solid var(--color-connect);outline-offset:4px;border-radius:var(--radius-sm)}
+.portrait .shelf{left:20px;top:391px;width:560px;height:560px}
+
+/* credit + toast */
+.credit{position:absolute;right:24px;bottom:16px;margin:0;font-size:10px;font-weight:500;line-height:1.3;color:var(--ink);opacity:.6}
+.portrait .credit{right:12px;font-size:9px}
+.toast{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,0);
+  background:var(--ink);color:var(--white);font-size:15px;font-weight:500;line-height:1.4;padding:10px 20px;border-radius:var(--radius-pill);
+  white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;transition:opacity var(--ease),transform var(--ease);z-index:40}
+.toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
+
+/* ===== reader: the book opens and the chat lives on its right-hand page ===== */
+:root{ --paper:#fffdf6; --rule:rgba(180,215,248,.45); --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .4  0 0 0 .09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); --line:34px }
+.reader{position:fixed;inset:0;z-index:35;overflow:hidden;
+  background:rgba(34,34,34,.5);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;transition:opacity var(--ease)}
+.reader.show{opacity:1}
+
+/* the book: closed size, then the cover swings left and the spread fills most of the screen */
+.book{--bh:min(86vh, 62vw);--bw:calc(var(--bh) * .72);
+  position:absolute;left:50%;top:50%;width:var(--bw);height:var(--bh);margin:calc(var(--bh) / -2) 0 0 calc(var(--bw) / -2);
+  perspective:2600px;transition:transform .8s ease}
+.book.open{transform:translateX(calc(var(--bw) / 2))}
+.book{--cover:var(--color-jobs-3);--cover-ink:var(--ink)}
+.book .back-cover{position:absolute;inset:-10px -10px -10px 0;background:var(--cover);border:3px solid var(--ink);border-radius:3px 14px 14px 3px;box-shadow:0 30px 50px rgba(0,0,0,.28)}
+/* right-hand page = chat */
+.book .page{position:absolute;inset:0;display:flex;flex-direction:column;border-radius:2px 8px 8px 2px;overflow:hidden;
+  background:var(--noise), repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)), var(--paper);
+  box-shadow:inset 26px 0 30px -18px rgba(34,34,34,.30), 3px 0 0 #f1ede0, 6px 0 0 #e9e4d4}
+.book .cover{position:absolute;inset:0;z-index:3;transform-origin:left center;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease, z-index 0s 0s}
+.book.open .cover{z-index:1;transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease, z-index 0s .9s}
+.book.open .cover{transform:rotateY(-178deg)}
+.book .face,.book .inside{position:absolute;inset:-10px -10px -10px 0;border:3px solid var(--ink);border-radius:3px 14px 14px 3px;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.book .face{background:var(--cover);display:flex;flex-direction:column;justify-content:center;align-items:center;gap:10px;color:var(--ink);
+  box-shadow:inset 22px 0 0 rgba(34,34,34,.08)}
+.book .face{gap:calc(var(--bw) * .045)}
+.book .face::after{content:"";position:absolute;left:0;top:0;bottom:0;width:22px;
+  background:linear-gradient(to bottom, transparent 9%, rgba(34,34,34,.22) 9% 11%, transparent 11% 89%, rgba(34,34,34,.22) 89% 91%, transparent 91%)}
+.book .cover-frame{position:absolute;top:calc(var(--bw) * .07);bottom:calc(var(--bw) * .07);left:calc(var(--bw) * .11);right:calc(var(--bw) * .07);
+  border:2px solid var(--cover-ink);border-radius:8px;opacity:.28}
+.book .cover-frame::before{content:"";position:absolute;inset:6px;border:1px solid var(--cover-ink);border-radius:5px}
+.book .cover-eyebrow{position:relative;font-size:calc(var(--bw) * .036);font-weight:600;letter-spacing:.42em;padding-left:.42em;color:var(--cover-ink)}
+.book .cover-plate{position:relative;padding:calc(var(--bw) * .05) calc(var(--bw) * .075);border:3px solid var(--ink);border-radius:8px;
+  background:var(--noise), var(--paper);box-shadow:6px 7px 0 rgba(34,34,34,.2)}
+.book .cover-date{position:relative;font-size:calc(var(--bw) * .03);font-weight:500;letter-spacing:.12em;color:var(--cover-ink);font-variant-numeric:tabular-nums;opacity:.85}
+.book .cover-icon{position:absolute;right:calc(var(--bw) * .12);bottom:calc(var(--bw) * .11);width:calc(var(--bw) * .16);height:calc(var(--bw) * .16);transform:rotate(-6deg)}
+.book .cover-icon svg{width:100%;height:100%;display:block;overflow:visible}
+.book .cover-icon [stroke]:not([stroke="none"]),.book .cover-icon [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke;stroke-width:2.5px}
+.book .cover-logo{font-size:calc(var(--bw) * .108);line-height:1.1;font-weight:600;letter-spacing:-.02em;white-space:nowrap;color:var(--ink)}
+.book .cover-logo span{font-weight:300}
+/* left-hand page (inside of the cover): plain paper */
+.book .inside{background:var(--cover);transform:rotateY(180deg);padding:10px 0 10px 10px}
+.book .inside::before{content:"";position:absolute;inset:10px 0 10px 10px;border-radius:8px 2px 2px 8px;
+  background:var(--noise), var(--paper);box-shadow:inset -26px 0 30px -18px rgba(34,34,34,.30), -3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
+
+/* chat contents fade in once the book is open */
+.chat{display:flex;flex-direction:column;flex:1;min-height:0;opacity:0;transform:translateY(8px);transition:opacity .35s ease, transform .35s ease}
+.book.ready .chat{opacity:1;transform:none}
+.chat-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:clamp(18px, 3.5vh, 32px) clamp(18px, 2.4vw, 32px) 12px clamp(26px, 3vw, 40px);border-bottom:2px solid rgba(34,34,34,.12)}
+.chat-head .title{display:flex;flex-direction:column;gap:4px;min-width:0}
+.chat-head .date{font-size:12px;font-weight:500;letter-spacing:.06em;opacity:.6}
+.chat-head h2{margin:0;font-size:clamp(20px, 2.8vh, 28px);line-height:1.2;font-weight:600;letter-spacing:-.02em}
+.close{appearance:none;border:2px solid var(--ink);background:transparent;color:var(--ink);width:38px;height:38px;border-radius:50%;flex:none;
+  font:inherit;font-size:19px;line-height:1;cursor:pointer;display:grid;place-items:center;transition:background var(--ease)}
+.close:hover{background:var(--color-learn)}
+.messages{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px clamp(18px, 2.4vw, 32px) 20px clamp(26px, 3vw, 40px);display:flex;flex-direction:column;gap:12px}
+.empty-state{margin:auto;text-align:center;font-size:15px;line-height:1.6;opacity:.5}
+.msg{max-width:78%;padding:10px 14px;border-radius:16px;font-size:15px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:var(--ink);color:var(--white);border-bottom-right-radius:4px}
+.msg.ai{align-self:flex-start;background:var(--white);border:2px solid var(--ink);border-bottom-left-radius:4px;min-width:72px;min-height:46px;box-shadow:3px 3px 0 rgba(34,34,34,.12)}
+.msg.typing{display:flex;gap:4px;align-items:center}
+.msg.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink);opacity:.3;animation:dot 1s infinite}
+.msg.typing i:nth-child(2){animation-delay:.15s}.msg.typing i:nth-child(3){animation-delay:.3s}
+@keyframes dot{50%{opacity:1}}
+.composer{display:flex;gap:10px;align-items:flex-end;padding:12px clamp(18px, 2.4vw, 32px) clamp(16px, 3vh, 28px) clamp(26px, 3vw, 40px);border-top:2px solid rgba(34,34,34,.12)}
+.composer textarea{flex:1;min-width:0;resize:none;border:2px solid var(--ink);border-radius:var(--radius-sm);padding:10px 12px;
+  font:inherit;font-size:15px;line-height:1.4;color:var(--ink);background:rgba(255,255,255,.7);max-height:120px;outline:none}
+.composer textarea::placeholder{color:var(--ink);opacity:.45}
+.composer textarea:focus{box-shadow:0 0 0 3px var(--color-learn)}
+.send{appearance:none;border:0;background:var(--ink);color:var(--white);font:inherit;font-size:15px;font-weight:500;padding:12px 20px;border-radius:var(--radius-pill);cursor:pointer;transition:opacity var(--ease)}
+.send:disabled{opacity:.3;cursor:default}
+.close:focus-visible,.send:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+/* narrow screens: no room for a two-page spread, so the cover swings away and the right page fills the screen */
+@media (max-width:700px), (max-aspect-ratio:1/1){
+  .book{--bw:min(calc(100vw - 40px), 560px);--bh:min(86vh, calc(var(--bw) * 1.7))}
+  .book.open{transform:none}
+  .book.open .cover{opacity:0}
+}
+
+/* ===== left page: generated picture (placeholder square for now) ===== */
+.inside{display:flex;align-items:center;justify-content:center}
+.art{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;gap:14px;width:72%;opacity:0;transform:scale(.94);transition:opacity .4s ease, transform .4s ease}
+.art.show{opacity:1;transform:none}
+.art-grid{display:grid;grid-template-columns:1fr;gap:14px;width:100%}
+.art.multi{width:calc(var(--bw) * .64)}
+.art.multi .art-grid{grid-template-columns:repeat(2, minmax(0,1fr));gap:12px}
+.art.multi .square{box-shadow:4px 5px 0 rgba(34,34,34,.12)}
+.art .square.new{animation:pop .45s ease}
+@keyframes pop{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
+.art .square{width:100%;aspect-ratio:1;background:var(--white);border:3px solid var(--ink);border-radius:4px;box-shadow:6px 8px 0 rgba(34,34,34,.12);overflow:hidden;display:grid;place-items:center}
+.art .square img{width:100%;height:100%;object-fit:cover;display:block}
+.art figcaption{font-size:13px;line-height:1.5;font-weight:500;text-align:center;opacity:.6;max-width:100%;overflow-wrap:anywhere}
+.msg.image{padding:8px;width:min(220px, 70%)}
+.msg.image .square{width:100%;aspect-ratio:1;background:var(--white);border:2px solid var(--ink);border-radius:4px;overflow:hidden}
+.msg.image .square img{width:100%;height:100%;object-fit:cover;display:block}
+
+/* ===== calendar page: the home calendar itself zooms up (same asset, same layout, scaled) ===== */
+.calpage{position:fixed;inset:0;z-index:30;display:grid;place-items:center;overflow:hidden;
+  padding:max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+}
+/* only the dimmed backdrop fades; the calendar itself stays fully visible while it shrinks back onto the wall */
+.calpage::before{content:"";position:absolute;inset:0;background:rgba(34,34,34,.5);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;transition:opacity .35s ease}
+.calpage.show::before{opacity:1}
+.calendar.at-rest{transform:none!important;transition:none!important}
+/* every size is the home calendar's px value ÷ its width (340px) in cqw, so the big calendar is the same picture, only larger */
+.bigcal{position:relative;width:min(96vh, 100%);aspect-ratio:1;container-type:size;transform-origin:0 0}
+.bigcal.anim{transition:transform .7s cubic-bezier(.4,0,.2,1)}
+.bigcal > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;filter:drop-shadow(-4.12cqw 3.53cqw 4.12cqw var(--shadow))}
+.bigcal > svg [stroke]:not([stroke="none"]){vector-effect:non-scaling-stroke;stroke-width:.88cqw}
+.bigcal .cal-head{gap:2.94cqw}
+.bigcal .cal-head b{font-size:10.59cqw}
+.bigcal .cal-head small{font-size:3.24cqw}
+.bigcal .cal-grid{gap:.59cqw}
+.bigcal .cal-dow{font-size:3.24cqw;padding-bottom:1.18cqw}
+.cell{position:relative;appearance:none;border:0;background:transparent;font:inherit;color:var(--ink);cursor:pointer;padding:0;min-width:0;
+  height:8.82cqw;border-radius:2.35cqw;display:grid;place-items:center;
+  font-size:4.12cqw;font-weight:500;font-variant-numeric:tabular-nums;transition:background var(--ease)}
+.cell:hover{background:var(--border-gray)}
+.cell .num{line-height:1}
+.cell.sun{font-weight:600}
+.cell.today,.cell.today:hover{background:var(--color-learn);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 .44cqw var(--ink)}
+.cell.empty{visibility:hidden}
+/* phone: the home calendar is 320px with its own sizes, so scale those instead */
+.calpage.pcal .bigcal > svg{filter:drop-shadow(-3.75cqw 3.75cqw 3.75cqw var(--shadow))}
+.calpage.pcal .bigcal > svg [stroke]:not([stroke="none"]){stroke-width:.94cqw}
+.calpage.pcal .bigcal .cal-head{gap:3.13cqw}
+.calpage.pcal .bigcal .cal-head b{font-size:9.38cqw}
+.calpage.pcal .bigcal .cal-head small{font-size:2.5cqw}
+.calpage.pcal .bigcal .cal-grid{gap:.63cqw}
+.calpage.pcal .bigcal .cal-dow{font-size:2.81cqw;padding-bottom:.63cqw}
+.calpage.pcal .cell{height:9.06cqw;font-size:4.06cqw;border-radius:2.5cqw}
+/* picture-diary mark: a small book at the top-right of the date (same on the wall and when enlarged) */
+.day{position:relative}
+.bookmark{position:absolute;pointer-events:none;top:3px;right:5px;width:10px;height:10px}
+.bookmark svg{width:100%;height:100%;display:block;overflow:visible}
+.bookmark [stroke]:not([stroke="none"]),.bookmark [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke;stroke-width:1px}
+.cell .bookmark{top:.88cqw;right:1.47cqw;width:2.94cqw;height:2.94cqw}
+.cell .bookmark [stroke]:not([stroke="none"]),.cell .bookmark [stroke]:not([stroke="none"]) *{stroke-width:.29cqw}
+.portrait .day .bookmark{right:4px}
+.cell:focus-visible{outline:3px solid var(--color-connect);outline-offset:1px}
+/* diary mode: the same book, read-only */
+/* left page uses the same lined paper as the right page */
+.book.readonly .inside::before{background:var(--noise), repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)), var(--paper)}
+.book.readonly .composer{display:none}
+.art .square.blank{background:transparent;border:2px dashed rgba(34,34,34,.35);box-shadow:none}
+/* clock second hand */
+#secHand{stroke:var(--color-connect)}
+.asset #secHand{stroke-width:1.5px}
+
+/* diary: a blank 4-page book you can page through */
+.book.readonly .chat{display:none}
+.book .pno{position:absolute;bottom:18px;font-size:12px;font-weight:500;opacity:.45;font-variant-numeric:tabular-nums;z-index:1}
+.book .page .pno{right:28px}
+.book .inside .pno{left:28px}
+.leaf{position:absolute;inset:0;z-index:2;transform-origin:left center;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,0,.2,1), opacity .8s ease;cursor:pointer}
+.leaf.turned{transform:rotateY(-178deg)}
+.leaf .lf,.leaf .lb{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:2px 8px 8px 2px;
+  background:var(--noise), repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)), var(--paper)}
+.leaf .lf{box-shadow:inset 26px 0 30px -18px rgba(34,34,34,.30)}
+.leaf .lb{transform:rotateY(180deg);border-radius:8px 2px 2px 8px;box-shadow:inset -26px 0 30px -18px rgba(34,34,34,.30)}
+.leaf .lf .pno{right:28px}.leaf .lb .pno{left:28px}
+.page-nav{position:fixed;left:50%;bottom:max(14px, env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:12px;
+  padding:6px 8px;border-radius:var(--radius-pill);background:var(--white);border:2px solid var(--ink);opacity:0;transition:opacity .3s ease}
+.page-nav.show{opacity:1}
+.page-nav button{appearance:none;border:0;background:transparent;color:var(--ink);font:inherit;font-size:18px;width:34px;height:34px;border-radius:50%;cursor:pointer}
+.page-nav button:hover:not(:disabled){background:var(--color-learn)}
+.page-nav button:disabled{opacity:.25;cursor:default}
+.page-nav button:focus-visible{outline:3px solid var(--color-connect);outline-offset:1px}
+.page-nav span{font-size:13px;font-weight:500;min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
+@media (max-width:700px), (max-aspect-ratio:1/1){
+  .leaf.turned{opacity:0}
+}
+
+/* several diaries on one day: pick a book */
+.chooser{position:absolute;inset:0;z-index:2;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.3);opacity:0;transition:opacity .25s ease}
+.chooser.show{opacity:1}
+.chooser-card{width:min(560px, 100%);display:flex;flex-direction:column;gap:10px;padding:28px 28px 24px;border-radius:4px;
+  background:var(--noise), var(--paper);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(10px);transition:transform .25s ease}
+.chooser.show .chooser-card{transform:none}
+.chooser-card h3{margin:0;font-size:26px;line-height:1.2;font-weight:600;letter-spacing:-.02em}
+.chooser-card p{margin:0 0 8px;font-size:14px;line-height:1.5;opacity:.65}
+.chooser-books{display:flex;flex-wrap:wrap;gap:12px}
+.pick{appearance:none;border:2px solid transparent;background:transparent;font:inherit;color:var(--ink);cursor:pointer;border-radius:var(--radius-sm);
+  display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 12px;min-width:92px;transition:background var(--ease), border-color var(--ease), transform var(--ease)}
+.pick:hover{background:var(--white);border-color:var(--ink);transform:translateY(-3px)}
+.pick:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.pick .bk{width:64px;height:64px}
+.pick .bk svg{width:100%;height:100%;display:block;overflow:visible}
+.pick .bk [stroke]:not([stroke="none"]),.pick .bk [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke;stroke-width:2px}
+.pick b{font-size:15px;font-weight:600}
+.pick small{font-size:12px;font-weight:500;opacity:.6;font-variant-numeric:tabular-nums}
+/* delete the open diary (asks once more before deleting) */
+.page-nav .del{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;border-left:0;margin-left:4px}
+.page-nav .del.armed{background:var(--color-connect);color:var(--white)}
+.page-nav .del[hidden]{display:none}
+
+/* ===== login / sign-up (UI only) ===== */
+.auth-btns{position:absolute;right:48px;top:44px;z-index:3;display:flex;gap:10px}
+.portrait .auth-btns{right:24px;top:34px}
+.auth-btn{appearance:none;font:inherit;font-size:15px;font-weight:500;padding:10px 20px;border-radius:var(--radius-pill);cursor:pointer;
+  border:2px solid var(--ink);background:var(--white);color:var(--ink);transition:background var(--ease), transform var(--ease)}
+.auth-btn:hover{background:var(--color-learn-3);transform:translateY(-2px)}
+.auth-btn.solid{background:var(--ink);color:var(--white)}
+.auth-btn.solid:hover{background:var(--ink);opacity:.88}
+.auth-btn:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.auth{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.5);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;transition:opacity .3s ease}
+.auth.show{opacity:1}
+.auth-card{width:min(420px, 100%);max-height:100%;overflow:auto;border-radius:6px;padding:10px 30px 28px;
+  background:var(--noise), var(--paper);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(12px);transition:transform .3s ease}
+.auth.show .auth-card{transform:none}
+.auth-tabs{display:flex;gap:4px;border-bottom:2px solid rgba(34,34,34,.12);margin:0 -8px 20px}
+.auth-tabs button{appearance:none;border:0;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--ink);opacity:.5;padding:14px 12px 12px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
+.auth-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-bottom-color:var(--ink)}
+.auth-form{display:flex;flex-direction:column;gap:14px}
+.auth-title{margin:0 0 4px;font-size:24px;line-height:1.25;font-weight:600;letter-spacing:-.02em}
+.field{display:flex;flex-direction:column;gap:6px}
+.field span{font-size:13px;font-weight:600}
+.field input{border:2px solid var(--ink);border-radius:var(--radius-sm);padding:11px 12px;font:inherit;font-size:15px;color:var(--ink);background:rgba(255,255,255,.8);outline:none}
+.field input:focus{box-shadow:0 0 0 3px var(--color-learn)}
+.field input[aria-invalid="true"]{border-color:var(--color-connect)}
+.check{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.5;cursor:pointer}
+.check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--ink)}
+.auth-msg{margin:0;min-height:20px;font-size:13px;line-height:1.5;font-weight:500;color:var(--error)}
+.auth-msg.ok{color:var(--ink)}
+.auth-submit{appearance:none;border:0;background:var(--ink);color:var(--white);font:inherit;font-size:16px;font-weight:600;padding:14px;border-radius:var(--radius-pill);cursor:pointer}
+.auth-submit:hover{opacity:.88}
+.auth-switch{margin:0;text-align:center;font-size:13px;opacity:.8}
+.link{appearance:none;border:0;background:none;padding:0;font:inherit;font-weight:600;color:var(--ink);text-decoration:underline;cursor:pointer}
+.auth-tabs button:focus-visible,.auth-submit:focus-visible,.link:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="viewport" id="viewport">
+  <div class="stage" id="stage">
+    <div class="wall" aria-hidden="true"></div>
+    <div class="floor" aria-hidden="true"></div>
+    <div class="glow" aria-hidden="true"></div>
+    <div class="light" aria-hidden="true"><div class="beam"></div><div class="floor-light"></div></div>
+    <div class="cshadow cs-plant" aria-hidden="true"></div>
+    <div class="cshadow cs-sofa" aria-hidden="true"></div>
+    <div class="cshadow cs-shelf" aria-hidden="true"></div>
+    <h1 class="logo">오늘, <span>그리고</span></h1>
+    <div class="auth-btns"><button type="button" class="auth-btn" id="openLogin">로그인</button><button type="button" class="auth-btn solid" id="openSignup">회원가입</button></div>
+
+    <div class="asset window" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.713v42.455m-21.179-21.21h42.562"/><rect width="42.775" height="42.775" x="14.513" y="14.613" style="fill:var(--color-jobs-3)" rx=".784"/><path fill="#fff" opacity=".85" d="m14.535 26.666l12.053-12.053H55.23L14.514 55.477z"/><path style="fill:var(--color-read)" d="M60.94 62H11.018a1.06 1.06 0 0 1-1.06-1.06V11.018a1.06 1.06 0 0 1 1.06-1.06H60.94a1.06 1.06 0 0 1 1.06 1.06V60.94A1.06 1.06 0 0 1 60.94 62m-44.367-5.612h38.655a1.06 1.06 0 0 0 1.06-1.06V16.672a1.06 1.06 0 0 0-1.06-1.06H16.573a1.06 1.06 0 0 0-1.06 1.06v38.656a1.06 1.06 0 0 0 1.06 1.06"/><path fill="none" stroke="#c0ab3c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.613v42.774M14.513 35.958h42.775"/><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M61 61H10.958m0-3.832v-46.21H61v46.21"/></svg></div>
+    <div class="asset clock" role="img" aria-label="벽시계" id="clock"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M12 22.543c5.821 0 10.54-4.72 10.54-10.542S17.822 1.459 12 1.459c-5.823 0-10.542 4.72-10.542 10.542s4.72 10.542 10.541 10.542"/><path style="fill:var(--white)" d="M4.545 19.455A10.542 10.542 0 0 1 19.453 4.547z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M12 22.543c5.821 0 10.54-4.72 10.54-10.542S17.822 1.459 12 1.459c-5.823 0-10.542 4.72-10.542 10.542s4.72 10.542 10.541 10.542"/><path id="minHand" stroke="#222222" stroke-linecap="round" d="M12 12V4.6"/><path id="secHand" stroke="#222222" stroke-linecap="round" d="M12 13.6V3.6"/><path id="hourHand" stroke="#222222" stroke-linecap="round" d="M12 12V7.4"/><circle cx="12" cy="12" r=".9" style="fill:var(--ink)"/></g></svg></div>
+
+    <section class="asset calendar" id="homeCal" role="button" tabindex="0" aria-label="2026년 11월 달력 열기">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-learn)" d="M1.459 7.875V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v3.667z"/><path style="fill:var(--color-learn-3)" d="M1.459 5.583V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v1.375z"/><path style="fill:var(--white)" d="M1.459 7.875h21.083v13.75a.917.917 0 0 1-.917.917H2.375a.917.917 0 0 1-.916-.917z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M21.625 3.293H2.375a.917.917 0 0 0-.916.916v17.417c0 .506.41.917.916.917h19.25c.506 0 .917-.41.917-.917V4.209a.917.917 0 0 0-.917-.916M6.042 1.46v4.583M17.959 1.46v4.583m-16.5 1.833h21.083"/></g></svg>
+      <div class="cal-head" aria-hidden="true"><b>11</b><small>NOV<br>2026</small></div>
+      <div class="cal-grid" id="calGrid"></div>
+    </section>
+
+    <div class="asset picture" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><g stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"><path style="fill:var(--color-read)" d="M12 12h48v48H12z"/><path style="fill:var(--color-jobs-3)" d="M18 18h36v36H18z"/><circle cx="26" cy="30" r="4" style="fill:var(--color-learn)"/><path style="fill:var(--color-inspire-3)" stroke="none" d="M50 35c-2.896-.854-6.28-7.989-8-8c-4.208-.028-6.254 5.836-11 9c-3 2-3.374 2.85-6 4c-2.282 1-3 3-3.25 3.64c-.303.777-1.475 2.522-.958 3.11c1.208 1.375 2.458 1.5 5 .718c2.147-.66 4.977-4.808 6.875-6.218c2.27-1.687 4.645-2.5 8.083-2c2.48.36 6.66 3.172 7.813 3.063c1.312-.126-1.594-2.563-.532-4.188c1.133-1.732 2.91.153 3.636-1.083C51.984 36.5 50.632 35.186 50 35"/></g><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"><path d="M12 12h48v48H12z"/><path d="M18 18h36v36H18z"/><circle cx="26" cy="30" r="4"/><path d="M22 43c.526-1.02.728-1.967 3-3c2.61-1.186 3-2 6-4c4.746-3.164 6.792-9.028 11-9c1.72.011 5 7 8 8"/></g></svg></div>
+    <div class="asset sofa" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-read)" d="M6.833 55.62h5.422v7.064H6.833zm44.987 0h5.422v7.064H51.82z"/><path style="fill:var(--color-jobs-3)" d="M12.54 28.49h38.94l.243 26.82l-38.96-.208z"/><path style="fill:var(--color-read-3)" d="M12.62 46.36h39.1v8.952h-39.1z"/><path style="fill:var(--color-read-3)" d="M57.93 34.6v20.69l-6.212.015l.173-20.71zm-45.452 1.324l.14 19.39l-7.166-.015V33.94z"/><path style="fill:var(--color-read)" d="M52.74 57.65v4.81h3.43v-4.81m-48.726-.04v4.85h3.426v-4.85"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"><path d="M12.61 36.87v-8.385h38.94v8.274c2.138-2.907 3.386-2.824 6.768-2.824v21.36H5.848v-21.36c3.594-.509 4.265.614 6.768 2.935zM7.833 58.61v3.852h3.422V58.61m41.565 0v3.852h3.422V58.61M12.7 46.42h38.86m0 8.18l-.011-17.84m-38.939.11l.01 18.44"/></g></svg></div>
+    <div class="asset plant" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><g fill="none"><path style="fill:var(--color-read)" d="M16.008 19.236c-.25 0-.45-.2-.45-.45V16.88l-2.43-.727l-1.71-1.46l4.14 1.24v-.276c0-1 .28-1.99.84-2.83q.251-.38.415-.8l-2.216-.663l-2.58-1.721l5.034 1.509q.057-.348.057-.705v-2.1h.9v2.1q0 .174-.012.346l3.881-1.16l-3.002 1.845l-1.041.31a5.1 5.1 0 0 1-.677 1.51c-.46.7-.7 1.52-.7 2.36v.992l4.13-1.238l-2.536 1.708l-1.593.477v1.19c0 .25-.2.45-.45.45"/><path style="fill:var(--color-inspire-3)" stroke="#222222" stroke-linejoin="round" d="M17.41 2.072c-1.832 2.13-1.886 5.642-.118 7.849c.082.098.217.109.298.01c1.832-2.13 1.886-5.641.118-7.848c-.082-.109-.217-.109-.298-.01m-6.752 9.453l-3.5-1.05c-.59 1.97.53 4.04 2.49 4.64l3.5 1.05c.6-1.97-.52-4.05-2.49-4.64m13.38-.09l-3.5 1.05c-1.97.6-3.09 2.67-2.49 4.64l3.5-1.05c1.96-.6 3.08-2.67 2.49-4.64m-11.91-4.7l-3.5-1.05c-.58 1.97.53 4.04 2.5 4.64l3.5 1.05a3.73 3.73 0 0 0-2.5-4.64m12.73-.94l-3.5 1.05a3.71 3.71 0 0 0-2.49 4.64l3.5-1.05c1.96-.6 3.08-2.67 2.49-4.64"/><path style="fill:var(--ink)" d="M22 20a9.98 9.98 0 0 0-6-2c-2.251 0-4.335.75-6 2l6 1.969z"/><path style="fill:var(--color-read-3)" stroke="#222222" stroke-linejoin="round" d="m9.007 23.996l.78 4.69c.13.76.78 1.31 1.54 1.31h9.35c.76 0 1.42-.55 1.54-1.31l.79-4.69l-7-1.59z"/><path style="fill:var(--white)" stroke="#222222" stroke-linejoin="round" d="M23.5 24h-15c-.28 0-.5-.22-.5-.5v-3c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5"/></g></svg></div>
+    <div class="asset shelf" id="shelf" role="button" tabindex="0" aria-label="책장 열기"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-connect)" d="M8.174 14.391h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479"/><path style="fill:var(--white)" d="M10.087 14.391h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-learn)" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668"/><path style="fill:var(--ink)" d="M18.217 10.565h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478z"/><path style="fill:var(--color-inspire-3)" d="M16.304 10.565H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path style="fill:var(--color-learn-3)" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667z"/><path style="fill:var(--color-read)" d="M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/><path style="fill:var(--color-read-3)" d="M1 11.522a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957zm0 9.565a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479m1.914 0h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479m1.913 0h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668m6.497-4.625h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478zm-1.913 0H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667zm-8.319.001V1.956m18.174 8.609V1.956M2.913 20.13v-7.652m18.174 7.652v-7.652M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/></g></svg></div>
+
+    <p class="credit">일러스트: OpenMoji (CC BY-SA 4.0), Streamline (CC BY 4.0), Fluent Emoji (MIT)</p>
+  </div>
+  <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
+</div>
+
+<div class="reader" id="reader" hidden>
+  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="del" id="delBook">이 책 지우기</button></nav>
+  <div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
+    <div class="back-cover" aria-hidden="true"></div>
+    <div class="page">
+      <span class="pno" id="pnoRight"></span>
+      <div class="chat">
+        <div class="chat-head">
+          <div class="title"><span class="date" id="chatDate"></span><h2 id="chatTitle">AI와 대화</h2></div>
+        </div>
+        <div class="messages" id="messages" aria-live="polite">
+          
+        </div>
+        <form class="composer" id="composer">
+          <label for="chatInput" class="sr-only">메시지</label>
+          <textarea id="chatInput" rows="1" placeholder="메시지를 입력하세요"></textarea>
+          <button type="submit" class="send" id="sendBtn" disabled>보내기</button>
+        </form>
+      </div>
+    </div>
+    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span></div><div class="inside"><span class="pno" id="pnoLeft"></span><figure class="art" id="art" hidden><div class="art-grid" id="artGrid"></div><figcaption id="artCaption"></figcaption></figure></div></div>
+  </div>
+</div>
+</div>
+
+<div class="auth" id="auth" hidden>
+  <div class="auth-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+    <div class="auth-tabs" role="tablist">
+      <button type="button" role="tab" id="tabLogin" aria-selected="true">로그인</button>
+      <button type="button" role="tab" id="tabSignup" aria-selected="false">회원가입</button>
+    </div>
+    <form class="auth-form" id="loginForm" novalidate>
+      <h2 id="authTitle" class="auth-title">다시 만나서 반가워요</h2>
+      <label class="field"><span>이메일</span><input type="email" id="loginEmail" autocomplete="email" placeholder="name@example.com"></label>
+      <label class="field"><span>비밀번호</span><input type="password" id="loginPw" autocomplete="current-password" placeholder="비밀번호"></label>
+      <p class="auth-msg" id="loginMsg" role="alert"></p>
+      <button type="submit" class="auth-submit">로그인</button>
+      <p class="auth-switch">계정이 없나요? <button type="button" class="link" data-go="signup">회원가입</button></p>
+    </form>
+    <form class="auth-form" id="signupForm" novalidate hidden>
+      <h2 class="auth-title">오늘부터 함께 기록해요</h2>
+      <label class="field"><span>이름</span><input type="text" id="suName" autocomplete="nickname" placeholder="불릴 이름"></label>
+      <label class="field"><span>이메일</span><input type="email" id="suEmail" autocomplete="email" placeholder="name@example.com"></label>
+      <label class="field"><span>비밀번호</span><input type="password" id="suPw" autocomplete="new-password" placeholder="8자 이상"></label>
+      <label class="field"><span>비밀번호 확인</span><input type="password" id="suPw2" autocomplete="new-password" placeholder="한 번 더 입력"></label>
+      <label class="check"><input type="checkbox" id="suAgree"><span>이용약관과 개인정보 처리방침에 동의해요</span></label>
+      <p class="auth-msg" id="signupMsg" role="alert"></p>
+      <button type="submit" class="auth-submit">가입하기</button>
+      <p class="auth-switch">이미 계정이 있나요? <button type="button" class="link" data-go="login">로그인</button></p>
+    </form>
+  </div>
+</div>
+<template id="bookIcon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--white)" d="m15.009 57.99l41.848-.38c1.653-.006 2.99-1.097 2.99-2.75V15.15a3 3 0 0 0-3-3H16.955a3 3 0 0 0-2.172.93l-1.954 2.051a3 3 0 0 0-.828 2.07v37.79a3 3 0 0 0 3.009 3"/><path style="fill:var(--cover)" d="M55.002 61H11.999a1 1 0 0 1-.999-.998V16.999c0-.552.447-.999.999-.999h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"><path d="M11.164 16.451L15.999 12h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/><path d="M55.002 61H11.999a1 1 0 0 1-.999-.998V16.999c0-.552.447-.999.999-.999h43.003c.551 0 .998.447.998.999v43.003a1 1 0 0 1-.998.998"/></g></svg></template>
+<div class="calpage" id="calpage" hidden>
+  <div class="chooser" id="chooser" hidden>
+    <div class="chooser-card" role="dialog" aria-modal="true" aria-labelledby="chooserTitle">
+      <h3 id="chooserTitle"></h3>
+      <p>이 날 쓴 그림일기가 여러 권 있어요. 펼칠 책을 골라 주세요.</p>
+      <div class="chooser-books" id="chooserBooks"></div>
+    </div>
+  </div>
+  <section class="bigcal" id="bigcal" aria-labelledby="bigcalTitle">
+    <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-learn)" d="M1.459 7.875V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v3.667z"/><path style="fill:var(--color-learn-3)" d="M1.459 5.583V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v1.375z"/><path style="fill:var(--white)" d="M1.459 7.875h21.083v13.75a.917.917 0 0 1-.917.917H2.375a.917.917 0 0 1-.916-.917z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M21.625 3.293H2.375a.917.917 0 0 0-.916.916v17.417c0 .506.41.917.916.917h19.25c.506 0 .917-.41.917-.917V4.209a.917.917 0 0 0-.917-.916M6.042 1.46v4.583M17.959 1.46v4.583m-16.5 1.833h21.083"/></g></svg>
+    <h2 class="sr-only" id="bigcalTitle">2026년 11월</h2>
+    <div class="cal-head" aria-hidden="true"><b>11</b><small>NOV<br>2026</small></div>
+    <div class="cal-grid" id="bigGrid"></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  const YEAR = 2026, MONTH = 10; // 11월 (0부터 시작)
+  const now = new Date();
+  const todayDate = (now.getFullYear()===YEAR && now.getMonth()===MONTH) ? now.getDate() : null;
+  const WD = ['일','월','화','수','목','금','토'];
+
+  // ---- 달력 ----
+  const grid = document.getElementById('calGrid');
+  WD.forEach((d,i)=>{
+    const el = document.createElement('div');
+    el.className = 'cal-dow' + (i===0?' sun':'');
+    el.textContent = d; grid.appendChild(el);
+  });
+  const first = new Date(YEAR, MONTH, 1).getDay();
+  const days = new Date(YEAR, MONTH+1, 0).getDate();
+  for(let i=0;i<first;i++){ const e=document.createElement('span'); e.className='day empty'; grid.appendChild(e); }
+  for(let d=1; d<=days; d++){
+    const b = document.createElement('span');
+    b.className='day'; b.id='hday-'+d; b.textContent=d;
+    const dow = (first + d - 1) % 7;
+    if(dow===0) b.classList.add('sun');
+    if(d===todayDate) b.classList.add('today');
+    grid.appendChild(b);
+  }
+
+  // ---- 그림일기 저장소 ----
+  // 날짜마다 대화와 그림을 그림일기로 저장합니다 (이 브라우저에만 저장).
+  // 항목 형태: {who:'user'|'ai', text} 또는 {who:'ai', kind:'image', url, prompt}
+  const pad = n => String(n).padStart(2,'0');
+  const keyOf = (y,m,d) => `oneul-diary-${y}-${pad(m)}-${pad(d)}`;
+  const TODAY_KEY = keyOf(now.getFullYear(), now.getMonth()+1, now.getDate());
+  // 하루에 여러 권: {books:[{id, color, entries}]}
+  // 예전 버전에서 시험 삼아 남은 기록(다른 형식)은 그림일기로 치지 않고 지움
+  try{ Object.keys(localStorage).forEach(k=>{
+    if(k.startsWith('oneul-memo-')) localStorage.removeItem(k);
+    if(k.startsWith('oneul-diary-')){ const v = JSON.parse(localStorage.getItem(k)); if(!v || !Array.isArray(v.books)) localStorage.removeItem(k); }
+  }); }catch(e){}
+  function loadDay(key){
+    try{ const v = JSON.parse(localStorage.getItem(key)); if(v && Array.isArray(v.books)) return v; }catch(e){}
+    return {books:[]};
+  }
+  function saveDay(key, d){ try{ localStorage.setItem(key, JSON.stringify(d)); return true; }catch(e){ return false; } }
+  // 사용자가 직접 글을 쓴 책만 그림일기로 인정
+  function writtenBooks(key){ return loadDay(key).books.filter(b => b.entries.some(en => en.who === 'user' && en.kind !== 'image')); }
+  function latestBook(key){ const bs = writtenBooks(key); return bs[bs.length-1] || null; }
+  // 지금 쓰고 있는 책. 책장을 열 때마다 새 책으로 시작하고, 첫 글을 쓰는 순간 저장됨
+  let current = null;
+  function record(entry){
+    current.entries.push(entry);
+    const day = loadDay(TODAY_KEY), i = day.books.findIndex(b => b.id === current.id);
+    if(i < 0) day.books.push(current); else day.books[i] = current;
+    saveDay(TODAY_KEY, day);
+    refreshCell(now.getDate());
+  }
+
+  // ---- 책 표지 색: 책장에 꽂힌 책들의 색 중 하나를 무작위로 ----
+  const SHELF_COLORS = ['color-jobs-3','color-connect','white','color-learn','ink','color-inspire-3','color-learn-3'];
+  let bookColor = SHELF_COLORS[0];
+  function setCover(color){
+    bookColor = color;
+    book.style.setProperty('--cover', `var(--${color})`);
+    book.style.setProperty('--cover-ink', color === 'ink' ? 'var(--white)' : 'var(--ink)');
+  }
+
+  // ---- 책: 대화(오늘) 또는 그림일기 보기(지난 날짜) ----
+  const shelf = document.getElementById('shelf');
+  const reader = document.getElementById('reader'), book = document.getElementById('book');
+  const messages = document.getElementById('messages');
+  const composer = document.getElementById('composer'), input = document.getElementById('chatInput'), sendBtn = document.getElementById('sendBtn');
+  const chatTitle = document.getElementById('chatTitle'), chatDate = document.getElementById('chatDate');
+  const art = document.getElementById('art'), artGrid = document.getElementById('artGrid'), artCaption = document.getElementById('artCaption');
+  const MAX_IMAGES = 6;   // 책 한 권에 그릴 수 있는 그림 수
+  let artImages = [];
+  const narrow = window.matchMedia('(max-width:700px), (max-aspect-ratio:1/1)');
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let timers = [], bookMode = 'chat', bookOpener = null;
+  const later = (fn, ms) => timers.push(setTimeout(fn, reduce ? 0 : ms));
+
+  function openBook(mode, entries, dateText, opener, color){
+    if(!reader.hidden) return;
+    timers.forEach(clearTimeout); timers = [];
+    bookMode = mode; bookOpener = opener;
+    setCover(color || SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)]);
+    book.className = 'book' + (mode === 'diary' ? ' readonly' : '');
+    setupPages(mode === 'diary');
+    resetDel(); delBtn.hidden = !(mode === 'diary' && diaryRef);
+    chatTitle.textContent = mode === 'diary' ? '그림일기' : 'AI와 대화';
+    chatDate.textContent = dateText;
+    document.getElementById('coverDate').textContent = dateText;
+    renderEntries(entries, mode);
+    reader.hidden = false;
+    requestAnimationFrame(()=>{ reader.classList.add('show');
+      later(()=> book.classList.add('open'), 200);                                          // 표지가 넘어가며 책이 펼쳐짐
+      later(()=>{ book.classList.add('ready'); if(mode === 'chat') input.focus({preventScroll:true}); else { pageNav.classList.add('show'); } }, 1100);  // 오른쪽 페이지 내용이 나타남
+    });
+  }
+  function closeBook(after){
+    timers.forEach(clearTimeout); timers = [];
+    book.classList.remove('ready'); pageNav.classList.remove('show');
+    const delay = spread > 0 ? 700 : 0;                    // 넘긴 쪽이 있으면 먼저 처음으로 되돌린 뒤
+    if(spread > 0) goSpread(0);
+    later(()=> book.classList.remove('open'), 200 + delay);        // 책을 다시 덮고
+    later(()=> reader.classList.remove('show'), 1000 + delay);
+    later(()=>{ reader.hidden = true; pageNav.hidden = true; clearLeaves(); after ? after() : (bookOpener && bookOpener.focus({preventScroll:true})); }, 1300 + delay);
+  }
+  const fmtDate = (y,m,d) => `${y}. ${m}. ${d}. (${WD[new Date(y, m-1, d).getDay()]})`;
+  function openChat(){
+    if(!reader.hidden) return;
+    // 책을 펼 때마다 대화를 비우고 새 책을 씀
+    diaryRef = null;
+    current = {id: Date.now(), color: SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)], entries: []};
+    openBook('chat', current.entries, fmtDate(now.getFullYear(), now.getMonth()+1, now.getDate()), shelf, current.color);
+  }
+
+  shelf.addEventListener('click', openChat);
+  shelf.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openChat(); }
+  });
+  reader.addEventListener('click', e=>{ if(e.target === reader) closeBook(); });   // 책 바깥을 누르면 닫힘
+
+  // ---- 그림일기: 넘길 수 있는 4쪽짜리 빈 책 ----
+  // PC: 두 쪽씩 펼침 (1–2, 3–4) / 휴대폰: 한 쪽씩 (1, 2, 3, 4)
+  const TOTAL = 4;
+  const pageNav = document.getElementById('pageNav'), pageInfo = document.getElementById('pageInfo');
+  const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
+  const pnoLeft = document.getElementById('pnoLeft'), pnoRight = document.getElementById('pnoRight');
+  let spread = 0, turning = false, diaryOn = false;
+  const perSpread = () => narrow.matches ? 1 : 2;
+  const spreads = () => TOTAL / perSpread();
+  function pagesOf(i){ return narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; }
+  function showNumbers(){
+    const [l, r] = pagesOf(spread);
+    pnoLeft.textContent = diaryOn && l ? l : ''; pnoRight.textContent = diaryOn ? r : '';
+    pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${l}–${r} / ${TOTAL}`;
+    prevBtn.disabled = spread === 0; nextBtn.disabled = spread === spreads() - 1;
+  }
+  function clearLeaves(){ book.querySelectorAll('.leaf').forEach(l => l.remove()); turning = false; }
+  function setupPages(on){
+    diaryOn = on; spread = 0; clearLeaves();
+    pageNav.hidden = !on; pageNav.classList.remove('show');
+    showNumbers();
+  }
+  function makeLeaf(front, back, turned){
+    const leaf = document.createElement('div'); leaf.className = 'leaf' + (turned ? ' turned' : '');
+    leaf.innerHTML = `<div class="lf"><span class="pno">${front ?? ''}</span></div><div class="lb"><span class="pno">${back ?? ''}</span></div>`;
+    book.insertBefore(leaf, book.querySelector('.cover'));
+    return leaf;
+  }
+  // 한 장을 넘기는 애니메이션: 넘어가는 종이를 만들고, 그 아래 쪽 번호를 미리 바꿔 둔다
+  function goSpread(target){
+    if(turning || target === spread || target < 0 || target >= spreads()) return;
+    const fwd = target > spread, [l0, r0] = pagesOf(spread), [l1, r1] = pagesOf(target);
+    turning = true;
+    const leaf = fwd ? makeLeaf(r0, l1, false) : makeLeaf(r1, l0, true);
+    if(fwd) pnoRight.textContent = r1; else if(l1) pnoLeft.textContent = l1;
+    void leaf.offsetWidth;
+    leaf.classList.toggle('turned', fwd);
+    spread = target;
+    setTimeout(()=>{ leaf.remove(); turning = false; showNumbers(); }, reduce ? 0 : 820);
+    showNumbers(); if(fwd && l1) pnoLeft.textContent = l0 ?? '';  // 왼쪽은 종이가 덮을 때까지 그대로
+    if(!fwd) pnoRight.textContent = r0;
+  }
+  prevBtn.addEventListener('click', ()=> goSpread(spread - 1));
+  nextBtn.addEventListener('click', ()=> goSpread(spread + 1));
+  book.addEventListener('click', e=>{                 // 오른쪽 쪽을 누르면 다음, 왼쪽 쪽을 누르면 앞으로
+    if(!diaryOn || !book.classList.contains('ready')) return;
+    const r = book.getBoundingClientRect();
+    if(e.clientX > r.left) goSpread(spread + 1); else goSpread(spread - 1);
+  });
+  document.addEventListener('keydown', e=>{
+    if(reader.hidden || !diaryOn) return;
+    if(e.key === 'ArrowRight') goSpread(spread + 1);
+    if(e.key === 'ArrowLeft') goSpread(spread - 1);
+  });
+
+  // ---- 페이지에 내용 그리기 ----
+  // 왼쪽 쪽: 그림이 1개면 크게, 2개 이상이면 2열로 최대 6개
+  function renderArt(){
+    artGrid.innerHTML = '';
+    art.classList.toggle('multi', artImages.length > 1);
+    artImages.forEach((en, i)=>{
+      const sq = document.createElement('div'); sq.className = 'square' + (i === artImages.length - 1 ? ' new' : '');
+      if(en.url){ const img = new Image(); img.src = en.url; img.alt = en.prompt || '그림일기 그림'; sq.appendChild(img); }
+      sq.title = en.prompt || '';
+      artGrid.appendChild(sq);
+    });
+    artCaption.textContent = artImages.length === 1 ? (artImages[0].prompt ? `“${artImages[0].prompt}”` : '') : `그림 ${artImages.length} / ${MAX_IMAGES}`;
+    if(art.hidden){ art.hidden = false; art.classList.remove('show'); requestAnimationFrame(()=> requestAnimationFrame(()=> art.classList.add('show'))); }
+  }
+  function clearArt(){ artImages = []; art.hidden = true; art.classList.remove('show','multi'); artGrid.innerHTML = ''; }
+  function addMsg(text, who){
+    const el = document.createElement('div');
+    el.className = 'msg ' + who; el.textContent = text;
+    if(who === 'ai' && !text) el.setAttribute('aria-label', 'AI 답변 (비어 있음)');
+    messages.appendChild(el); messages.scrollTop = messages.scrollHeight;
+    return el;
+  }
+  function addImageBubble(url){
+    const el = addMsg('', 'ai image'); el.setAttribute('aria-label', '그림일기 그림');
+    const sq = document.createElement('div'); sq.className = 'square';
+    if(url){ const img = new Image(); img.src = url; img.alt = '그림일기 그림'; sq.appendChild(img); }
+    el.appendChild(sq);
+  }
+  function drawImageEntry(en){
+    if(narrow.matches){ addImageBubble(en.url); return; }          // 휴대폰: 왼쪽 페이지가 없으니 대화 안에
+    artImages.push(en); renderArt();
+    addMsg('왼쪽 페이지에 그림을 그렸어요.', 'ai');
+  }
+  function renderEntries(entries, mode){
+    messages.innerHTML = ''; clearArt();
+    if(mode === 'diary') return;            // 그림일기는 빈 책으로 표시
+    if(!entries.length){
+      const p = document.createElement('p'); p.className = 'empty-state';
+      p.innerHTML = mode === 'diary' ? '이 날 작성한 그림일기가 없어요.' : '오늘 있었던 일이나 궁금한 것을<br>적어 보세요.';
+      messages.appendChild(p);
+    }
+    entries.forEach(en => en.kind === 'image' ? drawImageEntry(en) : addMsg(en.text, en.who));
+  }
+
+  // ---- AI 대화 ----
+  // 실제 생성형 AI를 연결할 때 이 함수만 바꾸면 됩니다.
+  // message: 사용자가 보낸 글 / 반환값: AI의 답변 글 (async 함수라서 서버 요청 결과를 기다려 반환해도 됩니다)
+  async function getAIReply(message){
+    return '';   // 아직 구현 전: 빈 답변
+  }
+  // 실제 이미지 생성 AI를 연결할 때 이 함수만 바꾸면 됩니다.
+  // prompt: "이미지 생성" 뒤에 적은 글 / 반환값: 이미지 주소(URL). 지금은 null을 돌려줘서 빈 정사각형만 표시됩니다.
+  async function generateImage(prompt){
+    return null;   // 아직 구현 전
+  }
+
+  input.addEventListener('input', ()=>{
+    sendBtn.disabled = !input.value.trim();
+    input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 136) + 'px';
+  });
+  input.addEventListener('keydown', e=>{
+    if(e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); composer.requestSubmit(); }
+  });
+  composer.addEventListener('submit', async e=>{
+    e.preventDefault();
+    if(bookMode !== 'chat') return;
+    const text = input.value.trim(); if(!text) return;
+    const es = messages.querySelector('.empty-state'); if(es) es.remove();
+    input.value = ''; input.style.height = 'auto'; sendBtn.disabled = true;
+    const command = text.replace(/[*\s]/g, '');
+    if(command === '대화종료'){                        // 대화를 마치고 달력 페이지로 이동 (명령은 일기에 남기지 않음)
+      addMsg(text, 'user');
+      closeBook(()=> openCalendarPage(shelf));
+      return;
+    }
+    addMsg(text, 'user'); record({who:'user', text});
+    const typing = addMsg('', 'ai typing'); typing.innerHTML = '<i></i><i></i><i></i>'; typing.setAttribute('aria-label','AI가 답변을 작성하는 중');
+    if(command.startsWith('이미지생성')){             // 왼쪽 페이지에 그림 생성
+      if(current.entries.filter(en => en.kind === 'image').length >= MAX_IMAGES){   // 한 권에 최대 6개
+        typing.remove();
+        const msg = `그림은 책 한 권에 최대 ${MAX_IMAGES}개까지 그릴 수 있어요.`;
+        addMsg(msg, 'ai'); record({who:'ai', text: msg});
+        return;
+      }
+      const prompt = text.replace(/^[*\s]*이미지\s*생성[*\s:]*/, '');
+      const [url] = await Promise.all([generateImage(prompt), new Promise(r=>setTimeout(r, 600))]);
+      typing.remove();
+      const en = {who:'ai', kind:'image', url: url || null, prompt};
+      drawImageEntry(en); record(en);
+      return;
+    }
+    const [reply] = await Promise.all([getAIReply(text), new Promise(r=>setTimeout(r, 600))]);
+    typing.remove();
+    addMsg(reply || '', 'ai'); record({who:'ai', text: reply || ''});
+  });
+
+  // ---- 달력 페이지 (방의 달력이 확대됨) ----
+  const calpage = document.getElementById('calpage'), bigcal = document.getElementById('bigcal'), bigGrid = document.getElementById('bigGrid');
+  const homeCal = document.getElementById('homeCal');
+  const BOOK_ICON = document.getElementById('bookIcon').innerHTML;
+
+  WD.forEach((d,i)=>{ const el=document.createElement('div'); el.className='cal-dow'+(i===0?' sun':''); el.textContent=d; bigGrid.appendChild(el); });
+  for(let i=0;i<first;i++){ const e=document.createElement('span'); e.className='cell empty'; bigGrid.appendChild(e); }
+  const cells = {};
+  for(let d=1; d<=days; d++){
+    const dow = (first + d - 1) % 7;
+    const c = document.createElement('button');
+    c.type='button'; c.className='cell'+(dow===0?' sun':'')+(d===todayDate?' today':''); c.id='cell-'+d;
+    c.innerHTML = `<span class="num">${d}</span>`;
+    c.addEventListener('click', ()=> openDiary(d, c));
+    bigGrid.appendChild(c); cells[d] = c; refreshCell(d);
+  }
+  function refreshCell(d){
+    const c = cells[d]; if(!c) return;
+    const lb = latestBook(keyOf(YEAR, MONTH+1, d)), has = !!lb;
+    c.classList.toggle('has-diary', has);
+    [c, document.getElementById('hday-'+d)].forEach(el=>{          // 확대 달력과 벽 달력에 똑같이 표시
+      if(!el) return;
+      let mark = el.querySelector('.bookmark');
+      if(has && !mark){ mark = document.createElement('span'); mark.className = 'bookmark'; mark.innerHTML = BOOK_ICON; el.appendChild(mark); }
+      if(!has && mark){ mark.remove(); mark = null; }
+      if(mark) mark.style.setProperty('--cover', `var(--${lb.color || 'color-jobs-3'})`);
+    });
+    c.setAttribute('aria-label', `11월 ${d}일 (${WD[(first+d-1)%7]})` + (d===todayDate?', 오늘':'') + (has?', 그림일기 있음':''));
+  }
+  // 날짜를 누르면: 책이 한 권이면 바로, 여러 권이면 고르는 창, 없으면 빈 책
+  let diaryRef = null;   // 지금 펼친 그림일기 {key, id, d}
+  function openDiary(d, cell){
+    const key = keyOf(YEAR, MONTH+1, d), books = writtenBooks(key);
+    if(books.length > 1) return showChooser(d, books, cell);
+    openDiaryBook(d, books[0] || null, cell);
+  }
+  function openDiaryBook(d, bk, opener){
+    diaryRef = bk ? {key: keyOf(YEAR, MONTH+1, d), id: bk.id, d} : null;
+    openBook('diary', [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null);
+  }
+
+  // ---- 여러 권 중 고르기 ----
+  const chooser = document.getElementById('chooser'), chooserBooks = document.getElementById('chooserBooks');
+  let chooserCell = null;
+  const hhmm = id => { const t = new Date(id); return `${pad(t.getHours())}:${pad(t.getMinutes())}`; };
+  function showChooser(d, books, cell){
+    chooserCell = cell;
+    document.getElementById('chooserTitle').textContent = `11월 ${d}일의 그림일기`;
+    chooserBooks.innerHTML = '';
+    books.forEach((bk, i)=>{
+      const btn = document.createElement('button'); btn.type = 'button'; btn.className = 'pick';
+      btn.innerHTML = `<span class="bk">${BOOK_ICON}</span><b>${i+1}번째 책</b><small>${bk.id ? hhmm(bk.id) : ''}</small>`;
+      btn.querySelector('.bk').style.setProperty('--cover', `var(--${bk.color || 'color-jobs-3'})`);
+      btn.setAttribute('aria-label', `${i+1}번째 책 펼치기` + (bk.id ? `, ${hhmm(bk.id)}에 씀` : ''));
+      btn.addEventListener('click', ()=>{ hideChooser(true); openDiaryBook(d, bk, cell); });
+      chooserBooks.appendChild(btn);
+    });
+    chooser.hidden = false;
+    requestAnimationFrame(()=>{ chooser.classList.add('show'); chooserBooks.firstChild.focus({preventScroll:true}); });
+  }
+  function hideChooser(keepFocus){
+    if(chooser.hidden) return;
+    chooser.classList.remove('show');
+    setTimeout(()=>{ chooser.hidden = true; if(!keepFocus && chooserCell) chooserCell.focus({preventScroll:true}); }, reduce ? 0 : 250);
+  }
+  chooser.addEventListener('click', e=>{ if(e.target === chooser) hideChooser(); });
+
+  // ---- 펼친 그림일기 지우기 (한 번 더 눌러야 지워짐) ----
+  const delBtn = document.getElementById('delBook'); let delTimer;
+  function resetDel(){ clearTimeout(delTimer); delBtn.classList.remove('armed'); delBtn.textContent = '이 책 지우기'; }
+  delBtn.addEventListener('click', ()=>{
+    if(!diaryRef) return;
+    if(!delBtn.classList.contains('armed')){
+      delBtn.classList.add('armed'); delBtn.textContent = '한 번 더 누르면 지워져요';
+      delTimer = setTimeout(resetDel, 3000);
+      return;
+    }
+    resetDel();
+    const day = loadDay(diaryRef.key); day.books = day.books.filter(b => b.id !== diaryRef.id); saveDay(diaryRef.key, day);
+    const d = diaryRef.d; diaryRef = null;
+    refreshCell(d); toast('그림일기를 지웠어요');
+    closeBook();
+  });
+
+  // 방의 달력 위치에서 화면 크기로 확대 (FLIP 애니메이션)
+  function flipFromHome(reverse){
+    const from = homeCal.getBoundingClientRect();
+    calpage.hidden = false;
+    bigcal.classList.remove('anim'); bigcal.style.transform = '';
+    const to = bigcal.getBoundingClientRect();
+    const t = `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${from.width / to.width}, ${from.height / to.height})`;
+    if(!reverse){ bigcal.style.transform = t; }
+    void bigcal.offsetWidth;
+    bigcal.classList.add('anim');
+    bigcal.style.transform = reverse ? t : '';
+  }
+  let calOpener = null;
+  function openCalendarPage(opener){
+    if(!calpage.hidden) return;
+    calOpener = opener || homeCal;
+    calpage.classList.toggle('pcal', stage.classList.contains('portrait'));
+    for(let d=1; d<=days; d++) refreshCell(d);
+    setTimeout(()=>{ homeCal.style.visibility = 'hidden'; }, 30);   // 벽의 달력이 떼어져 확대되는 것처럼
+    flipFromHome(false);
+    requestAnimationFrame(()=> calpage.classList.add('show'));
+    later(()=>{ const t = cells[todayDate || 1]; t && t.focus({preventScroll:true}); }, 700);
+  }
+  function closeCalendarPage(){
+    hideChooser(true);
+    homeCal.classList.add('at-rest');          // 벽 달력의 원래 자리(떠오르지 않은 상태)로 돌아가도록
+    flipFromHome(true);
+    calpage.classList.remove('show');
+    later(()=>{ homeCal.style.visibility = ''; homeCal.classList.remove('at-rest'); calpage.hidden = true; bigcal.classList.remove('anim'); bigcal.style.transform=''; calOpener && calOpener.focus({preventScroll:true}); }, 700);
+  }
+  calpage.addEventListener('click', e=>{ if(e.target === calpage) closeCalendarPage(); });   // 달력 바깥을 누르면 방으로
+  homeCal.addEventListener('click', ()=> openCalendarPage(homeCal));
+  homeCal.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openCalendarPage(homeCal); }
+  });
+  document.addEventListener('keydown', e=>{
+    if(e.key !== 'Escape') return;
+    if(!auth.hidden) closeAuth();                  // 로그인 창이 열려 있으면 그것부터
+    else if(!reader.hidden) closeBook();               // 책이 열려 있으면 책부터 닫기
+    else if(!chooser.hidden) hideChooser();
+    else if(!calpage.hidden) closeCalendarPage();
+  });
+
+  // ---- 로그인 / 회원가입 (화면만 있고 기능은 아직 없음) ----
+  // 실제 계정 기능을 연결할 때 이 두 함수만 바꾸면 됩니다. 성공하면 {ok:true}, 실패하면 {ok:false, message:'…'}를 돌려주세요.
+  async function login(email, password){ return {ok:false, message:'로그인 기능은 아직 준비 중이에요.'}; }
+  async function signup(name, email, password){ return {ok:false, message:'회원가입 기능은 아직 준비 중이에요.'}; }
+
+  const auth = document.getElementById('auth'), loginForm = document.getElementById('loginForm'), signupForm = document.getElementById('signupForm');
+  const tabLogin = document.getElementById('tabLogin'), tabSignup = document.getElementById('tabSignup');
+  let authOpener = null;
+  function showTab(which){
+    const isLogin = which === 'login';
+    loginForm.hidden = !isLogin; signupForm.hidden = isLogin;
+    tabLogin.setAttribute('aria-selected', String(isLogin)); tabSignup.setAttribute('aria-selected', String(!isLogin));
+    const f = (isLogin ? loginForm : signupForm).querySelector('input'); f && f.focus({preventScroll:true});
+  }
+  function openAuth(which, opener){
+    authOpener = opener; auth.hidden = false; showTab(which);
+    requestAnimationFrame(()=> auth.classList.add('show'));
+  }
+  function closeAuth(){
+    auth.classList.remove('show');
+    setTimeout(()=>{ auth.hidden = true; authOpener && authOpener.focus({preventScroll:true}); }, reduce ? 0 : 300);
+  }
+  document.getElementById('openLogin').addEventListener('click', e=> openAuth('login', e.currentTarget));
+  document.getElementById('openSignup').addEventListener('click', e=> openAuth('signup', e.currentTarget));
+  tabLogin.addEventListener('click', ()=> showTab('login'));
+  tabSignup.addEventListener('click', ()=> showTab('signup'));
+  auth.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', ()=> showTab(b.dataset.go)));
+  auth.addEventListener('click', e=>{ if(e.target === auth) closeAuth(); });   // 창 바깥을 누르면 닫힘
+
+  const emailOk = v => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+  function check(msgEl, rules){                    // [입력칸, 통과 여부, 안내 문구] 중 처음 걸리는 것을 알려 줌
+    msgEl.classList.remove('ok');
+    rules.forEach(([el]) => el && el.removeAttribute('aria-invalid'));
+    for(const [el, ok, text] of rules){ if(!ok){ msgEl.textContent = text; if(el){ el.setAttribute('aria-invalid','true'); el.focus({preventScroll:true}); } return false; } }
+    msgEl.textContent = ''; return true;
+  }
+  loginForm.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const em = document.getElementById('loginEmail'), pw = document.getElementById('loginPw'), msg = document.getElementById('loginMsg');
+    if(!check(msg, [[em, em.value.trim(), '이메일을 입력해 주세요.'], [em, emailOk(em.value.trim()), '이메일 형식을 확인해 주세요.'], [pw, pw.value, '비밀번호를 입력해 주세요.']])) return;
+    const r = await login(em.value.trim(), pw.value);
+    msg.textContent = r.ok ? '로그인했어요.' : r.message; msg.classList.toggle('ok', !!r.ok);
+    if(r.ok) setTimeout(closeAuth, 600);
+  });
+  signupForm.addEventListener('submit', async e=>{
+    e.preventDefault();
+    const nm = document.getElementById('suName'), em = document.getElementById('suEmail'), pw = document.getElementById('suPw'), pw2 = document.getElementById('suPw2'), ag = document.getElementById('suAgree'), msg = document.getElementById('signupMsg');
+    if(!check(msg, [[nm, nm.value.trim(), '이름을 입력해 주세요.'], [em, emailOk(em.value.trim()), '이메일 형식을 확인해 주세요.'], [pw, pw.value.length >= 8, '비밀번호는 8자 이상이어야 해요.'], [pw2, pw.value === pw2.value, '비밀번호 확인이 일치하지 않아요.'], [ag, ag.checked, '약관에 동의해 주세요.']])) return;
+    const r = await signup(nm.value.trim(), em.value.trim(), pw.value);
+    msg.textContent = r.ok ? '가입이 완료됐어요.' : r.message; msg.classList.toggle('ok', !!r.ok);
+    if(r.ok) setTimeout(()=> showTab('login'), 800);
+  });
+
+  // ---- 벽시계: 실제 시간처럼 초침이 움직임 ----
+  const hourHand = document.getElementById('hourHand'), minHand = document.getElementById('minHand'), secHand = document.getElementById('secHand');
+  const clockEl = document.getElementById('clock');
+  function tick(){
+    const t = new Date(), sec = t.getSeconds(), m = t.getMinutes() + sec / 60, h = t.getHours() % 12 + m / 60;
+    hourHand.setAttribute('transform', `rotate(${h*30} 12 12)`);
+    minHand.setAttribute('transform', `rotate(${m*6} 12 12)`);
+    secHand.setAttribute('transform', `rotate(${sec*6} 12 12)`);
+    clockEl.setAttribute('aria-label', `벽시계 ${t.getHours()}시 ${t.getMinutes()}분`);
+    setTimeout(tick, 1000 - new Date().getMilliseconds());   // 매 초 정각에 맞춰 째깍
+  }
+  tick();
+
+  // ---- 알림 ----
+  const toastEl = document.getElementById('toast'); let tt;
+  function toast(msg){
+    toastEl.textContent = msg; toastEl.classList.remove('hide');
+    clearTimeout(tt); tt = setTimeout(()=>toastEl.classList.add('hide'), 2200);
+  }
+
+  // ---- 화면 크기에 맞추기 (스크롤 없음) ----
+  const vp = document.getElementById('viewport'), stage = document.getElementById('stage');
+  function fit(){
+    const w = vp.clientWidth, h = vp.clientHeight;
+    const portrait = w / h < 1.05;
+    stage.classList.toggle('portrait', portrait);
+    const sw = portrait ? 600 : 1440, sh = portrait ? 1000 : 900;
+    const s = Math.min(w / sw, h / sh);
+    stage.style.transform = `scale(${s}) translate(-50%,-50%)`;
+  }
+  window.addEventListener('resize', fit);
+  const unscroll = el => el.addEventListener('scroll', ()=>{ if(el.scrollTop || el.scrollLeft){ el.scrollTop = 0; el.scrollLeft = 0; } });
+  [document.body, document.getElementById('viewport')].forEach(unscroll);
+  window.addEventListener('scroll', ()=>{ if(scrollX || scrollY) scrollTo(0, 0); });
+  fit();
+})();
+</script>
+</body>
+</html>
