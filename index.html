@@ -175,7 +175,7 @@ body{
 /* right-hand page = chat */
 .book .page{position:absolute;inset:0;display:flex;flex-direction:column;border-radius:2px 8px 8px 2px;overflow:hidden;
   background:var(--noise), repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)), var(--paper);
-  box-shadow:inset 26px 0 30px -18px rgba(34,34,34,.30), 3px 0 0 #f1ede0, 6px 0 0 #e9e4d4}
+  box-shadow:3px 0 0 #f1ede0, 6px 0 0 #e9e4d4}
 .book .cover{position:absolute;inset:0;z-index:3;transform-origin:left center;transform-style:preserve-3d;transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease, z-index 0s 0s}
 .book.open .cover{z-index:1;transition:transform .9s cubic-bezier(.4,0,.2,1), opacity .3s ease, z-index 0s .9s}
 .book.open .cover{transform:rotateY(-178deg)}
@@ -200,7 +200,7 @@ body{
 /* left-hand page (inside of the cover): plain paper */
 .book .inside{background:var(--cover);transform:rotateY(180deg);padding:10px 0 10px 10px}
 .book .inside::before{content:"";position:absolute;inset:10px 0 10px 10px;border-radius:8px 2px 2px 8px;
-  background:var(--noise), var(--paper);box-shadow:inset -26px 0 30px -18px rgba(34,34,34,.30), -3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
+  background:var(--noise), var(--paper);box-shadow:-3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
 
 /* chat contents fade in once the book is open */
 .chat{display:flex;flex-direction:column;flex:1;min-height:0;opacity:0;transform:translateY(8px);transition:opacity .35s ease, transform .35s ease}
@@ -316,8 +316,7 @@ body{
 .leaf.turned{transform:rotateY(-178deg)}
 .leaf .lf,.leaf .lb{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:2px 8px 8px 2px;
   background:var(--noise), repeating-linear-gradient(to bottom, transparent 0 calc(var(--line) - 1px), var(--rule) calc(var(--line) - 1px) var(--line)), var(--paper)}
-.leaf .lf{box-shadow:inset 26px 0 30px -18px rgba(34,34,34,.30)}
-.leaf .lb{transform:rotateY(180deg);border-radius:8px 2px 2px 8px;box-shadow:inset -26px 0 30px -18px rgba(34,34,34,.30)}
+.leaf .lb{transform:rotateY(180deg);border-radius:8px 2px 2px 8px}
 .leaf .lf .pno{right:28px}.leaf .lb .pno{left:28px}
 .page-nav{position:fixed;left:50%;bottom:max(14px, env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:12px;
   padding:6px 8px;border-radius:var(--radius-pill);background:var(--white);border:2px solid var(--ink);opacity:0;transition:opacity .3s ease}
