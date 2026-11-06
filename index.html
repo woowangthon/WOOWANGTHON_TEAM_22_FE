@@ -375,6 +375,79 @@ body{
 /* empty AI reply (no AI connected yet): shown as a muted note instead of an empty bubble */
 .msg.ai.pending{opacity:.55;font-size:14px}
 
+/* ===== sketchbook: after the chat ends, draw today's picture ===== */
+.sketch{position:fixed;inset:0;z-index:37;display:grid;place-items:center;overflow:auto;padding:28px 16px 16px;
+  background:rgba(34,34,34,.5);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;transition:opacity .3s ease}
+.sketch.show{opacity:1}
+/* kraft-board cover with a spiral binding across the top, white drawing sheet inside */
+.sketchbook{position:relative;width:min(880px, 100%);padding:26px 16px 16px;border:3px solid var(--ink);border-radius:14px;
+  background:var(--color-read);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(14px);transition:transform .3s ease}
+.sketch.show .sketchbook{transform:none}
+/* twin-wire spiral binding: each 28px step is a hole punched near the top of the sheet with a pair of metal wire loops
+   coming out of it, arching over the top edge of the board and disappearing behind it (ink outline, neutral metal, white glint).
+   Coordinates: the board's top edge sits at y=13 and the sheet starts at y=42 inside the 56px-tall strip */
+.sketchbook .rings{position:absolute;left:30px;right:30px;top:-16px;height:56px;pointer-events:none;
+  background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='56' viewBox='0 0 28 56'><ellipse cx='12.5' cy='48.5' rx='6' ry='3.2' fill='%23222222'/><g fill='none' stroke-linecap='round'><path d='M9.5 48 C6.5 34 5.5 10 10.5 4 C13.5 0 16.5 4 16.5 11' stroke='%23222222' stroke-width='4.2'/><path d='M9.5 48 C6.5 34 5.5 10 10.5 4 C13.5 0 16.5 4 16.5 11' stroke='%23a7a7a7' stroke-width='2.2'/><path d='M8.9 44 C6.3 32 5.4 12 9.8 5.2' stroke='%23ffffff' stroke-width='.8'/><path d='M14.5 48 C11.5 34 10.5 10 15.5 4 C18.5 0 21.5 4 21.5 11' stroke='%23222222' stroke-width='4.2'/><path d='M14.5 48 C11.5 34 10.5 10 15.5 4 C18.5 0 21.5 4 21.5 11' stroke='%23a7a7a7' stroke-width='2.2'/><path d='M13.9 44 C11.3 32 10.4 12 14.8 5.2' stroke='%23ffffff' stroke-width='.8'/></g></svg>") 0 0 / 28px 56px repeat-x}
+.sheet{display:flex;flex-direction:column;gap:12px;padding:20px 22px 18px;border-radius:4px;background:var(--noise), var(--white);
+  box-shadow:inset 0 2px 0 rgba(34,34,34,.08)}
+.sk-head h2{margin:0;font-size:24px;line-height:1.2;font-weight:600;letter-spacing:-.02em}
+.sk-head p{margin:4px 0 0;font-size:14px;line-height:1.5;opacity:.65}
+/* the 3:2 sheet gets whatever height is left after the title, tools and weather rows (~430px), so the sketchbook never scrolls */
+.sk-canvas{display:block;width:min(100%, max(240px, calc((100vh - 430px) * 1.5)));aspect-ratio:3 / 2;margin:0 auto;touch-action:none;cursor:crosshair;
+  background:var(--white);border:2px solid var(--ink);border-radius:8px}
+.sk-tools,.sk-meta{display:flex;flex-wrap:wrap;align-items:center;gap:10px}
+.sk-tools{justify-content:space-between}
+.sk-group{display:flex;flex-wrap:wrap;align-items:center;gap:8px}
+.sk-swatch{appearance:none;width:30px;height:30px;padding:0;border-radius:50%;border:2px solid var(--ink);cursor:pointer;background:var(--c)}
+.sk-swatch[aria-pressed="true"]{box-shadow:0 0 0 3px var(--white), 0 0 0 5.5px var(--ink)}
+.sk-swatch{width:20px;height:20px;border-width:1.5px}
+.sk-swatch[aria-pressed="true"]{box-shadow:0 0 0 2px var(--white), 0 0 0 4px var(--ink)}
+#skColors{display:flex;flex-wrap:wrap;gap:6px;max-width:410px}   /* 16 small swatches in one row (rainbow first, then everyday colours); wraps on phones */
+/* brush picker: a button showing the current brush's stroke, opening a list of brushes with stroke previews (like Paint's brush menu) */
+.sk-brush{position:relative}
+.sk-brush-btn{display:inline-flex;align-items:center;gap:8px;padding:5px 12px}
+.sk-brush-btn canvas{width:60px;height:22px;display:block}
+.sk-brush-menu{position:absolute;left:0;bottom:calc(100% + 8px);z-index:3;display:grid;grid-template-columns:repeat(2, minmax(0,1fr));gap:6px;
+  width:min(340px, 80vw);padding:10px;background:var(--white);border:2px solid var(--ink);border-radius:var(--radius-sm);box-shadow:0 14px 30px rgba(0,0,0,.18)}
+.sk-brush-item{appearance:none;display:flex;flex-direction:column;align-items:center;gap:4px;padding:6px 4px;border:2px solid transparent;border-radius:var(--radius-sm);
+  background:transparent;font:inherit;font-size:13px;font-weight:500;color:var(--ink);cursor:pointer}
+.sk-brush-item canvas{width:120px;max-width:100%;height:36px;display:block}
+.sk-brush-item:hover{background:var(--color-learn-3)}
+.sk-brush-item[aria-checked="true"]{border-color:var(--ink);background:var(--color-learn-3)}
+/* thickness: a draggable bar, with a dot showing the stroke at its real on-screen size */
+.sk-thick{gap:10px;font-size:14px;font-weight:600}
+.sk-thick input{width:150px;accent-color:var(--ink);cursor:pointer}
+.sk-thick-dot{display:grid;place-items:center;width:40px;height:40px}
+.sk-thick-dot i{display:block;border-radius:50%;background:var(--ink);max-width:40px;max-height:40px}
+.sk-thick output{min-width:2ch;font-size:13px;font-weight:500;font-variant-numeric:tabular-nums;opacity:.7}
+.sk-btn{appearance:none;font:inherit;font-size:14px;font-weight:500;color:var(--ink);padding:7px 14px;border:2px solid var(--ink);border-radius:var(--radius-pill);
+  background:var(--white);cursor:pointer;transition:background var(--ease)}
+.sk-btn:hover,.sk-btn[aria-pressed="true"]{background:var(--color-learn)}
+.sk-meta{justify-content:space-between;padding-top:10px;border-top:2px solid rgba(34,34,34,.12);font-size:14px;font-weight:600}
+.sk-weather{display:flex;align-items:center;gap:6px}
+.sk-weather .wx{appearance:none;border:0;background:transparent;padding:0;cursor:pointer;width:38px;height:38px}
+.sk-weather .wx svg{width:26px;height:26px}
+.sk-weather .wx[aria-checked="true"]{box-shadow:0 0 0 2.5px var(--color-connect)}
+.sk-meta .sk-done{margin-left:auto}   /* the finish button shares the weather/name row instead of taking its own */
+/* small phones: tighter frame, no subtitle, slimmer controls, so everything still fits on one screen */
+@media (max-width:520px){
+  .sketch{padding:22px 8px 8px}
+  .sketchbook{padding:22px 8px 8px}
+  .sheet{gap:8px;padding:12px 12px 12px}
+  .sk-head h2{font-size:20px}
+  .sk-head p{display:none}
+  .sk-tools,.sk-meta{gap:8px}
+  .sk-meta{padding-top:8px}
+  .sk-thick input{width:100px}
+  .sk-thick-dot{width:30px;height:30px}
+  .sk-btn{padding:5px 11px;font-size:13px}
+  .sk-weather .wx{width:32px;height:32px}
+  .sk-done{padding:9px 16px;font-size:14px}
+}
+.sk-done{appearance:none;border:0;font:inherit;font-size:15px;font-weight:600;color:var(--white);background:var(--ink);padding:11px 22px;border-radius:var(--radius-pill);cursor:pointer}
+.sk-done:hover{opacity:.88}
+.sketch button:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+
 /* ===== login / sign-up (UI only) ===== */
 .auth-btns{position:absolute;right:48px;top:44px;z-index:3;display:flex;gap:10px}
 .portrait .auth-btns{right:24px;top:34px}
@@ -512,6 +585,28 @@ body{
       <button type="submit" class="auth-submit">가입하기</button>
       <p class="auth-switch">이미 계정이 있나요? <button type="button" class="link" data-go="login">로그인</button></p>
     </form>
+  </div>
+</div>
+<div class="sketch" id="sketch" hidden>
+  <div class="sketchbook" role="dialog" aria-modal="true" aria-labelledby="sketchTitle">
+    <div class="rings" aria-hidden="true"></div>
+    <div class="sheet">
+      <div class="sk-head"><h2 id="sketchTitle">오늘의 그림 그리기</h2><p>오늘 이야기한 일을 그림으로 그려 보세요. 다 그리면 날씨를 고르고 그림일기를 완성해요.</p></div>
+      <canvas class="sk-canvas" id="skCanvas" width="1200" height="800" aria-label="그림을 그리는 칸"></canvas>
+      <div class="sk-tools">
+        <div class="sk-group" id="skColors" role="group" aria-label="색"></div>
+        <div class="sk-group sk-brush">
+          <button type="button" class="sk-btn sk-brush-btn" id="skBrushBtn" aria-haspopup="true" aria-expanded="false" aria-label="브러시 고르기"><canvas id="skBrushIcon" width="60" height="22" aria-hidden="true"></canvas><span id="skBrushName">브러시</span><span aria-hidden="true">▾</span></button>
+          <div class="sk-brush-menu" id="skBrushMenu" role="menu" aria-label="브러시" hidden></div>
+        </div>
+        <label class="sk-group sk-thick"><span>굵기</span><input type="range" id="skThick" min="1" max="60" value="12"><span class="sk-thick-dot" aria-hidden="true"><i id="skThickDot"></i></span><output id="skThickVal">12</output></label>
+        <div class="sk-group"><button type="button" class="sk-btn" id="skEraser" aria-pressed="false">지우개</button><button type="button" class="sk-btn" id="skUndo">되돌리기</button><button type="button" class="sk-btn" id="skReset">모두 지우기</button></div>
+      </div>
+      <div class="sk-meta">
+        <div class="sk-weather" id="skWeather" role="radiogroup" aria-label="날씨"><span>날씨</span></div>
+        <button type="button" class="sk-done" id="skDone">그림일기 완성</button>
+      </div>
+    </div>
   </div>
 </div>
 <div class="log" id="chatLog" hidden>
@@ -803,7 +898,7 @@ body{
     }
     if(!entries.length){
       const p = document.createElement('p'); p.className = 'empty-state';
-      p.innerHTML = '오늘 있었던 일이나 궁금한 것을<br>적어 보세요.<br>다 쓰면 “대화 끝내기”를 눌러 일기를 완성해요.';
+      p.innerHTML = '오늘 있었던 일이나 궁금한 것을<br>적어 보세요.<br>다 쓰면 “대화 끝내기”를 눌러 그림을 그려요.';
       messages.appendChild(p);
     }
     entries.forEach(en => { if(en.kind !== 'image') addMsg(en.text, en.who); });
@@ -823,17 +918,11 @@ body{
   input.addEventListener('keydown', e=>{
     if(e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); composer.requestSubmit(); }
   });
-  // ---- 대화 끝내기: 글을 쓴 책이면 작성 완료로 표시하고, 책을 덮은 뒤 달력을 열어 오늘의 그림일기를 펼침 ----
+  // ---- 대화 끝내기: 쓴 글이 있으면 책을 덮고 스케치북을 펼쳐 오늘의 그림을 그림 (없으면 달력으로) ----
   function endChat(){
     if(bookMode !== 'chat' || !bookShown()) return;
     const wrote = current.entries.some(en => en.who === 'user' && en.text);
-    if(wrote){ current.done = true; saveDay(TODAY_KEY, {books:[current]}); refreshCell(now.getDate()); }
-    closeBook(()=>{
-      openCalendarPage(shelf);
-      if(!wrote) return;                       // 쓴 글이 없으면 달력까지만
-      toast('그림일기를 완성했어요');
-      setTimeout(()=>{ if(todayDate && cells[todayDate] && !calpage.hidden) openDiary(todayDate, cells[todayDate]); }, reduce ? 0 : 800);   // 달력이 다 펼쳐진 뒤 책 열기
-    });
+    closeBook(()=> wrote ? openSketch() : openCalendarPage(shelf));
   }
   // 대화 끝내기는 두 번 눌러야 끝남: 첫 번째는 확인 문구로 바뀌고, 3초 안에 다시 누르지 않으면 원래대로
   const endBtn = document.getElementById('endChat'); let endTimer;
@@ -863,6 +952,167 @@ body{
 
   // 그림·글자를 끌어서 옮기는 브라우저 기본 드래그를 막음 (입력칸 안에서 글을 고르는 것은 그대로)
   document.addEventListener('dragstart', e=>{ if(!e.target.closest || !e.target.closest('input, textarea')) e.preventDefault(); });
+
+  // ---- 스케치북: 대화를 끝내면 오늘의 그림을 그리고, 날씨를 골라 그림일기를 완성 ----
+  const sketch = document.getElementById('sketch'), skCanvas = document.getElementById('skCanvas'), skCtx = skCanvas.getContext('2d');
+  const skWeatherEl = document.getElementById('skWeather');
+  const SK_W = skCanvas.width, SK_H = skCanvas.height;
+  // 색: 첫 줄은 검정(밑그림용)과 무지개 일곱 빛깔의 원색, 둘째 줄은 그림 그릴 때 가장 많이 쓰는 기본 색 8가지
+  const SK_COLORS = [['#222222','검정'],['#e8231a','빨강'],['#ff7a00','주황'],['#ffd000','노랑'],['#18a142','초록'],['#1665e8','파랑'],['#24298f','남색'],['#8a2be2','보라'],
+                     ['#ffffff','흰색'],['#9e9e9e','회색'],['#8b5a2b','갈색'],['#ff8fb8','분홍'],['#7fd0ff','하늘색'],['#9be15d','연두'],['#ffd3b0','살구색'],['#c9a227','황토색']];
+  // 브러시: Windows 그림판의 브러시 종류를 참고 (layer = 한 번 긋는 동안 겹쳐도 진해지지 않게 따로 그린 뒤 투명도를 줘서 얹는 브러시)
+  const BRUSHES = {
+    brush:       {label:'브러시'},
+    calligraphy: {label:'서예 브러시'},
+    airbrush:    {label:'에어브러시'},
+    crayon:      {label:'크레용'},
+    marker:      {label:'마커', layer:.45},
+    pencil:      {label:'연필'},
+    watercolor:  {label:'수채화 브러시', layer:.35},
+  };
+  let skColor = SK_COLORS[0][0], skSize = 12, skBrush = 'brush', skErase = false, skUndo = [], skDrawing = false, skLast = null, skDirty = false, skWeather = null;
+  let skBase = null, skSpray = null;
+  const skLayer = document.createElement('canvas'); skLayer.width = SK_W; skLayer.height = SK_H; const skLayerCtx = skLayer.getContext('2d');
+
+  // 한 구간(a→b)을 브러시 모양대로 칠함. ctx는 그림판 또는 미리보기 캔버스
+  function paintSeg(ctx, brush, a, b, color, size){
+    ctx.save();
+    ctx.strokeStyle = ctx.fillStyle = color; ctx.lineCap = ctx.lineJoin = 'round';
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy), same = len < .01;
+    const line = w => { ctx.lineWidth = w; ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0] + (same ? .01 : 0), b[1]); ctx.stroke(); };
+    // 구간을 1~2px 간격으로 나눠 점을 찍는 브러시(크레용, 에어브러시)용
+    const along = (step, fn) => { const n = Math.max(1, Math.ceil(len / step)); for(let i = 0; i <= n; i++){ const t = i / n; fn(a[0] + dx * t, a[1] + dy * t); } };
+    switch(brush){
+      case 'pencil':                        // 연필: 가늘고 살짝 연하게
+        ctx.globalAlpha = .9; line(Math.max(1.5, size * .3)); break;
+      case 'calligraphy': {                 // 서예 브러시: 45도로 기운 납작한 붓끝 → 긋는 방향에 따라 굵기가 달라짐
+        const nx = Math.cos(Math.PI / 4) * size / 2, ny = -Math.sin(Math.PI / 4) * size / 2;
+        ctx.beginPath();
+        ctx.moveTo(a[0] + nx, a[1] + ny); ctx.lineTo(a[0] - nx, a[1] - ny); ctx.lineTo(b[0] - nx, b[1] - ny); ctx.lineTo(b[0] + nx, b[1] + ny);
+        ctx.closePath(); ctx.fill(); ctx.lineWidth = 1.5; ctx.stroke(); break;
+      }
+      case 'airbrush':                      // 에어브러시: 둥글게 흩뿌린 작은 점
+        spray(ctx, b, color, size); break;
+      case 'crayon':                        // 크레용: 거친 결이 남는 촘촘한 점
+        ctx.globalAlpha = .55;
+        along(1.5, (x, y)=>{ for(let k = 0; k < size * .9; k++){ const r = size / 2 * Math.sqrt(Math.random()), t = Math.random() * Math.PI * 2; ctx.fillRect(x + Math.cos(t) * r, y + Math.sin(t) * r, 1.6, 1.6); } });
+        break;
+      case 'watercolor':                    // 수채화: 번진 가장자리 (투명도는 layer로)
+        ctx.shadowColor = color; ctx.shadowBlur = size * .6; line(size); break;
+      default:                              // 브러시, 마커: 둥근 붓
+        line(size);
+    }
+    ctx.restore();
+  }
+  function spray(ctx, p, color, size){
+    ctx.save(); ctx.fillStyle = color;
+    const r = size * 1.6;
+    for(let k = 0; k < size * 1.4; k++){ const d = r * Math.sqrt(Math.random()), t = Math.random() * Math.PI * 2; ctx.fillRect(p[0] + Math.cos(t) * d, p[1] + Math.sin(t) * d, 1.4, 1.4); }
+    ctx.restore();
+  }
+
+  // 도구 버튼 만들기: 색, 브러시, 굵기, 날씨
+  const skColorsEl = document.getElementById('skColors'), skEraser = document.getElementById('skEraser');
+  SK_COLORS.forEach(([c, label], i)=>{
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'sk-swatch'; b.style.setProperty('--c', c);
+    b.setAttribute('aria-label', label); b.title = label; b.setAttribute('aria-pressed', String(i === 0));
+    b.addEventListener('click', ()=>{ skColor = c; skErase = false; skPress(skColorsEl, b); skEraser.setAttribute('aria-pressed', 'false'); });
+    skColorsEl.appendChild(b);
+  });
+  // 브러시 고르기 (그림판처럼 브러시 모양 미리보기가 있는 목록)
+  const skBrushBtn = document.getElementById('skBrushBtn'), skBrushMenu = document.getElementById('skBrushMenu');
+  function drawPreview(cv, brush){
+    const ctx = cv.getContext('2d'); ctx.clearRect(0, 0, cv.width, cv.height);
+    const pts = []; for(let i = 0; i <= 30; i++) pts.push([6 + i * (cv.width - 12) / 30, cv.height / 2 + Math.sin(i / 30 * Math.PI * 2) * cv.height * .22]);
+    const lay = BRUSHES[brush].layer;
+    const tmp = lay ? Object.assign(document.createElement('canvas'), {width: cv.width, height: cv.height}) : null;
+    const target = tmp ? tmp.getContext('2d') : ctx;
+    for(let i = 1; i < pts.length; i++) paintSeg(target, brush, pts[i - 1], pts[i], '#222222', Math.max(3, cv.height * .2));
+    if(tmp){ ctx.globalAlpha = lay; ctx.drawImage(tmp, 0, 0); ctx.globalAlpha = 1; }
+  }
+  Object.entries(BRUSHES).forEach(([k, br])=>{
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'sk-brush-item'; b.setAttribute('role', 'menuitemradio');
+    b.setAttribute('aria-checked', String(k === skBrush)); b.dataset.brush = k;
+    const cv = document.createElement('canvas'); cv.width = 120; cv.height = 36; cv.setAttribute('aria-hidden', 'true'); drawPreview(cv, k);
+    const s = document.createElement('span'); s.textContent = br.label;
+    b.append(cv, s);
+    b.addEventListener('click', ()=>{ setBrush(k); toggleBrushMenu(false); skBrushBtn.focus({preventScroll:true}); });
+    skBrushMenu.appendChild(b);
+  });
+  function setBrush(k){
+    skBrush = k; skErase = false; skEraser.setAttribute('aria-pressed', 'false');
+    skBrushMenu.querySelectorAll('.sk-brush-item').forEach(x => x.setAttribute('aria-checked', String(x.dataset.brush === k)));
+    document.getElementById('skBrushName').textContent = BRUSHES[k].label;
+    drawPreview(document.getElementById('skBrushIcon'), k);
+  }
+  function toggleBrushMenu(open){ skBrushMenu.hidden = !open; skBrushBtn.setAttribute('aria-expanded', String(open)); }
+  skBrushBtn.addEventListener('click', e=>{ e.stopPropagation(); toggleBrushMenu(skBrushMenu.hidden); });
+  sketch.addEventListener('click', e=>{ if(!skBrushMenu.hidden && !skBrushMenu.contains(e.target)) toggleBrushMenu(false); });   // 목록 바깥을 누르면 닫힘
+  setBrush(skBrush);
+  // 굵기: 드래그하는 막대. 옆의 점은 그림판에 실제로 보이는 굵기
+  const skThick = document.getElementById('skThick'), skThickDot = document.getElementById('skThickDot'), skThickVal = document.getElementById('skThickVal');
+  function showThick(){
+    skSize = +skThick.value; skThickVal.textContent = skSize;
+    const shown = Math.max(2, skSize * (skCanvas.getBoundingClientRect().width || SK_W) / SK_W);
+    skThickDot.style.width = skThickDot.style.height = shown + 'px';
+  }
+  skThick.addEventListener('input', showThick);
+  Object.entries(WEATHER).forEach(([k, w])=>{
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'wx'; b.dataset.w = k;
+    b.setAttribute('role', 'radio'); b.setAttribute('aria-checked', 'false'); b.setAttribute('aria-label', w.label); b.title = w.label; b.innerHTML = w.svg;
+    b.addEventListener('click', ()=>{ skWeather = k; skWeatherEl.querySelectorAll('.wx').forEach(x => x.setAttribute('aria-checked', String(x === b))); });
+    skWeatherEl.appendChild(b);
+  });
+  function skPress(group, btn){ group.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === btn))); }
+  skEraser.addEventListener('click', ()=>{ skErase = !skErase; skEraser.setAttribute('aria-pressed', String(skErase)); });
+
+  // 그리기
+  function skClear(){ skCtx.fillStyle = '#ffffff'; skCtx.fillRect(0, 0, SK_W, SK_H); }
+  function skPos(e){ const r = skCanvas.getBoundingClientRect(); return [(e.clientX - r.left) * SK_W / r.width, (e.clientY - r.top) * SK_H / r.height]; }
+  const layered = () => !skErase && BRUSHES[skBrush].layer;
+  function skStroke(a, b){
+    if(skErase){ paintSeg(skCtx, 'brush', a, b, '#ffffff', skSize * 2); return; }          // 지우개: 굵은 흰 붓
+    if(!layered()){ paintSeg(skCtx, skBrush, a, b, skColor, skSize); return; }
+    // 마커·수채화: 이번 획을 따로 진하게 그린 뒤, 획을 시작하기 전 그림 위에 투명하게 얹음
+    paintSeg(skLayerCtx, skBrush, a, b, skColor, skSize);
+    skCtx.putImageData(skBase, 0, 0);
+    skCtx.globalAlpha = BRUSHES[skBrush].layer; skCtx.drawImage(skLayer, 0, 0); skCtx.globalAlpha = 1;
+  }
+  function skSnapshot(){ skUndo.push(skCtx.getImageData(0, 0, SK_W, SK_H)); if(skUndo.length > 20) skUndo.shift(); }
+  function skEnd(){ skDrawing = false; clearInterval(skSpray); skSpray = null; }
+  skCanvas.addEventListener('pointerdown', e=>{
+    e.preventDefault(); skCanvas.setPointerCapture(e.pointerId); toggleBrushMenu(false);
+    skSnapshot(); skBase = skUndo[skUndo.length - 1]; skLayerCtx.clearRect(0, 0, SK_W, SK_H);
+    skDrawing = true; skDirty = true; skLast = skPos(e); skStroke(skLast, skLast);
+    if(skBrush === 'airbrush' && !skErase) skSpray = setInterval(()=> spray(skCtx, skLast, skColor, skSize), 40);   // 가만히 누르고 있어도 계속 뿌려짐
+  });
+  skCanvas.addEventListener('pointermove', e=>{ if(!skDrawing) return; const p = skPos(e); skStroke(skLast, p); skLast = p; });
+  ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => skCanvas.addEventListener(t, skEnd));
+  document.getElementById('skUndo').addEventListener('click', ()=>{ if(skUndo.length) skCtx.putImageData(skUndo.pop(), 0, 0); skDirty = skUndo.length > 0; });
+  document.getElementById('skReset').addEventListener('click', ()=>{ skSnapshot(); skClear(); });
+  // 열기 / 완성
+  function openSketch(){
+    skClear(); skUndo = []; skDirty = false; skErase = false; skEraser.setAttribute('aria-pressed', 'false');
+    skWeather = null;
+    skWeatherEl.querySelectorAll('.wx').forEach(x => x.setAttribute('aria-checked', 'false'));
+    sketch.hidden = false;
+    toggleBrushMenu(false);
+    requestAnimationFrame(()=>{ sketch.classList.add('show'); showThick(); skColorsEl.querySelector('[aria-pressed="true"]').focus({preventScroll:true}); });
+  }
+  function finishSketch(){
+    current.drawing = skDirty ? skCanvas.toDataURL('image/jpeg', .85) : null;
+    current.weather = skWeather;
+    current.done = true;                    // 이 순간 작성 완료 → 이때부터 달력에서 확인 가능
+    if(!saveDay(TODAY_KEY, {books:[current]})){ current.drawing = null; saveDay(TODAY_KEY, {books:[current]}); toast('그림이 커서 그림 없이 저장했어요'); }
+    refreshCell(now.getDate());
+    sketch.classList.remove('show');
+    setTimeout(()=>{
+      sketch.hidden = true;
+      openCalendarPage(shelf); toast('그림일기를 완성했어요');
+      setTimeout(()=>{ if(todayDate && cells[todayDate] && !calpage.hidden) openDiary(todayDate, cells[todayDate]); }, reduce ? 0 : 800);   // 달력이 다 펼쳐진 뒤 오늘의 그림일기 펼치기
+    }, reduce ? 0 : 300);
+  }
+  document.getElementById('skDone').addEventListener('click', finishSketch);
 
   // ---- 달력 페이지 (방의 달력이 확대됨) ----
   const calpage = document.getElementById('calpage'), bigcal = document.getElementById('bigcal'), bigGrid = document.getElementById('bigGrid');
@@ -991,6 +1241,7 @@ body{
     if(e.key !== 'Escape') return;
     if(!auth.hidden) closeAuth();                  // 로그인 창이 열려 있으면 그것부터
     else if(!logEl.hidden) closeLog();             // 대화 기록 창이 열려 있으면 그것부터
+    else if(!sketch.hidden) return;                // 스케치북은 "그림일기 완성"으로만 닫음 (그리던 그림이 날아가지 않게)
     else if(bookShown()) closeBook();               // 책이 열려 있으면 책부터 닫기
     else if(!calpage.hidden) closeCalendarPage();
   });
