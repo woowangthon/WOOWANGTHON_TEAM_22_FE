@@ -673,8 +673,15 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     SUPABASE_PUBLISHABLE_KEY: '',
   }, window.APP_CONFIG || {});
   const API_BASE = String(CFG.API_BASE || '').replace(/\/+$/, '');
-  const AI_TIMEOUT = 150000;    // BE의 AI 요청 제한(135초)보다 조금 길게
-  const SAVE_TIMEOUT = 60000;
+  // 제한시간(ms): 인증 세션 조회·갱신 + 요청 + 응답 본문 읽기 전체. config.js의 TIMEOUT_MS로 덮어쓰기 가능
+  const TMO = Object.assign({
+    request: 60000,     // 일반 조회 (Render 무료 서버 기동 시간 포함)
+    ai: 150000,         // AI 요청: BE의 AI 요청 제한(135초)보다 조금 길게
+    save: 90000,        // 일기 확정·그림 업로드
+    auth: 20000,        // 로그인·회원가입·로그아웃
+    slow: 8000,         // 이 시간이 지나면 서버 준비 중 안내
+  }, CFG.TIMEOUT_MS || {});
+  const AI_TIMEOUT = TMO.ai, SAVE_TIMEOUT = TMO.save;
   const MAX_DRAWING = 10 * 1024 * 1024;   // BE 그림 업로드 상한 10 MiB
 
   const WD = ['일','월','화','수','목','금','토'];
@@ -708,6 +715,26 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   class ApiError extends Error {
     constructor(status, code, message, retryable){ super(message || code); this.status = status; this.code = code; this.retryable = retryable; }
   }
+  // 마감 시각까지만 기다림: 넘으면 요청 중단 후 status 0 오류 (code: 단계별 TIMEOUT / AUTH_TIMEOUT)
+  function untilDeadline(p, deadline, code, ctl){
+    const pr = Promise.resolve(p); pr.catch(()=>{});   // 마감 뒤 늦은 실패는 무시
+    const left = deadline - Date.now();
+    if(left <= 0){ ctl && ctl.abort(); return Promise.reject(new ApiError(0, code, '', true)); }
+    let t;
+    return Promise.race([pr, new Promise((_, rej)=>{ t = setTimeout(()=>{ rej(new ApiError(0, code, '', true)); ctl && ctl.abort(); }, left); })])   // 시간 초과 먼저 확정 후 중단
+      .finally(()=> clearTimeout(t));
+  }
+  // 서버 준비 상태: Render 무료 서버는 잠들어 있으면 첫 응답까지 오래 걸림
+  let serverReady = false;
+  function wakeServer(){
+    if(!API_BASE) return;
+    const ctl = new AbortController(), t = setTimeout(()=> ctl.abort(), TMO.request);
+    fetch(API_BASE + '/health', {cache:'no-store', signal:ctl.signal})
+      .then(r => { if(r.ok) serverReady = true; }).catch(()=>{}).finally(()=> clearTimeout(t));
+  }
+  function slowNotice(){
+    toast(serverReady ? '응답 대기 중 · 잠시만 기다려 주세요' : '서버 준비 중 · 최대 1분 정도 걸려요', 6000);
+  }
   async function accessToken(){
     if(!sb) return null;
     const {data} = await sb.auth.getSession();
@@ -715,36 +742,54 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   }
   // 모든 요청에 Authorization: Bearer <access token>. 401이면 토큰을 한 번 갱신해 같은 요청(같은 요청 ID)으로 다시 보냄
   // (BE는 인증을 세션 예약보다 먼저 확인하므로 같은 ID 재전송이 안전함)
-  async function api(path, {method = 'GET', json, form, headers = {}, timeout = 30000} = {}){
-    const send = async tk => {
+  // 제한시간은 세션 조회 → 요청 → (401이면 갱신·재요청) → 응답 본문 읽기 전체에 한 번만 적용. 자동 재시도 없음
+  async function api(path, {method = 'GET', json, form, headers = {}, timeout = TMO.request} = {}){
+    const deadline = Date.now() + timeout, ctl = new AbortController();
+    const slow = setTimeout(slowNotice, TMO.slow);
+    const send = tk => {
       const h = Object.assign({Authorization: 'Bearer ' + tk}, headers);
       let body;
       if(json !== undefined){ h['Content-Type'] = 'application/json'; body = JSON.stringify(json); }
       else if(form) body = form;               // FormData: Content-Type(boundary)은 브라우저가 지정
-      const ctl = new AbortController(), t = setTimeout(()=> ctl.abort(), timeout);
-      try{ return await fetch(API_BASE + path, {method, headers:h, body, signal:ctl.signal, cache:'no-store'}); }
-      catch(e){ throw new ApiError(0, e.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK', '', true); }
-      finally{ clearTimeout(t); }
+      const req = fetch(API_BASE + path, {method, headers:h, body, signal:ctl.signal, cache:'no-store'})
+        .catch(e => { throw new ApiError(0, e.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK', '', true); });
+      return untilDeadline(req, deadline, 'TIMEOUT', ctl);
     };
-    const tk = await accessToken();
-    if(!tk) throw new ApiError(401, 'NO_SESSION', '', false);
-    let res = await send(tk);
-    if(res.status === 401 && sb){
-      const {data} = await sb.auth.refreshSession();
-      if(data && data.session) res = await send(data.session.access_token);
+    try{
+      const tk = await untilDeadline(accessToken(), deadline, 'AUTH_TIMEOUT');
+      if(!tk) throw new ApiError(401, 'NO_SESSION', '', false);
+      let res = await send(tk);
+      if(res.status === 401 && sb){
+        const {data} = await untilDeadline(sb.auth.refreshSession(), deadline, 'AUTH_TIMEOUT');
+        if(data && data.session) res = await send(data.session.access_token);
+      }
+      serverReady = true;                      // 응답 헤더 도착 = 서버 깨어 있음
+      let data = null, bad = false;
+      try{ data = await untilDeadline(res.json(), deadline, 'TIMEOUT', ctl); }   // 본문 읽기도 제한시간 안
+      catch(e){
+        if(e instanceof ApiError) throw e;
+        if(e && e.name === 'AbortError') throw new ApiError(0, 'TIMEOUT', '', true);
+        bad = true;
+      }
+      if(!res.ok){
+        const er = (data && data.error) || {};
+        throw new ApiError(res.status, er.code || 'HTTP_' + res.status, er.message || '', !!er.retryable);
+      }
+      if(bad || data == null) throw new ApiError(res.status, 'INVALID_RESPONSE', '', true);   // 결과 불명: 같은 ID로만 재시도
+      return data;
+    }catch(e){
+      throw e instanceof ApiError ? e : new ApiError(0, 'NETWORK', '', true);
+    }finally{
+      clearTimeout(slow);
     }
-    let data = null; try{ data = await res.json(); }catch(e){}
-    if(!res.ok){
-      const er = (data && data.error) || {};
-      throw new ApiError(res.status, er.code || 'HTTP_' + res.status, er.message || '', !!er.retryable);
-    }
-    return data;
   }
   // 오류를 짧은 문구로
   function errText(e, fallback){
     const c = (e && e.code) || '';
-    if(c === 'NETWORK') return '서버 연결 실패';
-    if(c === 'TIMEOUT') return '응답 지연';
+    if(c === 'NETWORK') return serverReady ? '서버 연결 실패' : '서버 연결 실패 · 잠시 후 다시 시도';
+    if(c === 'TIMEOUT') return serverReady ? '응답 시간 초과' : '서버 준비 중 · 잠시 후 다시 시도';
+    if(c === 'AUTH_TIMEOUT') return '인증 응답 지연';
+    if(c === 'INVALID_RESPONSE') return '응답 형식 오류';
     if(e.status === 401 || e.status === 403) return '인증 실패';
     const known = {
       SESSION_NOT_FOUND:'세션 없음', DIARY_NOT_FOUND:'일기 없음', DIARY_DRAFT_NOT_FOUND:'초안 없음',
@@ -1762,6 +1807,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   // ---- 로그인 / 회원가입 (Supabase Auth) ----
   // 성공하면 {ok:true, message?}, 실패하면 {ok:false, message:'…'}
   function authErrMsg(e){
+    if(e && e.code === 'AUTH_TIMEOUT') return '인증 응답 지연 · 다시 시도해 주세요.';
     const m = (e && e.message) || '';
     if(/invalid login credentials/i.test(m)) return '이메일 또는 비밀번호가 맞지 않아요.';
     if(/email not confirmed/i.test(m)) return '이메일 인증 후 로그인해 주세요.';
@@ -1771,14 +1817,15 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     if(/fetch|network/i.test(m)) return '서버 연결 실패';
     return '인증 실패';
   }
+  const authCall = p => untilDeadline(p, Date.now() + TMO.auth, 'AUTH_TIMEOUT');   // 인증 서버 대기 제한
   async function login(email, password){
     if(!sb) return {ok:false, message:NO_AUTH_MSG};
-    const {error} = await sb.auth.signInWithPassword({email, password});
+    const {error} = await authCall(sb.auth.signInWithPassword({email, password}));
     return error ? {ok:false, message:authErrMsg(error)} : {ok:true};
   }
   async function signup(name, email, password){
     if(!sb) return {ok:false, message:NO_AUTH_MSG};
-    const {data, error} = await sb.auth.signUp({email, password, options:{data:{name}}});
+    const {data, error} = await authCall(sb.auth.signUp({email, password, options:{data:{name}}}));
     if(error) return {ok:false, message:authErrMsg(error)};
     // 이메일 인증을 켠 프로젝트는 세션 없이 가입만 됨
     return data && data.session ? {ok:true, message:'가입이 완료됐어요.', session:true} : {ok:true, message:'가입 완료. 이메일 인증 후 로그인해 주세요.'};
@@ -1803,7 +1850,11 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   function requireLogin(){ toast('로그인이 필요해요'); openAuth('login', shelf); }
   document.getElementById('openLogin').addEventListener('click', e=> openAuth('login', e.currentTarget));
   document.getElementById('openSignup').addEventListener('click', e=> openAuth('signup', e.currentTarget));
-  document.getElementById('logoutBtn').addEventListener('click', async ()=>{ if(sb) await sb.auth.signOut(); setUser(null); toast('로그아웃했어요'); });
+  document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+    let ok = true;
+    if(sb){ try{ await authCall(sb.auth.signOut()); }catch(e){ ok = false; } }
+    setUser(null); toast(ok ? '로그아웃했어요' : '인증 응답 지연 · 이 화면에서만 로그아웃');
+  });
   tabLogin.addEventListener('click', ()=> showTab('login'));
   tabSignup.addEventListener('click', ()=> showTab('signup'));
   auth.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', ()=> showTab(b.dataset.go)));
@@ -1877,9 +1928,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 
   // ---- 알림 ----
   const toastEl = document.getElementById('toast'); let tt;
-  function toast(msg){
+  function toast(msg, ms = 2200){
     toastEl.textContent = msg; toastEl.classList.remove('hide');
-    clearTimeout(tt); tt = setTimeout(()=>toastEl.classList.add('hide'), 2200);
+    clearTimeout(tt); tt = setTimeout(()=>toastEl.classList.add('hide'), ms);
   }
 
   // ---- 화면 크기에 맞추기 (스크롤 없음) ----
@@ -1899,6 +1950,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   fit();
   renderHome();
   updateShelf();
+  wakeServer();   // 잠든 서버를 미리 깨움 (공개 /health, 인증 없음)
   if(!sb) console.warn('Supabase 설정이 없어 로그인할 수 없습니다. config.js를 확인하세요.');
 })();
 </script>

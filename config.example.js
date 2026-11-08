@@ -6,4 +6,6 @@ window.APP_CONFIG = {
   // Supabase 프로젝트 주소와 Publishable key (sb_publishable_…)
   SUPABASE_URL: 'https://nnbmxtiouvsuszretahg.supabase.co',
   SUPABASE_PUBLISHABLE_KEY: '',
+  // (선택) 제한시간(ms). 인증 세션 조회·요청·응답 본문 읽기 전체 기준. 생략하면 기본값 사용
+  // TIMEOUT_MS: {request: 60000, ai: 150000, save: 90000, auth: 20000, slow: 8000},
 };
