@@ -157,10 +157,11 @@ body{
 /* credit + toast */
 .credit{position:absolute;right:24px;bottom:16px;margin:0;font-size:10px;font-weight:500;line-height:1.3;color:var(--ink);opacity:.6}
 .portrait .credit{right:12px;font-size:9px}
-.toast{position:absolute;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,0);
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom, 0px));transform:translate(-50%,0);
   background:var(--ink);color:var(--white);font-size:15px;font-weight:500;line-height:1.4;padding:10px 20px;border-radius:var(--radius-pill);
   white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;transition:opacity var(--ease),transform var(--ease);z-index:40}
 .toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
+body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0px))}   /* keep clear of the diary page nav */
 
 /* ===== reader: the book opens and the chat lives on its right-hand page ===== */
 :root{ --paper:#fffdf6; --rule:rgba(180,215,248,.45); --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .4  0 0 0 .09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); --line:34px }
@@ -367,10 +368,35 @@ body{
   .leaf.turned{opacity:0}
 }
 
-/* delete the open diary (asks once more before deleting) */
-.page-nav .del{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;border-left:0;margin-left:4px}
-.page-nav .del.armed{background:var(--color-connect);color:var(--white)}
-.page-nav .del[hidden]{display:none}
+/* review the AI draft before saving: redraw / save buttons in the page nav */
+.page-nav .act{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;white-space:nowrap}
+.page-nav .act.solid{background:var(--ink);color:var(--white)}
+.page-nav .act.solid:hover:not(:disabled){background:var(--ink);opacity:.85}
+.page-nav .act[hidden],.page-nav .log-btn[hidden]{display:none}
+@media (max-width:420px){ .page-nav{gap:4px} .page-nav .act,.page-nav .log-btn{padding:0 10px} }
+.dp1-grid.muted{opacity:.55}
+
+/* chat: message being sent, failed message (retry with the same request id), notes */
+.msg.user.sending{opacity:.6}
+.msg.user.failed{background:var(--white);color:var(--ink);border:2px dashed var(--color-connect)}
+.msg-fail,.chat-note{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font-size:13px;font-weight:500}
+.msg-fail{align-self:flex-end}
+.chat-note{align-self:center;justify-content:center;text-align:center}
+.msg-fail button,.chat-note button{appearance:none;border:2px solid var(--ink);background:var(--white);color:var(--ink);font:inherit;font-size:13px;font-weight:500;
+  padding:4px 12px;border-radius:var(--radius-pill);cursor:pointer}
+.msg-fail button:hover,.chat-note button:hover{background:var(--color-learn)}
+.msg-fail button:focus-visible,.chat-note button:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.end-chat:disabled,.send:disabled{cursor:default}
+
+/* calendar: month navigation and loading */
+.cal-nav{position:absolute;top:19%;z-index:1;width:8.5cqw;height:8.5cqw;padding:0;display:grid;place-items:center;appearance:none;
+  border:.6cqw solid var(--ink);border-radius:50%;background:var(--white);color:var(--ink);font:inherit;font-size:5cqw;line-height:1;cursor:pointer}
+.cal-nav.prev{left:14%}
+.cal-nav.next{right:14%}
+.cal-nav:hover{background:var(--color-learn)}
+.cal-nav:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.bigcal.loading .cal-grid{opacity:.55}
+.cell.loading{opacity:.5}
 
 /* empty AI reply (no AI connected yet): shown as a muted note instead of an empty bubble */
 .msg.ai.pending{opacity:.55;font-size:14px}
@@ -457,6 +483,9 @@ body{
 .auth-btn.solid{background:var(--ink);color:var(--white)}
 .auth-btn.solid:hover{background:var(--ink);opacity:.88}
 .auth-btn:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.auth-btn[hidden],.auth-name[hidden]{display:none}
+.auth-name{align-self:center;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:600}
+.portrait .auth-name{max-width:120px}
 .auth{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.5);backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;transition:opacity .3s ease}
 .auth.show{opacity:1}
 .auth-card{width:min(420px, 100%);max-height:100%;overflow:auto;border-radius:6px;padding:10px 30px 28px;
@@ -511,14 +540,14 @@ body{
     <div class="cshadow cs-sofa" aria-hidden="true"></div>
     <div class="cshadow cs-shelf" aria-hidden="true"></div>
     <h1 class="logo">오늘, <span>그리고</span></h1>
-    <div class="auth-btns"><button type="button" class="auth-btn" id="openLogin">로그인</button><button type="button" class="auth-btn solid" id="openSignup">회원가입</button></div>
+    <div class="auth-btns"><span class="auth-name" id="authName" hidden></span><button type="button" class="auth-btn" id="openLogin">로그인</button><button type="button" class="auth-btn solid" id="openSignup">회원가입</button><button type="button" class="auth-btn" id="logoutBtn" hidden>로그아웃</button></div>
 
     <div class="asset window" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.713v42.455m-21.179-21.21h42.562"/><rect width="42.775" height="42.775" x="14.513" y="14.613" style="fill:var(--color-jobs-3)" rx=".784"/><path fill="#fff" opacity=".85" d="m14.535 26.666l12.053-12.053H55.23L14.514 55.477z"/><path style="fill:var(--color-read)" d="M60.94 62H11.018a1.06 1.06 0 0 1-1.06-1.06V11.018a1.06 1.06 0 0 1 1.06-1.06H60.94a1.06 1.06 0 0 1 1.06 1.06V60.94A1.06 1.06 0 0 1 60.94 62m-44.367-5.612h38.655a1.06 1.06 0 0 0 1.06-1.06V16.672a1.06 1.06 0 0 0-1.06-1.06H16.573a1.06 1.06 0 0 0-1.06 1.06v38.656a1.06 1.06 0 0 0 1.06 1.06"/><path fill="none" stroke="#c0ab3c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.613v42.774M14.513 35.958h42.775"/><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M61 61H10.958m0-3.832v-46.21H61v46.21"/></svg></div>
     <div class="asset clock" role="img" aria-label="벽시계" id="clock"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M12 22.543c5.821 0 10.54-4.72 10.54-10.542S17.822 1.459 12 1.459c-5.823 0-10.542 4.72-10.542 10.542s4.72 10.542 10.541 10.542"/><path style="fill:var(--white)" d="M4.545 19.455A10.542 10.542 0 0 1 19.453 4.547z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M12 22.543c5.821 0 10.54-4.72 10.54-10.542S17.822 1.459 12 1.459c-5.823 0-10.542 4.72-10.542 10.542s4.72 10.542 10.541 10.542"/><path id="minHand" stroke="#222222" stroke-linecap="round" d="M12 12V4.6"/><path id="secHand" stroke="#222222" stroke-linecap="round" d="M12 13.6V3.6"/><path id="hourHand" stroke="#222222" stroke-linecap="round" d="M12 12V7.4"/><circle cx="12" cy="12" r=".9" style="fill:var(--ink)"/></g></svg></div>
 
-    <section class="asset calendar" id="homeCal" role="button" tabindex="0" aria-label="일기 확인: 2026년 11월 달력 열기">
+    <section class="asset calendar" id="homeCal" role="button" tabindex="0" aria-label="일기 확인: 달력 열기">
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-learn)" d="M1.459 7.875V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v3.667z"/><path style="fill:var(--color-learn-3)" d="M1.459 5.583V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v1.375z"/><path style="fill:var(--white)" d="M1.459 7.875h21.083v13.75a.917.917 0 0 1-.917.917H2.375a.917.917 0 0 1-.916-.917z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M21.625 3.293H2.375a.917.917 0 0 0-.916.916v17.417c0 .506.41.917.916.917h19.25c.506 0 .917-.41.917-.917V4.209a.917.917 0 0 0-.917-.916M6.042 1.46v4.583M17.959 1.46v4.583m-16.5 1.833h21.083"/></g></svg>
-      <div class="cal-head" aria-hidden="true"><b>11</b><small>NOV<br>2026</small></div>
+      <div class="cal-head" id="homeHead" aria-hidden="true"></div>
       <div class="cal-grid" id="calGrid"></div>
       <span class="hint" aria-hidden="true">일기 확인</span>
     </section>
@@ -530,11 +559,10 @@ body{
 
     <p class="credit">일러스트: OpenMoji (CC BY-SA 4.0), Streamline (CC BY 4.0), Fluent Emoji (MIT)</p>
   </div>
-  <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 </div>
 
 <div class="reader" id="reader" hidden>
-  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="log-btn" id="logBtn">대화 기록 보기</button><button type="button" class="del" id="delBook">이 책 지우기</button></nav>
+  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="log-btn" id="logBtn">대화 기록 보기</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button></nav>
   <div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
     <div class="back-cover" aria-hidden="true"></div>
     <div class="page">
@@ -622,69 +650,160 @@ body{
 <div class="calpage" id="calpage" hidden>
   <section class="bigcal" id="bigcal" aria-labelledby="bigcalTitle">
     <svg preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-learn)" d="M1.459 7.875V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v3.667z"/><path style="fill:var(--color-learn-3)" d="M1.459 5.583V4.208a.917.917 0 0 1 .916-.916h19.25a.916.916 0 0 1 .917.916v1.375z"/><path style="fill:var(--white)" d="M1.459 7.875h21.083v13.75a.917.917 0 0 1-.917.917H2.375a.917.917 0 0 1-.916-.917z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M21.625 3.293H2.375a.917.917 0 0 0-.916.916v17.417c0 .506.41.917.916.917h19.25c.506 0 .917-.41.917-.917V4.209a.917.917 0 0 0-.917-.916M6.042 1.46v4.583M17.959 1.46v4.583m-16.5 1.833h21.083"/></g></svg>
-    <h2 class="sr-only" id="bigcalTitle">2026년 11월</h2>
-    <div class="cal-head" aria-hidden="true"><b>11</b><small>NOV<br>2026</small></div>
+    <h2 class="sr-only" id="bigcalTitle"></h2>
+    <button type="button" class="cal-nav prev" id="calPrev" aria-label="이전 달">‹</button>
+    <div class="cal-head" id="bigHead" aria-hidden="true"></div>
+    <button type="button" class="cal-nav next" id="calNext" aria-label="다음 달">›</button>
     <div class="cal-grid" id="bigGrid"></div>
   </section>
 </div>
+<!-- 알림: 책·달력·로그인 창 위에도 보이도록 모든 창보다 위에 둠 -->
+<div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.4/dist/umd/supabase.js"></script>
+<!-- 환경별 설정 (config.example.js를 복사해 만듦, git 제외) -->
+<script src="config.js"></script>
 <script>
 (function(){
-  const YEAR = 2026, MONTH = 10; // 11월 (0부터 시작)
-  const now = new Date();
-  const todayDate = (now.getFullYear()===YEAR && now.getMonth()===MONTH) ? now.getDate() : null;
+  // ---- 설정: config.js(환경별, git 제외)에서 지정. 없으면 로컬 개발 기본값 ----
+  // FE에는 Publishable key만 둡니다. Secret key·AI 공급자 키는 넣지 않습니다.
+  const CFG = Object.assign({
+    API_BASE: 'http://127.0.0.1:8000',
+    SUPABASE_URL: 'https://nnbmxtiouvsuszretahg.supabase.co',
+    SUPABASE_PUBLISHABLE_KEY: '',
+  }, window.APP_CONFIG || {});
+  const API_BASE = String(CFG.API_BASE || '').replace(/\/+$/, '');
+  const AI_TIMEOUT = 150000;    // BE의 AI 요청 제한(135초)보다 조금 길게
+  const SAVE_TIMEOUT = 60000;
+  const MAX_DRAWING = 10 * 1024 * 1024;   // BE 그림 업로드 상한 10 MiB
+
   const WD = ['일','월','화','수','목','금','토'];
-
-  // ---- 달력 ----
-  const grid = document.getElementById('calGrid');
-  WD.forEach((d,i)=>{
-    const el = document.createElement('div');
-    el.className = 'cal-dow' + (i===0?' sun':'');
-    el.textContent = d; grid.appendChild(el);
-  });
-  const first = new Date(YEAR, MONTH, 1).getDay();
-  const days = new Date(YEAR, MONTH+1, 0).getDate();
-  for(let i=0;i<first;i++){ const e=document.createElement('span'); e.className='day empty'; grid.appendChild(e); }
-  for(let d=1; d<=days; d++){
-    const b = document.createElement('span');
-    b.className='day'; b.id='hday-'+d; b.textContent=d;
-    const dow = (first + d - 1) % 7;
-    if(dow===0) b.classList.add('sun');
-    if(d===todayDate) b.classList.add('today');
-    grid.appendChild(b);
-  }
-
-  // ---- 그림일기 저장소 ----
-  // 날짜마다 대화와 그림을 그림일기로 저장합니다 (이 브라우저에만 저장).
-  // 항목 형태: {who:'user'|'ai', text} 또는 {who:'ai', kind:'image', url, prompt}
+  const MON = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
   const pad = n => String(n).padStart(2,'0');
-  const keyOf = (y,m,d) => `oneul-diary-${y}-${pad(m)}-${pad(d)}`;
-  const TODAY_KEY = keyOf(now.getFullYear(), now.getMonth()+1, now.getDate());
-  // 하루에 한 권: {books:[{id, color, entries}]} (예전에 여러 권 저장된 날은 마지막 책만 씀)
-  // 웹에 들어올 때마다 기록을 초기화: 지난 방문에서 남은 그림일기·메모를 모두 지우고 빈 상태로 시작
-  try{ Object.keys(localStorage).forEach(k=>{
-    if(k.startsWith('oneul-memo-') || k.startsWith('oneul-diary-')) localStorage.removeItem(k);
-  }); }catch(e){}
-  function loadDay(key){
-    try{ const v = JSON.parse(localStorage.getItem(key)); if(v && Array.isArray(v.books)) return v; }catch(e){}
-    return {books:[]};
+  const ymKey = (y,m) => `${y}-${pad(m)}`;
+  // BE는 일기 날짜를 서울 시간(Asia/Seoul) 기준으로 정하므로 "오늘"도 서울 기준
+  function seoulToday(){
+    const p = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Seoul', year:'numeric', month:'2-digit', day:'2-digit'}).formatToParts(new Date());
+    const g = t => +p.find(x => x.type === t).value;
+    return {y:g('year'), m:g('month'), d:g('day')};
   }
-  function saveDay(key, d){ try{ localStorage.setItem(key, JSON.stringify(d)); return true; }catch(e){ return false; } }
-  // 사용자가 직접 글을 쓴 책만 그림일기로 인정
-  function writtenBooks(key){ return loadDay(key).books.filter(b => b.entries.some(en => en.who === 'user' && en.kind !== 'image')); }
-  function latestBook(key){ const bs = writtenBooks(key); return bs[bs.length-1] || null; }
-  // 작성 완료된 그림일기("대화 종료"로 마친 책)만 달력에 표시하고 열 수 있음
-  function doneBook(key){ const bk = latestBook(key); return bk && bk.done ? bk : null; }
-  // 지금 쓰고 있는 오늘의 책. 오늘 쓴 책이 있으면 이어서 쓰고, 없으면 새 책으로 시작해 첫 글을 쓰는 순간 저장됨
-  let current = null;
-  function record(entry){
-    current.entries.push(entry);
-    saveDay(TODAY_KEY, {books:[current]});          // 하루에 한 권만 저장
-    refreshCell(now.getDate());
+  let today = seoulToday();
+  const isToday = (y,m,d) => y === today.y && m === today.m && d === today.d;
+  const fmtDate = (y,m,d) => `${y}. ${m}. ${d}. (${WD[new Date(y, m-1, d).getDay()]})`;
+  // 요청 ID: ASCII 영문·숫자·하이픈, 128자 이내. 한 번 만든 ID는 같은 요청의 재시도에 그대로 씀
+  function rid(prefix){
+    const b = new Uint8Array(16); crypto.getRandomValues(b);
+    return prefix + '-' + Array.from(b, x => x.toString(16).padStart(2,'0')).join('');
   }
 
-  // ---- 책 표지 색: 책장에 꽂힌 책들의 색 중 하나를 무작위로 ----
+  // ---- 로그인 (Supabase Auth) ----
+  const sb = (window.supabase && CFG.SUPABASE_URL && CFG.SUPABASE_PUBLISHABLE_KEY)
+    ? window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_PUBLISHABLE_KEY, {auth:{persistSession:true, autoRefreshToken:true}})
+    : null;
+  const NO_AUTH_MSG = '로그인 설정이 없어요. (config.js 확인)';
+  let user = null;
+  const userName = () => (user && user.user_metadata && user.user_metadata.name) || '';
+
+  // ---- BE 요청 ----
+  class ApiError extends Error {
+    constructor(status, code, message, retryable){ super(message || code); this.status = status; this.code = code; this.retryable = retryable; }
+  }
+  async function accessToken(){
+    if(!sb) return null;
+    const {data} = await sb.auth.getSession();
+    return data && data.session ? data.session.access_token : null;
+  }
+  // 모든 요청에 Authorization: Bearer <access token>. 401이면 토큰을 한 번 갱신해 같은 요청(같은 요청 ID)으로 다시 보냄
+  // (BE는 인증을 세션 예약보다 먼저 확인하므로 같은 ID 재전송이 안전함)
+  async function api(path, {method = 'GET', json, form, headers = {}, timeout = 30000} = {}){
+    const send = async tk => {
+      const h = Object.assign({Authorization: 'Bearer ' + tk}, headers);
+      let body;
+      if(json !== undefined){ h['Content-Type'] = 'application/json'; body = JSON.stringify(json); }
+      else if(form) body = form;               // FormData: Content-Type(boundary)은 브라우저가 지정
+      const ctl = new AbortController(), t = setTimeout(()=> ctl.abort(), timeout);
+      try{ return await fetch(API_BASE + path, {method, headers:h, body, signal:ctl.signal, cache:'no-store'}); }
+      catch(e){ throw new ApiError(0, e.name === 'AbortError' ? 'TIMEOUT' : 'NETWORK', '', true); }
+      finally{ clearTimeout(t); }
+    };
+    const tk = await accessToken();
+    if(!tk) throw new ApiError(401, 'NO_SESSION', '', false);
+    let res = await send(tk);
+    if(res.status === 401 && sb){
+      const {data} = await sb.auth.refreshSession();
+      if(data && data.session) res = await send(data.session.access_token);
+    }
+    let data = null; try{ data = await res.json(); }catch(e){}
+    if(!res.ok){
+      const er = (data && data.error) || {};
+      throw new ApiError(res.status, er.code || 'HTTP_' + res.status, er.message || '', !!er.retryable);
+    }
+    return data;
+  }
+  // 오류를 짧은 문구로
+  function errText(e, fallback){
+    const c = (e && e.code) || '';
+    if(c === 'NETWORK') return '서버 연결 실패';
+    if(c === 'TIMEOUT') return '응답 지연';
+    if(e.status === 401 || e.status === 403) return '인증 실패';
+    const known = {
+      SESSION_NOT_FOUND:'세션 없음', DIARY_NOT_FOUND:'일기 없음', DIARY_DRAFT_NOT_FOUND:'초안 없음',
+      REQUEST_IN_PROGRESS:'요청 처리 중', SESSION_BUSY:'요청 처리 중', IDEMPOTENCY_CONFLICT:'요청 ID 충돌',
+      DIARY_DATE_CONFLICT:'오늘 일기가 이미 있어요', HISTORY_REVISION_CONFLICT:'대화 버전 충돌',
+      NO_CHILD_MESSAGES:'대화 내용 없음', CONVERSATION_LIMIT_REACHED:'대화 길이 초과',
+      DRAWING_ALREADY_EXISTS:'이미 저장된 그림', DRAWING_TOO_LARGE:'그림 크기 초과', DRAWING_DIMENSIONS_EXCEEDED:'그림 크기 초과',
+      DRAWING_INVALID_IMAGE:'그림 형식 오류',
+    };
+    if(known[c]) return known[c];
+    if(c.startsWith('AI_')) return 'AI 응답 실패';
+    if(c.startsWith('AUTH_')) return '인증 실패';
+    if(c.startsWith('DIARY_STORAGE') || c.startsWith('DRAWING_')) return '저장 실패';
+    if(e.status === 422) return '입력 형식 오류';
+    return fallback || '요청 실패';
+  }
+  // 같은 요청 ID로 다시 보내는 것이 의미 있는 실패 (결과를 모름 / 재시도 가능 / 인증·처리 중)
+  const sameIdRetry = e => e.status === 0 || e.retryable || e.status === 401 || e.status === 403 ||
+    ['REQUEST_IN_PROGRESS','SESSION_BUSY'].includes(e.code) || (e.code || '').startsWith('AUTH_');
+  // 인증이 풀렸으면 로그인 창을 띄움
+  function handleAuth(e){
+    if(e && (e.status === 401 || e.status === 403)){ toast('인증 실패: 다시 로그인해 주세요'); if(auth.hidden) openAuth('login', null); }
+  }
+
+  // ---- 월별 일기 목록 (GET /api/diaries?month=YYYY-MM) ----
+  const months = {};   // 'YYYY-MM' → {state:'loading'|'ok'|'err', byDay:{일: {diary_id, diary_date, weather, preview}}, promise}
+  function loadMonth(y, m, force){
+    const k = ymKey(y, m);
+    if(!user) return Promise.resolve(null);
+    if(months[k] && !force && months[k].state !== 'err') return months[k].promise;
+    const uid = user.id, entry = months[k] = {state:'loading', byDay:{}, promise:null};
+    refreshMonthViews(y, m);
+    entry.promise = api('/api/diaries?month=' + k).then(r => {
+      if(months[k] !== entry || !user || user.id !== uid) return null;    // 그 사이 다시 불러왔거나 로그아웃
+      (r.diaries || []).forEach(it => { entry.byDay[+String(it.diary_date).slice(8, 10)] = it; });
+      entry.state = 'ok'; refreshMonthViews(y, m);
+      return entry;
+    }).catch(e => {
+      if(months[k] !== entry) return null;
+      entry.state = 'err'; refreshMonthViews(y, m);
+      toast('일기 목록: ' + errText(e)); handleAuth(e);
+      return null;
+    });
+    return entry.promise;
+  }
+  const dayItem = (y, m, d) => { const mo = months[ymKey(y, m)]; return mo ? mo.byDay[d] || null : null; };
+  // 확정 저장 응답을 목록에도 반영
+  function putDiaryItem(det){
+    const [y, m, d] = String(det.diary_date).split('-').map(Number), mo = months[ymKey(y, m)];
+    if(mo && mo.state === 'ok'){
+      mo.byDay[d] = {diary_id: det.diary_id, diary_date: det.diary_date, weather: det.weather, preview: (det.confirmed_text || '').slice(0, 120)};
+      refreshMonthViews(y, m);
+    } else loadMonth(y, m, true);
+  }
+
+  // ---- 책 표지 색: 책장에 꽂힌 책들의 색 (BE 일기는 일기 ID로 항상 같은 색) ----
   const SHELF_COLORS = ['color-jobs-3','color-connect','white','color-learn','ink','color-inspire-3','color-learn-3'];
+  const randomColor = () => SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)];
+  function colorOf(id){ let h = 0; for(const ch of String(id)) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return SHELF_COLORS[h % SHELF_COLORS.length]; }
   let bookColor = SHELF_COLORS[0];
   function setCover(color){
     bookColor = color;
@@ -692,7 +811,7 @@ body{
     book.style.setProperty('--cover-ink', color === 'ink' ? 'var(--white)' : 'var(--ink)');
   }
 
-  // ---- 책: 대화(오늘) 또는 그림일기 보기(지난 날짜) ----
+  // ---- 책: 대화(오늘) 또는 그림일기 보기 ----
   const shelf = document.getElementById('shelf');
   const reader = document.getElementById('reader'), book = document.getElementById('book');
   const messages = document.getElementById('messages');
@@ -701,26 +820,29 @@ body{
   const comic = document.getElementById('comic');
   const narrow = window.matchMedia('(max-width:700px), (max-aspect-ratio:1/1)');
   const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  let timers = [], bookMode = 'chat', bookOpener = null;
+  let timers = [], bookMode = 'chat', bookOpener = null, reviewing = false;
   const later = (fn, ms) => timers.push(setTimeout(fn, reduce ? 0 : ms));
 
   // 책이 덮이는 중(closing)에는 화면을 막지 않음: 덮이는 애니메이션은 계속되지만 터치는 아래(방/달력)로 바로 전달되고,
   // 그 사이에 다른 책을 열면 덮던 것을 멈추고 새로 연다
   const bookShown = () => !reader.hidden && !reader.classList.contains('closing');
-  function openBook(mode, entries, dateText, opener, color, bk){
+  // review: 저장 전 일기 초안 확인 (그림일기 양식에 초안·그림·날씨를 보여 주고 저장 버튼을 둠)
+  function openBook(mode, dateText, opener, color, bk, review){
     if(bookShown()) return;
     timers.forEach(clearTimeout); timers = [];
     reader.classList.remove('closing');
-    bookMode = mode; bookOpener = opener;
-    setCover(color || SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)]);
+    bookMode = mode; bookOpener = opener; reviewing = !!review;
+    setCover(color || randomColor());
     book.className = 'book' + (mode === 'diary' ? ' readonly' : '');
     setupPages(mode === 'diary');
-    resetDel(); resetEnd(); delBtn.hidden = !(mode === 'diary' && diaryRef);
-    logBtn.hidden = mode !== 'diary';   // 그림일기에서는 항상 대화 기록을 볼 수 있음 (기록이 없으면 없다고 표시)
+    resetEnd();
+    logBtn.hidden = mode !== 'diary' || reviewing;   // 그림일기에서는 항상 대화 기록을 볼 수 있음 (기록이 없으면 없다고 표시)
+    saveBtn.hidden = !reviewing; redrawBtn.hidden = !reviewing;
     chatTitle.textContent = mode === 'diary' ? '그림일기' : 'AI와 대화';
     chatDate.textContent = dateText;
     document.getElementById('coverDate').textContent = dateText;
-    renderEntries(entries, mode, bk);
+    renderEntries(mode, bk);
+    if(reviewing) renderReview();
     reader.hidden = false;
     requestAnimationFrame(()=>{ reader.classList.add('show');
       later(()=> book.classList.add('open'), 200);                                          // 표지가 넘어가며 책이 펼쳐짐
@@ -736,28 +858,11 @@ body{
     if(spread > 0) goSpread(0);
     later(()=> book.classList.remove('open'), 200 + delay);        // 책을 다시 덮고
     later(()=> reader.classList.remove('show'), 1000 + delay);
-    later(()=>{ reader.hidden = true; reader.classList.remove('closing'); pageNav.hidden = true; clearLeaves(); after ? after() : (bookOpener && bookOpener.focus({preventScroll:true})); }, 1300 + delay);
-  }
-  const fmtDate = (y,m,d) => `${y}. ${m}. ${d}. (${WD[new Date(y, m-1, d).getDay()]})`;
-  function openChat(){
-    if(bookShown()) return;
-    // 일기는 하루에 한 권: 오늘 쓴 책이 있으면 그 책을 다시 펼치고, 이미 완성한 일기면 "수정"으로 연다 (대화를 더 하고 그림·날씨를 고침)
-    diaryRef = null;
-    const todays = latestBook(TODAY_KEY);
-    current = todays ? {...todays, done: !!todays.done, entries: todays.entries.slice()}
-                     : {id: Date.now(), color: SHELF_COLORS[Math.floor(Math.random() * SHELF_COLORS.length)], entries: []};
-    openBook('chat', current.entries, fmtDate(now.getFullYear(), now.getMonth()+1, now.getDate()), shelf, current.color);
-    if(current.done){ chatTitle.textContent = '오늘의 일기 수정하기'; toast('오늘 쓴 그림일기를 수정해요'); }
+    later(()=>{ reader.hidden = true; reader.classList.remove('closing'); pageNav.hidden = true; clearLeaves(); reviewing = false; after ? after() : (bookOpener && bookOpener.focus({preventScroll:true})); }, 1300 + delay);
   }
 
-  shelf.addEventListener('click', openChat);
-  shelf.addEventListener('keydown', e=>{
-    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openChat(); }
-  });
-  reader.addEventListener('click', e=>{ if(e.target === reader) closeBook(); });   // 책 바깥을 누르면 닫힘
-
-  // ---- 그림일기: 넘길 수 있는 4쪽짜리 빈 책 ----
-  // PC: 두 쪽씩 펼침 (1–2, 3–4) / 휴대폰: 한 쪽씩 (1, 2, 3, 4)
+  // ---- 그림일기: 넘길 수 있는 책 ----
+  // PC: 두 쪽씩 펼침 / 휴대폰: 한 쪽씩
   const TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 2쪽: 4컷 만화
   const pageNav = document.getElementById('pageNav'), pageInfo = document.getElementById('pageInfo');
   const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
@@ -835,19 +940,14 @@ body{
   });
 
   // ---- 페이지에 내용 그리기 ----
-  const AI_PENDING = 'AI 답변 기능은 아직 준비 중이에요.';
   function addMsg(text, who){
     const el = document.createElement('div');
     el.className = 'msg ' + who; el.textContent = text;
-    if(who === 'ai' && !text){ el.textContent = AI_PENDING; el.classList.add('pending'); }   // 빈 AI 답변도 대화 자리에 보이도록
-    messages.appendChild(el); messages.scrollTop = messages.scrollHeight;
+    messages.appendChild(el);
     return el;
   }
-  // 그림일기에 들어갈 일기 글. AI와 나눈 대화 내용은 그림일기에 보이지 않음 (대화는 "대화 기록 보기"에서만).
-  // AI가 대화를 일기로 정리하는 기능을 붙이면 그 결과를 책의 diary에 저장하면 밑줄 칸에 표시됩니다.
-  const diaryTextOf = bk => (bk && bk.diary) || '';
 
-  // ---- 날씨 (그림일기장 양식의 해·구름·눈·비) ----
+  // ---- 날씨 (그림일기장 양식의 해·구름·눈·비). 키는 BE의 weather 값과 같음 ----
   const WEATHER = {
     sunny:  {label:'맑음', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="#222222" stroke-width="1.8" stroke-linecap="round"><path d="M12 1.8v2.6M12 19.6v2.6M1.8 12h2.6M19.6 12h2.6M4.8 4.8l1.8 1.8M17.4 17.4l1.8 1.8M4.8 19.2l1.8-1.8M17.4 6.6l1.8-1.8"/></g><circle cx="12" cy="12" r="4.6" style="fill:var(--color-learn)" stroke="#222222" stroke-width="1.8"/></svg>'},
     cloudy: {label:'흐림', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 19h11a4.2 4.2 0 0 0 .6-8.35A6 6 0 0 0 6.6 9.6 4.7 4.7 0 0 0 6.5 19z" style="fill:var(--color-jobs-3)" stroke="#222222" stroke-width="1.8" stroke-linejoin="round"/></svg>'},
@@ -855,14 +955,15 @@ body{
     rainy:  {label:'비', svg:'<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 12.5a9.5 9.5 0 0 1 19 0z" style="fill:var(--color-connect)" stroke="#222222" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 3v1M12 12.5v6.3a2.2 2.2 0 0 1-4.4 0" fill="none" stroke="#222222" stroke-width="1.8" stroke-linecap="round"/></svg>'},
   };
 
-  // ---- 그림일기 1쪽: 그림일기장 양식 (년 월 일 요일 / 날씨·이름 / 그림 칸 / 원고지 칸) ----
+  // ---- 그림일기 1쪽: 그림일기장 양식 (년 월 일 요일 / 날씨·이름 / 그림 칸 / 밑줄 칸) ----
+  // bk: {weather, drawing(그림 주소), diary(일기 글), name, diaryId(그림 주소가 만료되면 다시 받아올 일기)}
   const dp1 = document.getElementById('dp1'), dpPic = document.getElementById('dpPic'), dpGrid = document.getElementById('dpGrid');
   const dpWeather = document.getElementById('dpWeather'), dpName = document.getElementById('dpName');
   Object.entries(WEATHER).forEach(([k, w])=>{
     const s = document.createElement('span'); s.className = 'wx'; s.dataset.w = k; s.title = w.label; s.innerHTML = w.svg; dpWeather.appendChild(s);
   });
-  let diaryDate = now;
-  function renderDiaryPage(entries, bk){
+  let diaryDate = new Date(today.y, today.m - 1, today.d);
+  function renderDiaryPage(bk){
     const d = diaryDate;
     document.getElementById('dpY').textContent = d.getFullYear();
     document.getElementById('dpM').textContent = d.getMonth() + 1;
@@ -872,15 +973,28 @@ body{
     dpWeather.querySelectorAll('.wx').forEach(s => s.classList.toggle('on', s.dataset.w === w));
     dpWeather.setAttribute('aria-label', '날씨: ' + (w ? WEATHER[w].label : '고르지 않음'));
     dpName.textContent = (bk && bk.name) || '';
-    dpPic.innerHTML = '';
-    dpPic.classList.toggle('blank', !(bk && bk.drawing));
-    if(bk && bk.drawing){ const img = new Image(); img.src = bk.drawing; img.alt = '내가 그린 그림'; dpPic.appendChild(img); }
+    setPicture(bk);
     // 밑줄 칸: 일기 글을 줄 위에 씀 (대화 내용은 넣지 않음)
-    const text = diaryTextOf(bk);
-    dpGrid.textContent = text;
+    setDiaryText((bk && bk.diary) || '', false);
+  }
+  function setDiaryText(text, muted){
+    dpGrid.textContent = text; dpGrid.classList.toggle('muted', !!muted);
     dpGrid.setAttribute('aria-label', text ? '일기: ' + text : '일기 글 칸 (비어 있음)');
   }
-  // 그림일기 2쪽: 쪽 전체에 4컷 만화. 만화 생성 기능을 붙이면 그림 주소 4개를 책의 comic에 저장하면 됩니다 (없으면 점선 자리)
+  function setPicture(bk){
+    dpPic.innerHTML = '';
+    dpPic.classList.toggle('blank', !(bk && bk.drawing));
+    if(!(bk && bk.drawing)) return;
+    const img = new Image(); img.alt = '내가 그린 그림';
+    // 비공개 그림 주소는 300초 뒤 만료됨: 못 불러오면 일기 상세를 다시 받아 새 주소로 한 번 바꿈
+    img.addEventListener('error', async ()=>{
+      if(!bk.diaryId || img.dataset.retried) return;
+      img.dataset.retried = '1';
+      try{ const det = await api('/api/diaries/' + encodeURIComponent(bk.diaryId)); if(det.imageUrl && img.isConnected) img.src = det.imageUrl; }catch(e){}
+    });
+    img.src = bk.drawing; dpPic.appendChild(img);
+  }
+  // 그림일기 2쪽: 4컷 만화. 아직 BE에서 만화가 오지 않으므로 점선 자리만 보임 (가짜 그림을 넣지 않음)
   function renderComic(bk){
     comic.innerHTML = '';
     const urls = (bk && bk.comic) || [];
@@ -891,39 +1005,160 @@ body{
       comic.appendChild(p);
     }
   }
-  function renderEntries(entries, mode, bk){
+  function renderEntries(mode, bk){
     messages.innerHTML = ''; dp1.hidden = true; comic.hidden = true;
     if(mode === 'diary'){                   // 그림일기: 1쪽 그림일기장 양식, 2쪽 4컷 만화
-      renderDiaryPage(entries, bk); renderComic(bk); showNumbers();
+      renderDiaryPage(bk); renderComic(bk); showNumbers();
       return;
     }
-    if(!entries.length){
-      const p = document.createElement('p'); p.className = 'empty-state';
-      p.innerHTML = '오늘 있었던 일이나 궁금한 것을<br>적어 보세요.<br>다 쓰면 “대화 끝내기”를 눌러 그림을 그려요.';
-      messages.appendChild(p);
-    }
-    entries.forEach(en => { if(en.kind !== 'image') addMsg(en.text, en.who); });
+    renderChat();
   }
 
-  // ---- AI 대화 ----
-  // 실제 생성형 AI를 연결할 때 이 함수만 바꾸면 됩니다.
-  // message: 사용자가 보낸 글 / 반환값: AI의 답변 글 (async 함수라서 서버 요청 결과를 기다려 반환해도 됩니다)
-  async function getAIReply(message){
-    return '';   // 아직 구현 전: 빈 답변
+  // ---- AI 대화 (BE 세션) ----
+  // chat: {sessionId, revision(history_revision), startKey(Idempotency-Key), color, date,
+  //        entries:[{who:'ai'|'user', text, id(client_message_id), state:'sent'|'pending'|'failed', err}], busy, note}
+  let chat = null;
+  function newChat(){
+    chat = {sessionId:null, revision:0, startKey:rid('start'), color:randomColor(), date:ymKey(today.y, today.m) + '-' + pad(today.d),
+            entries:[], busy:false, note:null};
+    return chat;
   }
+  const hasFailed = c => c.entries.some(en => en.state === 'failed');
+  function setComposer(){
+    const c = chat, ok = !!(c && c.sessionId && !c.busy && !hasFailed(c));
+    sendBtn.disabled = !ok || !input.value.trim();
+    endBtn.disabled = !!(c && c.busy);
+  }
+  function renderChat(){
+    if(bookMode !== 'chat') return;
+    const c = chat; messages.innerHTML = '';
+    if(!c){ setComposer(); return; }
+    c.entries.forEach(en => {
+      const el = addMsg(en.text, en.who === 'user' ? 'user' : 'ai');
+      if(en.state === 'pending') el.classList.add('sending');
+      if(en.state === 'failed'){
+        el.classList.add('failed');
+        const row = document.createElement('div'); row.className = 'msg-fail';
+        const t = document.createElement('span'); t.textContent = en.err || '전송 실패';
+        const retry = document.createElement('button'); retry.type = 'button'; retry.textContent = '다시 보내기';
+        retry.addEventListener('click', ()=> sendMessage(en));            // 같은 client_message_id로 재전송
+        const drop = document.createElement('button'); drop.type = 'button'; drop.textContent = '지우기';
+        drop.addEventListener('click', ()=>{                               // 보내지 않기로 함: 글은 입력칸으로 되돌림
+          c.entries.splice(c.entries.indexOf(en), 1);
+          if(!input.value.trim()){ input.value = en.text; input.dispatchEvent(new Event('input')); }
+          renderChat();
+        });
+        row.append(t, retry, drop); messages.appendChild(row);
+      }
+    });
+    if(c.busy){
+      const typing = addMsg('', 'ai typing'); typing.innerHTML = '<i></i><i></i><i></i>'; typing.setAttribute('aria-label','AI가 답변을 작성하는 중');
+    }
+    if(c.note){
+      const row = document.createElement('div'); row.className = 'chat-note';
+      const t = document.createElement('span'); t.textContent = c.note.text; row.appendChild(t);
+      if(c.note.action){ const b = document.createElement('button'); b.type = 'button'; b.textContent = c.note.label; b.addEventListener('click', c.note.action); row.appendChild(b); }
+      messages.appendChild(row);
+    }
+    messages.scrollTop = messages.scrollHeight;
+    setComposer();
+  }
+  // 세션이 사라졌을 때(BE 재시작 등): 새 대화로 다시 시작
+  function restartChat(){
+    flow = null; newChat(); renderChat(); updateShelf();
+    if(bookShown() && bookMode === 'chat') startSession();
+    else closeBook(()=> openChat());
+  }
+  // 채팅 시작: Idempotency-Key는 한 번 만들어 재시도에도 같은 값
+  async function startSession(){
+    const c = chat; if(!c || c.busy || c.sessionId) return;
+    c.busy = true; c.note = null; renderChat();
+    try{
+      const r = await api('/api/chat-sessions', {method:'POST', json:{}, headers:{'Idempotency-Key': c.startKey}, timeout:AI_TIMEOUT});
+      if(c !== chat) return;                       // 그 사이 로그아웃·새 대화 → 늦은 응답은 버림
+      c.sessionId = r.session_id; c.revision = r.history_revision;
+      c.entries.push({who:'ai', text:r.reply.text, state:'sent'});
+    }catch(e){
+      if(c !== chat) return;
+      c.note = {text: errText(e, 'AI 응답 실패'), label:'다시 시도', action: ()=> startSession()};
+      handleAuth(e);
+    }finally{
+      if(c === chat){ c.busy = false; renderChat(); }
+    }
+  }
+  // 메시지 보내기: 실패하면 같은 client_message_id로만 다시 보냄
+  async function sendMessage(entry){
+    const c = chat; if(!c || c.busy || !c.sessionId) return;
+    c.busy = true; c.note = null; entry.state = 'pending'; entry.err = null; renderChat();
+    try{
+      const r = await api(`/api/chat-sessions/${encodeURIComponent(c.sessionId)}/messages`,
+        {method:'POST', json:{client_message_id: entry.id, text: entry.text}, timeout:AI_TIMEOUT});
+      if(c !== chat || !c.entries.includes(entry)) return;
+      entry.state = 'sent';
+      if(r.history_revision >= c.revision){       // 늦게 도착한 이전 버전 응답은 화면을 덮어쓰지 않음
+        c.revision = r.history_revision;
+        c.entries.splice(c.entries.indexOf(entry) + 1, 0, {who:'ai', text:r.reply.text, state:'sent'});
+      }
+    }catch(e){
+      if(c !== chat || !c.entries.includes(entry)) return;
+      if(e.code === 'SESSION_NOT_FOUND'){
+        c.entries.splice(c.entries.indexOf(entry), 1);
+        c.note = {text:'세션 없음', label:'새 대화 시작', action: restartChat};
+      }else if(sameIdRetry(e)){
+        entry.state = 'failed'; entry.err = errText(e, 'AI 응답 실패');
+      }else{                                       // 처리되지 않은 요청: 쓴 글은 입력칸에 보존
+        c.entries.splice(c.entries.indexOf(entry), 1);
+        if(!input.value.trim()){ input.value = entry.text; input.dispatchEvent(new Event('input')); }
+        toast(errText(e, 'AI 응답 실패'));
+      }
+      handleAuth(e);
+    }finally{
+      if(c === chat){ c.busy = false; renderChat(); }
+    }
+  }
+  let openingChat = false;
+  async function openChat(){
+    if(bookShown() || openingChat) return;
+    if(!user){ requireLogin(); return; }
+    today = seoulToday();
+    if(flow){ resumeFlow(shelf); return; }                  // 대화를 끝내고 아직 저장하지 못한 일기가 있으면 그것부터
+    openingChat = true;                                     // 오늘 일기가 이미 있는지 이번 달 목록으로 확인
+    try{ await loadMonth(today.y, today.m); }finally{ openingChat = false; }
+    if(bookShown() || !user) return;
+    const todayItem = dayItem(today.y, today.m, today.d);
+    if(todayItem){                                          // 하루에 한 권: 오늘 일기를 이미 저장했으면 그 일기를 펼침 (수정 기능은 아직 없음)
+      toast('오늘 일기는 이미 완성했어요');
+      openDiaryAt(today.y, today.m, today.d, shelf);
+      return;
+    }
+    const tkey = ymKey(today.y, today.m) + '-' + pad(today.d);
+    if(!chat || chat.date !== tkey) newChat();
+    openBook('chat', fmtDate(today.y, today.m, today.d), shelf, chat.color);
+    if(!chat.sessionId) startSession();
+  }
+
+  shelf.addEventListener('click', openChat);
+  shelf.addEventListener('keydown', e=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); openChat(); }
+  });
+  reader.addEventListener('click', e=>{ if(e.target === reader) closeBook(); });   // 책 바깥을 누르면 닫힘
 
   input.addEventListener('input', ()=>{
-    sendBtn.disabled = !input.value.trim();
+    setComposer();
     input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 136) + 'px';
   });
   input.addEventListener('keydown', e=>{
     if(e.key==='Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); composer.requestSubmit(); }
   });
-  // ---- 대화 끝내기: 쓴 글이 있으면 책을 덮고 스케치북을 펼쳐 오늘의 그림을 그림 (없으면 달력으로) ----
+  // ---- 대화 끝내기: 대화가 있으면 책을 덮고 스케치북을 펼침 (동시에 AI 일기 초안을 요청). 대화가 없으면 달력으로 ----
   function endChat(){
-    if(bookMode !== 'chat' || !bookShown()) return;
-    const wrote = current.entries.some(en => en.who === 'user' && en.text);
-    closeBook(()=> wrote ? openSketch() : openCalendarPage(shelf));
+    if(bookMode !== 'chat' || !bookShown() || !chat) return;
+    if(chat.busy){ toast('요청 처리 중'); return; }
+    if(hasFailed(chat)){ toast('보내지 못한 메시지를 먼저 정리해 주세요'); return; }
+    if(chat.sessionId && chat.revision >= 1){
+      startFlow(chat);
+      closeBook(()=> openSketch());
+    }else closeBook(()=> openCalendarPage(shelf));
   }
   // 대화 끝내기는 두 번 눌러야 끝남: 첫 번째는 확인 문구로 바뀌고, 3초 안에 다시 누르지 않으면 원래대로
   const endBtn = document.getElementById('endChat'); let endTimer;
@@ -937,18 +1172,17 @@ body{
     resetEnd(); endChat();
   });
 
-  // 입력한 글은 모두 그대로 대화로 보냄 (특별한 명령어 없음)
-  composer.addEventListener('submit', async e=>{
+  // 입력한 글은 모두 그대로 대화로 보냄 (응답을 기다리는 동안에는 보내지 않음)
+  composer.addEventListener('submit', e=>{
     e.preventDefault();
-    if(bookMode !== 'chat') return;
+    const c = chat;
+    if(bookMode !== 'chat' || !c || c.busy || !c.sessionId || hasFailed(c)) return;
     const text = input.value.trim(); if(!text) return;
-    const es = messages.querySelector('.empty-state'); if(es) es.remove();
-    input.value = ''; input.style.height = 'auto'; sendBtn.disabled = true;
-    addMsg(text, 'user'); record({who:'user', text});
-    const typing = addMsg('', 'ai typing'); typing.innerHTML = '<i></i><i></i><i></i>'; typing.setAttribute('aria-label','AI가 답변을 작성하는 중');
-    const [reply] = await Promise.all([getAIReply(text), new Promise(r=>setTimeout(r, 600))]);
-    typing.remove();
-    addMsg(reply || '', 'ai'); record({who:'ai', text: reply || ''});
+    if(text.length > 2000){ toast('2,000자까지 보낼 수 있어요'); return; }
+    input.value = ''; input.style.height = 'auto';
+    const entry = {who:'user', text, id:rid('msg'), state:'pending'};
+    c.entries.push(entry);
+    sendMessage(entry);
   });
 
   // 그림·글자를 끌어서 옮기는 브라우저 기본 드래그를 막음 (입력칸 안에서 글을 고르는 것은 그대로)
@@ -1092,97 +1326,292 @@ body{
   document.getElementById('skUndo').addEventListener('click', ()=>{ if(skUndo.length) skCtx.putImageData(skUndo.pop(), 0, 0); skDirty = skUndo.length > 0; });
   document.getElementById('skReset').addEventListener('click', ()=>{ skSnapshot(); skClear(); });
   // 열기 / 완성
-  let skEditing = false;   // 이미 완성한 오늘의 일기를 고치는 중인지
+  const skDone = document.getElementById('skDone');
   function openSketch(){
-    skEditing = !!current.done;
-    skClear(); skUndo = []; skDirty = false; skErase = false; skEraser.setAttribute('aria-pressed', 'false');
-    // 수정할 때는 전에 그린 그림·날씨를 그대로 불러와서 이어서 고침
-    if(skEditing && current.drawing){ const img = new Image(); img.onload = ()=> skCtx.drawImage(img, 0, 0, SK_W, SK_H); img.src = current.drawing; skDirty = true; }
-    skWeather = skEditing && WEATHER[current.weather] ? current.weather : null;
-    skWeatherEl.querySelectorAll('.wx').forEach(x => x.setAttribute('aria-checked', String(x.dataset.w === skWeather)));
-    document.getElementById('sketchTitle').textContent = skEditing ? '오늘의 그림 고치기' : '오늘의 그림 그리기';
-    document.getElementById('skDone').textContent = skEditing ? '그림일기 수정 완료' : '그림일기 완성';
+    const f = flow; if(!f || !sketch.hidden) return;
+    // 처음 열 때만 빈 종이로 시작. "그림 고치기"로 다시 열면 그리던 그림·날씨가 그대로 남아 있음
+    if(!f.sketchStarted){
+      f.sketchStarted = true;
+      skClear(); skUndo = []; skDirty = false; skErase = false; skEraser.setAttribute('aria-pressed', 'false');
+      skWeather = null;
+      skWeatherEl.querySelectorAll('.wx').forEach(x => x.setAttribute('aria-checked', 'false'));
+    }
+    skDone.disabled = false;
     sketch.hidden = false;
     toggleBrushMenu(false);
     requestAnimationFrame(()=>{ sketch.classList.add('show'); showThick(); skColorsEl.querySelector('[aria-pressed="true"]').focus({preventScroll:true}); });
   }
-  function finishSketch(){
-    current.drawing = skDirty ? skCanvas.toDataURL('image/jpeg', .85) : null;
-    current.weather = skWeather;
-    current.done = true;                    // 이 순간 작성 완료 → 이때부터 달력에서 확인 가능
-    if(!saveDay(TODAY_KEY, {books:[current]})){ current.drawing = null; saveDay(TODAY_KEY, {books:[current]}); toast('그림이 커서 그림 없이 저장했어요'); }
-    refreshCell(now.getDate());
+  function closeSketch(after){
     sketch.classList.remove('show');
-    setTimeout(()=>{
-      sketch.hidden = true;
-      openCalendarPage(shelf); toast(skEditing ? '그림일기를 수정했어요' : '그림일기를 완성했어요');
-      setTimeout(()=>{ if(todayDate && cells[todayDate] && !calpage.hidden) openDiary(todayDate, cells[todayDate]); }, reduce ? 0 : 800);   // 달력이 다 펼쳐진 뒤 오늘의 그림일기 펼치기
-    }, reduce ? 0 : 300);
+    setTimeout(()=>{ sketch.hidden = true; after && after(); }, reduce ? 0 : 300);
   }
-  document.getElementById('skDone').addEventListener('click', finishSketch);
-
-  // ---- 달력 페이지 (방의 달력이 확대됨) ----
-  const calpage = document.getElementById('calpage'), bigcal = document.getElementById('bigcal'), bigGrid = document.getElementById('bigGrid');
-  const homeCal = document.getElementById('homeCal');
-  const BOOK_ICON = document.getElementById('bookIcon').innerHTML;
-
-  WD.forEach((d,i)=>{ const el=document.createElement('div'); el.className='cal-dow'+(i===0?' sun':''); el.textContent=d; bigGrid.appendChild(el); });
-  for(let i=0;i<first;i++){ const e=document.createElement('span'); e.className='cell empty'; bigGrid.appendChild(e); }
-  const cells = {};
-  for(let d=1; d<=days; d++){
-    const dow = (first + d - 1) % 7;
-    const c = document.createElement('button');
-    c.type='button'; c.className='cell'+(dow===0?' sun':'')+(d===todayDate?' today':''); c.id='cell-'+d;
-    c.innerHTML = `<span class="num">${d}</span>`;
-    c.addEventListener('click', ()=> openDiary(d, c));
-    bigGrid.appendChild(c); cells[d] = c; refreshCell(d);
+  // 그림을 PNG Blob으로 (10 MiB를 넘으면 JPEG로). 이 Blob을 업로드가 끝날 때까지 그대로 보관
+  function canvasBlob(){
+    return new Promise(res => skCanvas.toBlob(b => {
+      if(b && b.size <= MAX_DRAWING) return res(b);
+      skCanvas.toBlob(j => res(j && j.size <= MAX_DRAWING ? j : null), 'image/jpeg', .9);
+    }, 'image/png'));
   }
-  function refreshCell(d){
-    const c = cells[d]; if(!c) return;
-    const lb = doneBook(keyOf(YEAR, MONTH+1, d)), has = !!lb;
-    c.classList.toggle('has-diary', has);
-    [c, document.getElementById('hday-'+d)].forEach(el=>{          // 확대 달력과 벽 달력에 똑같이 표시
-      if(!el) return;
-      let mark = el.querySelector('.bookmark');
-      if(has && !mark){ mark = document.createElement('span'); mark.className = 'bookmark'; mark.innerHTML = BOOK_ICON; el.appendChild(mark); }
-      if(!has && mark){ mark.remove(); mark = null; }
-      if(mark) mark.style.setProperty('--cover', `var(--${lb.color || 'color-jobs-3'})`);
-    });
-    c.setAttribute('aria-label', `11월 ${d}일 (${WD[(first+d-1)%7]})` + (d===todayDate?', 오늘':'') + (has?', 그림일기 있음':''));
-    if(d === todayDate){                       // 오늘 일기를 완성했으면 책장 안내도 "수정"으로
-      shelf.querySelector('.hint').textContent = has ? '오늘의 일기 수정하기' : '오늘의 일기 쓰기';
-      shelf.setAttribute('aria-label', (has ? '오늘의 일기 수정하기' : '오늘의 일기 쓰기') + ': 책장 열기');
+  async function finishSketch(){
+    const f = flow; if(!f || f.confirmReq || skDone.disabled) return;
+    skDone.disabled = true;
+    const blob = skDirty ? await canvasBlob() : null;
+    if(skDirty && !blob){ skDone.disabled = false; toast('그림 크기 초과'); return; }
+    if(f !== flow) return;
+    if(f.blobUrl) URL.revokeObjectURL(f.blobUrl);
+    f.blob = blob; f.blobUrl = blob ? URL.createObjectURL(blob) : null;
+    f.weather = skWeather;
+    f.phase = 'review'; updateShelf();
+    closeSketch(()=> openReview(shelf));
+  }
+  skDone.addEventListener('click', finishSketch);
+
+  // ---- 일기 완성 흐름: 초안 요청 → 그림 → 초안·날씨 확인 → 확정 저장 → 그림 업로드 → 결과 ----
+  // flow: {chat, sessionId, revision, phase:'sketch'|'review', draftReq, draft, draftBusy, draftErr, sessionLost,
+  //        blob, blobUrl, weather, confirmReq, saving, saveErr, diary, uploading, upErr}
+  let flow = null;
+  function startFlow(c){
+    flow = {chat:c, sessionId:c.sessionId, revision:c.revision, phase:'sketch', draft:null, draftReq:null, draftBusy:false, draftErr:null,
+            sessionLost:false, blob:null, blobUrl:null, weather:null, confirmReq:null, saving:false, saveErr:null, diary:null, uploading:false, upErr:null};
+    updateShelf();
+    requestDraft(flow, false);           // 그림을 그리는 동안 초안을 미리 받아 둠
+  }
+  function resumeFlow(opener){
+    if(flow.phase === 'sketch') openSketch(); else openReview(opener);
+  }
+  // 초안: 결과를 모르는 실패는 같은 client_request_id로, 확실히 실패했으면 사용자가 눌러 새 ID로 다시 만듦 (BE 허용)
+  async function requestDraft(f, fresh){
+    if(f.draftBusy || f.draft) return;
+    if(!f.draftReq || fresh) f.draftReq = {client_request_id: rid('draft'), history_revision: f.revision};
+    const req = f.draftReq;
+    f.draftBusy = true; f.draftErr = null; renderReview();
+    try{
+      const r = await api(`/api/chat-sessions/${encodeURIComponent(f.sessionId)}/diary-draft`, {method:'POST', json:req, timeout:AI_TIMEOUT});
+      if(f !== flow || req !== f.draftReq || r.history_revision !== f.revision) return;   // 늦은 이전 응답은 버림
+      f.draft = r.draft;
+    }catch(e){
+      if(f !== flow || req !== f.draftReq) return;
+      if(e.code === 'SESSION_NOT_FOUND') f.sessionLost = true;
+      f.draftErr = e; handleAuth(e);
+    }finally{
+      if(f === flow && req === f.draftReq){ f.draftBusy = false; renderReview(); }
     }
   }
-  // 날짜를 누르면 그 날의 그림일기(한 권)를, 없으면 빈 책을 펼침
-  let diaryRef = null;   // 지금 펼친 그림일기 {key, id, d}
-  function openDiary(d, cell){
-    openDiaryBook(d, doneBook(keyOf(YEAR, MONTH+1, d)), cell);
-  }
-  let diaryEntries = [];   // 지금 펼친 그림일기를 쓸 때 나눈 대화 (대화 기록 보기에 사용)
-  function openDiaryBook(d, bk, opener){
-    diaryRef = bk ? {key: keyOf(YEAR, MONTH+1, d), id: bk.id, d} : null;
-    diaryEntries = bk ? bk.entries : [];
-    diaryDate = new Date(YEAR, MONTH, d);
-    openBook('diary', bk ? bk.entries : [], fmtDate(YEAR, MONTH+1, d), opener, bk ? bk.color || 'color-jobs-3' : null, bk);
-  }
-
-  // ---- 펼친 그림일기 지우기 (한 번 더 눌러야 지워짐) ----
-  const delBtn = document.getElementById('delBook'); let delTimer;
-  function resetDel(){ clearTimeout(delTimer); delBtn.classList.remove('armed'); delBtn.textContent = '이 책 지우기'; }
-  delBtn.addEventListener('click', ()=>{
-    if(!diaryRef) return;
-    if(!delBtn.classList.contains('armed')){
-      delBtn.classList.add('armed'); delBtn.textContent = '한 번 더 누르면 지워져요';
-      delTimer = setTimeout(resetDel, 3000);
+  // 확정 저장: 요청 본문은 처음 한 번만 만들고, 재시도는 같은 키·같은 본문으로만
+  async function confirmDiary(f){
+    if(f.saving || f.diary || !f.draft) return;
+    if(!f.confirmReq){
+      const body = {client_request_id: rid('confirm'), history_revision: f.revision, draft_id: f.draft.draft_id};
+      if(f.weather) body.weather = f.weather;
+      f.confirmReq = body;
+    }
+    f.saving = true; f.saveErr = null; renderReview();
+    try{
+      const det = await api(`/api/chat-sessions/${encodeURIComponent(f.sessionId)}/diaries`, {method:'POST', json:f.confirmReq, timeout:SAVE_TIMEOUT});
+      if(f !== flow) return;
+      f.diary = det; putDiaryItem(det);
+    }catch(e){
+      if(f !== flow) return;
+      f.saving = false;
+      if(e.code === 'DIARY_DATE_CONFLICT'){          // 이미 오늘 일기가 있음 → 그 일기를 보여 줌
+        toast('오늘 일기가 이미 있어요'); endFlow();
+        loadMonth(today.y, today.m, true);
+        closeBook(()=> openCalendarPage(shelf));
+        return;
+      }
+      if(e.code === 'SESSION_NOT_FOUND') f.sessionLost = true;
+      else if(e.code === 'HISTORY_REVISION_CONFLICT' || e.code === 'DIARY_DRAFT_NOT_FOUND'){   // 초안이 바뀜 → 다시 확인받기
+        f.draft = null; f.confirmReq = null; requestDraft(f, true);
+      }else f.saveErr = e;
+      toast('저장 실패: ' + errText(e)); handleAuth(e);
+      renderReview();
       return;
     }
-    resetDel();
-    try{ localStorage.removeItem(diaryRef.key); }catch(e){}          // 하루에 한 권이므로 그 날의 기록을 통째로 지움
-    const d = diaryRef.d; diaryRef = null;
-    refreshCell(d); toast('그림일기를 지웠어요');
-    closeBook();
+    f.saving = false;
+    uploadDrawing(f);
+  }
+  // 그림 업로드: diary_id를 받은 뒤에만. 실패하면 같은 diary_id·같은 Blob으로만 다시 시도
+  async function uploadDrawing(f){
+    if(f !== flow || f.uploading) return;
+    if(!f.blob){ finishFlow(f); return; }            // 그린 그림이 없으면 일기만 저장
+    f.uploading = true; f.upErr = null; renderReview();
+    let ok = false;
+    try{
+      const form = new FormData(); form.append('file', f.blob, f.blob.type === 'image/jpeg' ? 'drawing.jpg' : 'drawing.png');
+      await api(`/api/diaries/${encodeURIComponent(f.diary.diary_id)}/drawing`, {method:'POST', form, timeout:SAVE_TIMEOUT});
+      ok = true;
+    }catch(e){
+      if(e.code === 'DRAWING_ALREADY_EXISTS'){ ok = true; toast('이미 저장된 그림이 있어요'); }   // 자동 재시도 없이 저장된 그림을 보여 줌
+      else { f.upErr = e; toast('그림 ' + errText(e)); handleAuth(e); }
+    }
+    if(f !== flow) return;
+    f.uploading = false;
+    if(ok) finishFlow(f); else renderReview();
+  }
+  function endFlow(){
+    if(flow && flow.blobUrl){ const u = flow.blobUrl; setTimeout(()=> URL.revokeObjectURL(u), 3000); }
+    flow = null; chat = null; updateShelf();
+  }
+  // 저장이 모두 끝남 → 달력을 열고 오늘의 그림일기를 BE에서 다시 불러와 펼침
+  function finishFlow(f){
+    if(f !== flow) return;
+    const d = f.diary; endFlow();
+    const [y, m, dd] = String(d.diary_date).split('-').map(Number);
+    const after = ()=>{
+      openCalendarPage(shelf, y, m); toast('그림일기를 완성했어요');
+      setTimeout(()=>{ if(!calpage.hidden && !bookShown() && viewY === y && viewM === m) openDiaryAt(y, m, dd, bigGrid.cells[dd], d.diary_id); }, reduce ? 0 : 800);
+    };
+    bookShown() ? closeBook(after) : after();
+  }
+
+  // 저장 전 확인 화면: 그림일기 양식에 초안 글·그림·날씨를 보여 줌
+  const saveBtn = document.getElementById('saveBtn'), redrawBtn = document.getElementById('redrawBtn');
+  function openReview(opener){
+    const f = flow; if(!f || bookShown()) return;
+    diaryDate = new Date(today.y, today.m - 1, today.d);
+    diaryEntries = f.chat.entries.filter(en => en.state === 'sent');
+    openBook('diary', fmtDate(today.y, today.m, today.d), opener || shelf, f.chat.color,
+      {weather:f.weather, drawing:f.blobUrl, diary:'', name:userName()}, true);
+  }
+  function renderReview(){
+    const f = flow; if(!reviewing || !f) return;
+    if(f.draft) setDiaryText(f.draft.text, false);
+    else if(f.draftErr) setDiaryText('초안 실패: ' + errText(f.draftErr, 'AI 응답 실패'), true);
+    else setDiaryText('AI가 일기 초안을 쓰고 있어요…', true);
+    redrawBtn.hidden = !!f.confirmReq || f.sessionLost;     // 저장을 시작한 뒤에는 그림을 바꾸지 않음 (같은 그림으로만 재시도)
+    let label = '이대로 저장', dis = false;
+    if(f.sessionLost){ label = '새 대화 시작'; }
+    else if(f.uploading){ label = '그림 저장 중…'; dis = true; }
+    else if(f.saving){ label = '저장 중…'; dis = true; }
+    else if(f.diary){ label = '그림 저장 다시 시도'; }
+    else if(!f.draft){ label = f.draftErr ? '초안 다시 요청' : '초안 기다리는 중'; dis = !f.draftErr; }
+    else if(f.saveErr){ label = '저장 다시 시도'; }
+    saveBtn.textContent = label; saveBtn.disabled = dis;
+  }
+  saveBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    const f = flow; if(!f) return;
+    if(f.sessionLost){ restartChat(); return; }
+    if(f.diary){ uploadDrawing(f); return; }
+    if(!f.draft){ if(f.draftErr && !f.draftBusy) requestDraft(f, !sameIdRetry(f.draftErr)); return; }
+    confirmDiary(f);
   });
+  redrawBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    if(!flow || flow.confirmReq) return;
+    flow.phase = 'sketch';
+    closeBook(()=> openSketch());
+  });
+
+  // ---- 달력: 서울 기준 이번 달(벽), 확대 달력은 달을 넘겨 볼 수 있음 ----
+  const calpage = document.getElementById('calpage'), bigcal = document.getElementById('bigcal'), bigGrid = document.getElementById('bigGrid');
+  const homeCal = document.getElementById('homeCal'), homeGrid = document.getElementById('calGrid');
+  const BOOK_ICON = document.getElementById('bookIcon').innerHTML;
+  let homeY = 0, homeM = 0, viewY = today.y, viewM = today.m;
+  const headHTML = (y, m) => `<b>${m}</b><small>${MON[m-1]}<br>${y}</small>`;
+  // 달력 칸 만들기 (big: 확대 달력의 누를 수 있는 칸)
+  function buildGrid(el, y, m, big){
+    el.innerHTML = ''; el.cells = {}; el.ym = [y, m];
+    WD.forEach((d,i)=>{ const w = document.createElement('div'); w.className = 'cal-dow' + (i===0?' sun':''); w.textContent = d; el.appendChild(w); });
+    const first = new Date(y, m-1, 1).getDay(), days = new Date(y, m, 0).getDate();
+    for(let i=0;i<first;i++){ const e = document.createElement('span'); e.className = big ? 'cell empty' : 'day empty'; el.appendChild(e); }
+    for(let d=1; d<=days; d++){
+      const sun = (first + d - 1) % 7 === 0, td = isToday(y, m, d);
+      let c;
+      if(big){
+        c = document.createElement('button'); c.type = 'button';
+        c.className = 'cell' + (sun?' sun':'') + (td?' today':'');
+        c.innerHTML = `<span class="num">${d}</span>`;
+        c.addEventListener('click', ()=> openDiaryAt(y, m, d, c));
+      }else{
+        c = document.createElement('span'); c.className = 'day' + (sun?' sun':'') + (td?' today':''); c.textContent = d;
+      }
+      el.appendChild(c); el.cells[d] = c;
+    }
+    markGrid(el);
+  }
+  // 일기가 있는 날에 책 아이콘
+  function markGrid(el){
+    if(!el.ym) return;
+    const [y, m] = el.ym, mo = months[ymKey(y, m)];
+    for(const [d, c] of Object.entries(el.cells)){
+      const it = mo && mo.byDay[d], has = !!it;
+      c.classList.toggle('has-diary', has);
+      let mark = c.querySelector('.bookmark');
+      if(has && !mark){ mark = document.createElement('span'); mark.className = 'bookmark'; mark.innerHTML = BOOK_ICON; c.appendChild(mark); }
+      if(!has && mark){ mark.remove(); mark = null; }
+      if(mark) mark.style.setProperty('--cover', `var(--${colorOf(it.diary_id)})`);
+      if(c.tagName === 'BUTTON') c.setAttribute('aria-label', `${m}월 ${d}일 (${WD[new Date(y, m-1, +d).getDay()]})` + (isToday(y, m, +d)?', 오늘':'') + (has?', 그림일기 있음':''));
+    }
+  }
+  function refreshMonthViews(y, m){
+    if(homeGrid.ym && homeGrid.ym[0] === y && homeGrid.ym[1] === m) markGrid(homeGrid);
+    if(bigGrid.ym && bigGrid.ym[0] === y && bigGrid.ym[1] === m){
+      markGrid(bigGrid);
+      const mo = months[ymKey(y, m)];
+      bigcal.classList.toggle('loading', !!mo && mo.state === 'loading');
+    }
+    if(y === today.y && m === today.m) updateShelf();
+  }
+  // 벽 달력: 서울 기준 이번 달 (날이 바뀌면 다시 그림)
+  function renderHome(){
+    today = seoulToday();
+    if(homeY === today.y && homeM === today.m && homeGrid.querySelector('.today')) return;
+    homeY = today.y; homeM = today.m;
+    document.getElementById('homeHead').innerHTML = headHTML(homeY, homeM);
+    homeCal.setAttribute('aria-label', `일기 확인: ${homeY}년 ${homeM}월 달력 열기`);
+    buildGrid(homeGrid, homeY, homeM, false);
+  }
+  function showMonth(y, m){
+    viewY = y; viewM = m;
+    document.getElementById('bigHead').innerHTML = headHTML(y, m);
+    document.getElementById('bigcalTitle').textContent = `${y}년 ${m}월`;
+    buildGrid(bigGrid, y, m, true);
+    bigcal.classList.remove('loading');
+    loadMonth(y, m);
+  }
+  function stepMonth(n){
+    let y = viewY, m = viewM + n;
+    if(m < 1){ m = 12; y--; } if(m > 12){ m = 1; y++; }
+    showMonth(y, m);
+  }
+  document.getElementById('calPrev').addEventListener('click', ()=> stepMonth(-1));
+  document.getElementById('calNext').addEventListener('click', ()=> stepMonth(1));
+  // 책장 안내 문구
+  function updateShelf(){
+    const has = !!(user && dayItem(today.y, today.m, today.d));
+    const text = flow ? '오늘의 일기 마저 쓰기' : has ? '오늘의 일기 보기' : '오늘의 일기 쓰기';
+    shelf.querySelector('.hint').textContent = text;
+    shelf.setAttribute('aria-label', text + ': 책장 열기');
+  }
+
+  // 날짜를 누르면 그 날의 그림일기를 BE에서 불러와 펼침 (없으면 빈 책)
+  let diaryEntries = [];   // 지금 펼친 그림일기를 쓸 때 나눈 대화 (대화 기록 보기에 사용)
+  let diarySeq = 0;
+  async function openDiaryAt(y, m, d, opener, knownId){
+    if(bookShown()) return;
+    const it = user ? dayItem(y, m, d) : null, id = knownId || (it && it.diary_id);
+    // 저장은 됐지만 그림 업로드를 마치지 못한 오늘 일기 → 다시 시도할 수 있는 확인 화면으로
+    if(id && flow && flow.diary && flow.diary.diary_id === id){ openReview(opener); return; }
+    const seq = ++diarySeq;
+    if(!id){ openDiaryBook(y, m, d, null, opener); return; }
+    opener && opener.classList.add('loading');
+    try{
+      const det = await api('/api/diaries/' + encodeURIComponent(id));
+      if(seq !== diarySeq) return;                  // 그 사이 다른 날짜를 눌렀으면 늦은 응답은 버림
+      openDiaryBook(y, m, d, det, opener);
+    }catch(e){
+      if(seq === diarySeq){ toast(errText(e)); handleAuth(e); }
+    }finally{ opener && opener.classList.remove('loading'); }
+  }
+  function openDiaryBook(y, m, d, det, opener){
+    // 원본 대화는 position 순서 그대로
+    diaryEntries = det ? (det.messages || []).slice().sort((a, b) => a.position - b.position)
+      .map(x => ({who: x.role === 'child' ? 'user' : 'ai', text: x.text})) : [];
+    diaryDate = new Date(y, m - 1, d);
+    const bk = det ? {weather:det.weather, drawing:det.imageUrl || null, diary:det.confirmed_text || '', name:userName(), diaryId:det.diary_id} : null;
+    openBook('diary', fmtDate(y, m, d), opener, det ? colorOf(det.diary_id) : null, bk);
+  }
 
   // ---- 대화 기록 보기: 이 그림일기를 쓸 때 AI와 나눈 대화를 읽기 전용으로 보여 줌 ----
   const logEl = document.getElementById('chatLog'), logList = document.getElementById('logList');
@@ -1190,14 +1619,12 @@ body{
   function openLog(){
     logList.innerHTML = '';
     document.getElementById('logDate').textContent = chatDate.textContent;
-    const shown = diaryEntries.filter(en => en.kind !== 'image');
-    if(!shown.length){
+    if(!diaryEntries.length){
       const p = document.createElement('p'); p.className = 'empty-state'; p.textContent = '대화 기록이 없어요.'; logList.appendChild(p);
     }
-    shown.forEach(en=>{
+    diaryEntries.forEach(en=>{
       const el = document.createElement('div');
       el.className = 'msg ' + en.who; el.textContent = en.text;
-      if(en.who === 'ai' && !en.text){ el.textContent = AI_PENDING; el.classList.add('pending'); }   // 빈 AI 답변도 대화 자리에 보이도록
       logList.appendChild(el);
     });
     logEl.hidden = false;
@@ -1224,15 +1651,17 @@ body{
     bigcal.style.transform = reverse ? t : '';
   }
   let calOpener = null;
-  function openCalendarPage(opener){
+  function openCalendarPage(opener, y, m){
     if(!calpage.hidden) return;
     calOpener = opener || homeCal;
+    renderHome();
+    if(!user) toast('로그인하면 저장한 일기를 볼 수 있어요');
     calpage.classList.toggle('pcal', stage.classList.contains('portrait'));
-    for(let d=1; d<=days; d++) refreshCell(d);
+    showMonth(y || today.y, m || today.m);
     setTimeout(()=>{ homeCal.style.visibility = 'hidden'; }, 30);   // 벽의 달력이 떼어져 확대되는 것처럼
     flipFromHome(false);
     requestAnimationFrame(()=> calpage.classList.add('show'));
-    later(()=>{ const t = cells[todayDate || 1]; t && t.focus({preventScroll:true}); }, 700);
+    later(()=>{ const t = bigGrid.querySelector('.cell.today') || bigGrid.cells[1]; t && t.focus({preventScroll:true}); }, 700);
   }
   function closeCalendarPage(){
     if(calpage.hidden || calpage.classList.contains('closing')) return;
@@ -1257,11 +1686,30 @@ body{
     else if(!calpage.hidden) closeCalendarPage();
   });
 
-  // ---- 로그인 / 회원가입 (화면만 있고 기능은 아직 없음) ----
-  // 실제 계정 기능을 연결할 때 이 두 함수만 바꾸면 됩니다. 성공하면 {ok:true}, 실패하면 {ok:false, message:'…'}를 돌려주세요.
-  async function login(email, password){ return {ok:false, message:'로그인 기능은 아직 준비 중이에요.'}; }
-  async function signup(name, email, password){ return {ok:false, message:'회원가입 기능은 아직 준비 중이에요.'}; }
-
+  // ---- 로그인 / 회원가입 (Supabase Auth) ----
+  // 성공하면 {ok:true, message?}, 실패하면 {ok:false, message:'…'}
+  function authErrMsg(e){
+    const m = (e && e.message) || '';
+    if(/invalid login credentials/i.test(m)) return '이메일 또는 비밀번호가 맞지 않아요.';
+    if(/email not confirmed/i.test(m)) return '이메일 인증 후 로그인해 주세요.';
+    if(/already (registered|been registered|exists)/i.test(m)) return '이미 가입한 이메일이에요.';
+    if(e && e.status === 429) return '요청이 많아요. 잠시 후 다시 시도해 주세요.';
+    if(/password/i.test(m)) return '비밀번호 조건을 확인해 주세요.';
+    if(/fetch|network/i.test(m)) return '서버 연결 실패';
+    return '인증 실패';
+  }
+  async function login(email, password){
+    if(!sb) return {ok:false, message:NO_AUTH_MSG};
+    const {error} = await sb.auth.signInWithPassword({email, password});
+    return error ? {ok:false, message:authErrMsg(error)} : {ok:true};
+  }
+  async function signup(name, email, password){
+    if(!sb) return {ok:false, message:NO_AUTH_MSG};
+    const {data, error} = await sb.auth.signUp({email, password, options:{data:{name}}});
+    if(error) return {ok:false, message:authErrMsg(error)};
+    // 이메일 인증을 켠 프로젝트는 세션 없이 가입만 됨
+    return data && data.session ? {ok:true, message:'가입이 완료됐어요.', session:true} : {ok:true, message:'가입 완료. 이메일 인증 후 로그인해 주세요.'};
+  }
   const auth = document.getElementById('auth'), loginForm = document.getElementById('loginForm'), signupForm = document.getElementById('signupForm');
   const tabLogin = document.getElementById('tabLogin'), tabSignup = document.getElementById('tabSignup');
   let authOpener = null;
@@ -1279,8 +1727,10 @@ body{
     auth.classList.remove('show');
     setTimeout(()=>{ auth.hidden = true; authOpener && authOpener.focus({preventScroll:true}); }, reduce ? 0 : 300);
   }
+  function requireLogin(){ toast('로그인이 필요해요'); openAuth('login', shelf); }
   document.getElementById('openLogin').addEventListener('click', e=> openAuth('login', e.currentTarget));
   document.getElementById('openSignup').addEventListener('click', e=> openAuth('signup', e.currentTarget));
+  document.getElementById('logoutBtn').addEventListener('click', async ()=>{ if(sb) await sb.auth.signOut(); setUser(null); toast('로그아웃했어요'); });
   tabLogin.addEventListener('click', ()=> showTab('login'));
   tabSignup.addEventListener('click', ()=> showTab('signup'));
   auth.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', ()=> showTab(b.dataset.go)));
@@ -1293,22 +1743,51 @@ body{
     for(const [el, ok, text] of rules){ if(!ok){ msgEl.textContent = text; if(el){ el.setAttribute('aria-invalid','true'); el.focus({preventScroll:true}); } return false; } }
     msgEl.textContent = ''; return true;
   }
+  // 제출 중에는 버튼을 막아 중복 요청 방지
+  async function submitOnce(form, fn){
+    const btn = form.querySelector('.auth-submit'); if(btn.disabled) return null;
+    btn.disabled = true;
+    try{ return await fn(); }catch(e){ return {ok:false, message:authErrMsg(e)}; }finally{ btn.disabled = false; }
+  }
   loginForm.addEventListener('submit', async e=>{
     e.preventDefault();
     const em = document.getElementById('loginEmail'), pw = document.getElementById('loginPw'), msg = document.getElementById('loginMsg');
     if(!check(msg, [[em, em.value.trim(), '이메일을 입력해 주세요.'], [em, emailOk(em.value.trim()), '이메일 형식을 확인해 주세요.'], [pw, pw.value, '비밀번호를 입력해 주세요.']])) return;
-    const r = await login(em.value.trim(), pw.value);
+    const r = await submitOnce(loginForm, ()=> login(em.value.trim(), pw.value)); if(!r) return;
     msg.textContent = r.ok ? '로그인했어요.' : r.message; msg.classList.toggle('ok', !!r.ok);
-    if(r.ok) setTimeout(closeAuth, 600);
+    if(r.ok){ pw.value = ''; setTimeout(closeAuth, 600); }
   });
   signupForm.addEventListener('submit', async e=>{
     e.preventDefault();
     const nm = document.getElementById('suName'), em = document.getElementById('suEmail'), pw = document.getElementById('suPw'), pw2 = document.getElementById('suPw2'), ag = document.getElementById('suAgree'), msg = document.getElementById('signupMsg');
     if(!check(msg, [[nm, nm.value.trim(), '이름을 입력해 주세요.'], [em, emailOk(em.value.trim()), '이메일 형식을 확인해 주세요.'], [pw, pw.value.length >= 8, '비밀번호는 8자 이상이어야 해요.'], [pw2, pw.value === pw2.value, '비밀번호 확인이 일치하지 않아요.'], [ag, ag.checked, '약관에 동의해 주세요.']])) return;
-    const r = await signup(nm.value.trim(), em.value.trim(), pw.value);
-    msg.textContent = r.ok ? '가입이 완료됐어요.' : r.message; msg.classList.toggle('ok', !!r.ok);
-    if(r.ok) setTimeout(()=> showTab('login'), 800);
+    const r = await submitOnce(signupForm, ()=> signup(nm.value.trim(), em.value.trim(), pw.value)); if(!r) return;
+    msg.textContent = r.message; msg.classList.toggle('ok', !!r.ok);
+    if(r.ok){ pw.value = pw2.value = ''; setTimeout(()=> r.session ? closeAuth() : showTab('login'), 900); }
   });
+
+  // 로그인한 회원이 바뀌면 화면 상태를 정리하고 이번 달 일기를 불러옴
+  function setUser(u){
+    const prev = user ? user.id : null;
+    user = u || null;
+    const name = userName();
+    const nameEl = document.getElementById('authName');
+    nameEl.hidden = !user; nameEl.textContent = user ? (name || user.email || '') + (name ? ' 님' : '') : '';
+    document.getElementById('openLogin').hidden = document.getElementById('openSignup').hidden = !!user;
+    document.getElementById('logoutBtn').hidden = !user;
+    if((user ? user.id : null) === prev) return;     // 토큰 갱신 등 같은 회원이면 그대로
+    chat = null; flow = null; diarySeq++;
+    Object.keys(months).forEach(k => delete months[k]);
+    if(!sketch.hidden) closeSketch();
+    if(bookShown()) closeBook();
+    markGrid(homeGrid); if(bigGrid.ym) markGrid(bigGrid);
+    updateShelf();
+    if(user){ loadMonth(today.y, today.m); if(!calpage.hidden) loadMonth(viewY, viewM); }
+  }
+  if(sb){
+    // 콜백 안에서 다른 Supabase 호출을 기다리지 않도록 한 박자 뒤에 처리
+    sb.auth.onAuthStateChange((event, session)=>{ setTimeout(()=> setUser(session ? session.user : null), 0); });
+  }
 
   // ---- 벽시계: 실제 시간처럼 초침이 움직임 ----
   const hourHand = document.getElementById('hourHand'), minHand = document.getElementById('minHand'), secHand = document.getElementById('secHand');
@@ -1345,6 +1824,9 @@ body{
   [document.body, document.getElementById('viewport')].forEach(unscroll);
   window.addEventListener('scroll', ()=>{ if(scrollX || scrollY) scrollTo(0, 0); });
   fit();
+  renderHome();
+  updateShelf();
+  if(!sb) console.warn('Supabase 설정이 없어 로그인할 수 없습니다. config.js를 확인하세요.');
 })();
 </script>
 </body>
