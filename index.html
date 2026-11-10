@@ -83,6 +83,10 @@ body{
 .portrait .cs-sofa,.portrait .cs-plant{display:none}
 .portrait .cs-shelf{left:30px;top:889px;width:540px;height:32px}
 
+/* 마스코트 (Fluent Emoji 고양이): 대화 기록 책갈피의 표정 (setMascot) */
+.mascot{position:relative;display:block}
+.mascot .mascot-face{display:block;width:100%;height:100%}
+
 /* logo */
 .logo{position:absolute;left:48px;top:40px;margin:0;font-size:46px;line-height:1.1;font-weight:600;letter-spacing:-.02em;color:var(--ink);z-index:3}
 .logo span{font-weight:300;opacity:.6}
@@ -228,6 +232,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .msg.user{align-self:flex-end;background:var(--ink);color:var(--white);border-bottom-right-radius:4px}
 .msg.ai{align-self:flex-start;background:var(--white);border:2px solid var(--ink);border-bottom-left-radius:4px;min-width:72px;min-height:46px;box-shadow:3px 3px 0 rgba(34,34,34,.12)}
 .msg.typing{display:flex;gap:4px;align-items:center}
+/* AI 말풍선 + 마스코트 아바타: 줄은 대화 목록 전체 너비라 말풍선 max-width:78% 기준이 그대로 */
+.ai-row{display:flex;align-items:flex-end;gap:8px;flex:none}
+.ai-row .avatar{flex:none;width:34px;height:34px;display:block}
 .msg.typing i{width:6px;height:6px;border-radius:50%;background:var(--ink);opacity:.3;animation:dot 1s infinite}
 .msg.typing i:nth-child(2){animation-delay:.15s}.msg.typing i:nth-child(3){animation-delay:.3s}
 @keyframes dot{50%{opacity:1}}
@@ -304,6 +311,17 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 
 /* diary: a blank 4-page book you can page through */
 .book.readonly .chat{display:none}
+/* 대화 기록: 책 위 모서리에 앉은 마스코트(누르면 대화 기록). "대화 기록" 글자는 마우스를 올리거나 키보드로 포커스할 때만 마스코트 아래에.
+   책 넘김 종이(.leaf z2)·표지(z3)보다 위라 쪽을 넘겨도 그대로 */
+.log-tab{position:absolute;right:14px;top:-48px;z-index:4;width:52px;height:52px;padding:0;border:0;background:none;cursor:pointer;
+  font:inherit;color:var(--ink);transition:transform var(--ease), opacity .35s ease}
+.log-tab .mascot{width:52px;height:52px;filter:drop-shadow(1px 2px 1.5px rgba(34,34,34,.25))}
+.log-tab .bm-label{position:absolute;left:50%;top:calc(100% + 4px);transform:translate(-50%,-3px);font-size:13px;line-height:1.3;white-space:nowrap;
+  text-shadow:0 0 3px var(--paper), 0 0 3px var(--paper);opacity:0;pointer-events:none;transition:opacity var(--ease), transform var(--ease)}
+.log-tab:hover{transform:translateY(-2px)}
+.log-tab:hover .bm-label,.log-tab:focus-visible .bm-label{opacity:1;transform:translate(-50%,0)}
+.log-tab:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px;border-radius:50%}
+.book:not(.ready) .log-tab{opacity:0;pointer-events:none}
 .book .pno{position:absolute;bottom:18px;font-size:12px;font-weight:500;opacity:.45;font-variant-numeric:tabular-nums;z-index:1}
 .book .page .pno{right:28px}
 .book .inside .pno{left:28px;bottom:25px}   /* the cover box reaches 7px past the page, so lift the number to line up with the right page's */
@@ -376,8 +394,8 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .page-nav .act{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;white-space:nowrap}
 .page-nav .act.solid{background:var(--ink);color:var(--white)}
 .page-nav .act.solid:hover:not(:disabled){background:var(--ink);opacity:.85}
-.page-nav .act[hidden],.page-nav .log-btn[hidden]{display:none}
-@media (max-width:420px){ .page-nav{gap:4px} .page-nav .act,.page-nav .log-btn{padding:0 10px} }
+.page-nav .act[hidden]{display:none}
+@media (max-width:420px){ .page-nav{gap:4px} .page-nav .act{padding:0 10px} }
 .dp1-grid.muted{opacity:.55}
 /* 글 칸 넘기기: 글 칸 바로 아래 가운데 (1쪽 아래 여백, 쪽 번호와 겹치지 않음) */
 .dp1-turn{position:absolute;left:50%;bottom:-40px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -502,8 +520,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   background:var(--noise), var(--paper);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(12px);transition:transform .3s ease}
 .auth.show .auth-card{transform:none}
 /* chat log of a diary (opened from the diary book's page nav): same card as the login dialog */
-.page-nav .log-btn{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;margin-left:4px}
-.page-nav .log-btn,.page-nav .del{white-space:nowrap}   /* keep each label on one line on narrow screens */
+.page-nav .del{white-space:nowrap}   /* keep each label on one line on narrow screens */
 .log{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.5);opacity:0;transition:opacity .3s ease}
 .log.show{opacity:1}
 .log-card{width:min(520px, 100%);max-height:min(80vh, 100%);display:flex;flex-direction:column;border-radius:6px;overflow:hidden;
@@ -575,9 +592,10 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 </div>
 
 <div class="reader" id="reader" hidden>
-  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="log-btn" id="logBtn">대화 기록 보기</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button></nav>
+  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button></nav>
   <div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
     <div class="back-cover" aria-hidden="true"></div>
+    <button type="button" class="log-tab" id="logBtn" hidden><span class="bm-label">대화 기록</span><span class="mascot" aria-hidden="true"><img class="mascot-face" src="assets/mascot/mascot_default.svg" alt=""></span></button>
     <div class="page">
       <span class="pno" id="pnoRight"></span>
       <div class="comic" id="comic" hidden role="img" aria-label="4컷 만화"></div>
@@ -745,6 +763,14 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     fetch(API_BASE + '/health', {cache:'no-store', signal:ctl.signal})
       .then(r => { if(r.ok) serverReady = true; }).catch(()=>{}).finally(()=> clearTimeout(t));
   }
+  // ---- 마스코트 표정: 대화 기록 책갈피의 마스코트 ----
+  // error·happy 등은 ms 동안만 보이고 기본 얼굴로 돌아감
+  let tempMood = null, moodTimer;
+  function setMascot(mood, ms = 3000){
+    if(mood){ clearTimeout(moodTimer); tempMood = mood; moodTimer = setTimeout(()=>{ tempMood = null; setMascot(); }, ms); }
+    const m = tempMood || 'default';
+    document.querySelectorAll('.mascot').forEach(el => { el.querySelector('.mascot-face').src = `assets/mascot/mascot_${m}.svg`; el.dataset.mood = m; });
+  }
   function slowNotice(){
     toast(serverReady ? '응답 대기 중 · 잠시만 기다려 주세요' : '서버 준비 중 · 최대 1분 정도 걸려요', 6000);
   }
@@ -826,7 +852,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     ['REQUEST_IN_PROGRESS','SESSION_BUSY'].includes(e.code) || (e.code || '').startsWith('AUTH_');
   // 인증이 풀렸으면 로그인 창을 띄움
   function handleAuth(e){
-    if(e && (e.status === 401 || e.status === 403)){ toast('인증 실패: 다시 로그인해 주세요'); if(auth.hidden) openAuth('login', null); }
+    if(e && (e.status === 401 || e.status === 403)){ errToast('인증 실패: 다시 로그인해 주세요'); if(auth.hidden) openAuth('login', null); }
   }
 
   // ---- 월별 일기 목록 (GET /api/diaries?month=YYYY-MM) ----
@@ -845,7 +871,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     }).catch(e => {
       if(months[k] !== entry) return null;
       entry.state = 'err'; refreshMonthViews(y, m);
-      toast('일기 목록: ' + errText(e)); handleAuth(e);
+      errToast('일기 목록: ' + errText(e)); handleAuth(e);
       return null;
     });
     return entry.promise;
@@ -1005,7 +1031,12 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   function addMsg(text, who){
     const el = document.createElement('div');
     el.className = 'msg ' + who; el.textContent = text;
-    messages.appendChild(el);
+    if(who.startsWith('ai')){                        // AI 말풍선 왼쪽에 마스코트 아바타 (답을 기다리는 동안은 생각하는 표정)
+      const row = document.createElement('div'); row.className = 'ai-row';
+      const av = new Image(); av.className = 'avatar'; av.alt = ''; av.setAttribute('aria-hidden', 'true');
+      av.src = `assets/mascot/mascot_${who.includes('typing') ? 'thinking' : 'default'}.svg`;
+      row.append(av, el); messages.appendChild(row);
+    } else messages.appendChild(el);
     return el;
   }
 
@@ -1216,7 +1247,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       if(c !== chat || !c.entries.includes(entry)) return;
       if(wasUnknown || outcomeUnknown(e)){         // 결과 불명: 세션 미해결, 같은 발언·다른 발언 모두 새 ID 전송 금지
         entry.state = 'unknown';
-        if(wasUnknown) toast('확인 결과: ' + errText(e, 'AI 응답 실패'));
+        if(wasUnknown) errToast('확인 결과: ' + errText(e, 'AI 응답 실패'));
         if(e.code === 'SESSION_NOT_FOUND') c.note = {text:'세션 없음', label:'새 대화 시작', action: restartChat};
       }else if(e.code === 'SESSION_NOT_FOUND'){
         c.entries.splice(c.entries.indexOf(entry), 1);
@@ -1226,7 +1257,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       }else{                                       // 처리되지 않은 요청: 쓴 글은 입력칸에 보존
         c.entries.splice(c.entries.indexOf(entry), 1);
         if(!input.value.trim()){ input.value = entry.text; input.dispatchEvent(new Event('input')); }
-        toast(errText(e, 'AI 응답 실패'));
+        errToast(errText(e, 'AI 응답 실패'));
       }
       handleAuth(e);
     }finally{
@@ -1477,7 +1508,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     const f = flow; if(!f || f.confirmReq || skDone.disabled) return;
     skDone.disabled = true;
     const blob = skDirty ? await canvasBlob() : null;
-    if(skDirty && !blob){ skDone.disabled = false; toast('그림 크기 초과'); return; }
+    if(skDirty && !blob){ skDone.disabled = false; errToast('그림 크기 초과'); return; }
     if(f !== flow) return;
     if(f.blobUrl) URL.revokeObjectURL(f.blobUrl);
     f.blob = blob; f.blobUrl = blob ? URL.createObjectURL(blob) : null;
@@ -1550,7 +1581,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       else if(e.code === 'HISTORY_REVISION_CONFLICT' || e.code === 'DIARY_DRAFT_NOT_FOUND'){   // 초안이 바뀜 → 다시 확인받기
         f.draft = null; f.confirmReq = null; requestDraft(f, true);
       }else f.saveErr = e;
-      toast('저장 실패: ' + errText(e)); handleAuth(e);
+      errToast('저장 실패: ' + errText(e)); handleAuth(e);
       renderReview();
       return;
     }
@@ -1569,7 +1600,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       ok = true;
     }catch(e){
       if(e.code === 'DRAWING_ALREADY_EXISTS') conflict = true;   // 409: 성공 아님, 서버 상태 확인
-      else { f.upErr = e; toast('그림 ' + errText(e)); handleAuth(e); }
+      else { f.upErr = e; errToast('그림 ' + errText(e)); handleAuth(e); }
     }
     if(f !== flow) return;
     f.uploading = false;
@@ -1587,7 +1618,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       if(url) state = 'exists';
       toast(url ? '이미 저장된 그림 있음 · 확인 필요' : '그림 저장 대기 · 완료 불가');
     }catch(e){
-      toast('그림 상태 ' + errText(e)); handleAuth(e);
+      errToast('그림 상태 ' + errText(e)); handleAuth(e);
     }
     if(f !== flow) return;
     f.drawState = state; f.serverImage = url;
@@ -1604,7 +1635,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     const d = f.diary; endFlow();
     const [y, m, dd] = String(d.diary_date).split('-').map(Number);
     const after = ()=>{
-      openCalendarPage(shelf, y, m); toast('그림일기를 완성했어요');
+      openCalendarPage(shelf, y, m); toast('그림일기를 완성했어요'); setMascot('happy');
       setTimeout(()=>{ if(!calpage.hidden && !bookShown() && viewY === y && viewM === m) openDiaryAt(y, m, dd, bigGrid.cells[dd], d.diary_id); }, reduce ? 0 : 800);
     };
     bookShown() ? closeBook(after) : after();
@@ -1763,7 +1794,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       if(seq !== diarySeq) return;                  // 그 사이 다른 날짜를 눌렀으면 늦은 응답은 버림
       openDiaryBook(y, m, d, det, opener);
     }catch(e){
-      if(seq === diarySeq){ toast(errText(e)); handleAuth(e); }
+      if(seq === diarySeq){ errToast(errText(e)); handleAuth(e); }
     }finally{ opener && opener.classList.remove('loading'); }
   }
   function openDiaryBook(y, m, d, det, opener){
@@ -1991,6 +2022,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     toastEl.textContent = msg; toastEl.classList.remove('hide');
     clearTimeout(tt); tt = setTimeout(()=>toastEl.classList.add('hide'), ms);
   }
+  function errToast(msg){ toast(msg); setMascot('error', 2200); }   // 오류 안내: 토스트가 보이는 동안 마스코트 우는 표정
 
   // ---- 화면 크기에 맞추기 (스크롤 없음) ----
   const vp = document.getElementById('viewport'), stage = document.getElementById('stage'), stageTop = document.getElementById('stageTop');
