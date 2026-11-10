@@ -344,7 +344,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .dp1-pic.blank{background:transparent}
 .dp1-pic.blank::after{content:"그린 그림이 없어요";font-size:13px;font-weight:500;opacity:.5}
 /* writing lines: six underlined lines (each 10cqw of the page width, so the box keeps the 10:6 height the picture box is sized against);
-   longer text continues on lined-only pages (.dpn, built by paginate()) */
+   longer text is shown six lines at a time; ‹ › under the box (.dp1-turn) flips to the next six */
 .dp1-grid{flex:none;height:60cqw;overflow:hidden;padding:0 6px;
   font-size:4.4cqw;line-height:10cqw;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere;
   background:repeating-linear-gradient(to bottom, transparent 0 calc(10cqw - 1.5px), rgba(34,34,34,.6) calc(10cqw - 1.5px) 10cqw) local}
@@ -379,9 +379,12 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .page-nav .act[hidden],.page-nav .log-btn[hidden]{display:none}
 @media (max-width:420px){ .page-nav{gap:4px} .page-nav .act,.page-nav .log-btn{padding:0 10px} }
 .dp1-grid.muted{opacity:.55}
-/* 줄 수 재기용 보이지 않는 글 칸 (1쪽 글 칸과 같은 너비·글꼴) */
-.dp-measure{visibility:hidden;pointer-events:none}
-.dp-measure .dp1-grid{height:auto}
+/* 글 칸 넘기기: 글 칸 바로 아래 가운데 (1쪽 아래 여백, 쪽 번호와 겹치지 않음) */
+.dp1-turn{position:absolute;left:50%;bottom:-40px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dp1-turn button{appearance:none;width:30px;height:30px;border-radius:50%;border:2px solid var(--ink);background:var(--white);color:var(--ink);font:inherit;font-size:16px;line-height:1;cursor:pointer;display:grid;place-items:center}
+.dp1-turn button:disabled{opacity:.3;cursor:default}
+.dp1-turn button:not(:disabled):hover{background:var(--color-learn)}
+.dp1-turn button:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
 
 /* chat: message being sent, failed message (retry with the same request id), notes */
 .msg.user.sending{opacity:.6}
@@ -578,7 +581,6 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     <div class="page">
       <span class="pno" id="pnoRight"></span>
       <div class="comic" id="comic" hidden role="img" aria-label="4컷 만화"></div>
-      <div class="dp1 dp-measure" id="dpMeasure" aria-hidden="true"><div class="dp1-grid"></div></div>
       <div class="chat">
         <div class="chat-head">
           <div class="title"><span class="date" id="chatDate"></span><h2 id="chatTitle">AI와 대화</h2></div>
@@ -594,7 +596,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
         </form>
       </div>
     </div>
-    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"></div></section></div></div>
+    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"><div id="dpText"></div></div><div class="dp1-turn" id="dpTurn" hidden><button type="button" id="dpPrev" aria-label="앞 여섯 줄">‹</button><span id="dpLines"></span><button type="button" id="dpNext" aria-label="다음 여섯 줄">›</button></div></section></div></div>
   </div>
 </div>
 </div>
@@ -902,7 +904,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     renderEntries(mode, bk);
     if(reviewing) renderReview();
     reader.hidden = false;
-    if(mode === 'diary') paginate();                 // 책이 화면에 놓인 뒤에야 줄 수를 잴 수 있음
+    if(mode === 'diary') updateLines();              // 책이 화면에 놓인 뒤에야 줄 수를 잴 수 있음
     requestAnimationFrame(()=>{ reader.classList.add('show');
       later(()=> book.classList.add('open'), 200);                                          // 표지가 넘어가며 책이 펼쳐짐
       later(()=>{ book.classList.add('ready'); if(mode === 'chat') input.focus({preventScroll:true}); else { pageNav.classList.add('show'); } }, 1100);  // 오른쪽 페이지 내용이 나타남
@@ -922,61 +924,32 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 
   // ---- 그림일기: 넘길 수 있는 책 ----
   // PC: 두 쪽씩 펼침 / 휴대폰: 한 쪽씩
-  let TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 이어지는 글 쪽(긴 일기) / 끝 쪽: 4컷 만화. paginate()가 계산
+  const TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 2쪽: 4컷 만화
   const pageNav = document.getElementById('pageNav'), pageInfo = document.getElementById('pageInfo');
   const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
   const pnoLeft = document.getElementById('pnoLeft'), pnoRight = document.getElementById('pnoRight');
   let spread = 0, turning = false, diaryOn = false;
   const perSpread = () => narrow.matches ? 1 : 2;
-  const spreads = () => Math.ceil(TOTAL / perSpread());
-  function pagesOf(i){ const [l, r] = narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; return [l, r <= TOTAL ? r : null]; }   // 쪽 수가 홀수면 마지막 오른쪽은 빈 쪽
+  const spreads = () => TOTAL / perSpread();
+  function pagesOf(i){ return narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; }
   const insideEl = book.querySelector('.inside'), pageEl = book.querySelector('.page');
-  // 그림일기의 내용이 있는 쪽: 1쪽 = 날짜·그림·일기 글, 이어지는 글 쪽들, 끝 쪽 = 4컷 만화 (모두 줄 없는 종이)
+  // 그림일기의 내용이 있는 쪽: 1쪽 = 날짜·그림·일기 글, 2쪽 = 4컷 만화 (둘 다 줄 없는 종이)
   const PAGE_CONTENT = {1: document.getElementById('dp1'), 2: comic};
-  // 긴 일기: 1쪽 밑줄 6줄을 넘친 글을 밑줄만 있는 쪽으로 이어 씀. 글자 수가 아니라 실제로 그려진 줄 수로 나눔
-  // 이어지는 쪽은 같은 글을 앞쪽 줄 수만큼 위로 밀어 보여 줌 (같은 너비라 줄바꿈 위치가 1쪽과 똑같음)
-  const FIRST_LINES = 6, dpMeasure = document.getElementById('dpMeasure');
-  let contPages = [];
-  function paginate(){
-    const src = document.getElementById('dpGrid'), g = dpMeasure.firstElementChild;
-    g.textContent = src.textContent;
-    const lh = parseFloat(getComputedStyle(g).lineHeight);
-    if(!lh || !dpMeasure.clientHeight) return;            // 책이 아직 화면에 없음: 책이 보일 때 다시 계산
-    const lines = Math.round(g.scrollHeight / lh);
-    const per = Math.max(1, Math.floor(dpMeasure.clientHeight / lh));
-    const extra = Math.ceil(Math.max(0, lines - FIRST_LINES) / per);
-    clearLeaves();
-    contPages.forEach(el => el.remove());
-    contPages = Array.from({length: extra}, (_, i)=>{
-      const el = document.createElement('section'); el.className = 'dp1 dpn'; el.hidden = true; el.setAttribute('aria-hidden', 'true');
-      const grid = document.createElement('div'); grid.className = 'dp1-grid' + (src.classList.contains('muted') ? ' muted' : '');
-      grid.style.height = `calc(${per} * 10cqw)`;
-      const t = document.createElement('div'); t.textContent = src.textContent; t.style.marginTop = `calc(${-(FIRST_LINES + i * per)} * 10cqw)`;
-      grid.appendChild(t); el.appendChild(grid);
-      return el;
-    });
-    Object.keys(PAGE_CONTENT).forEach(k => delete PAGE_CONTENT[k]);
-    PAGE_CONTENT[1] = document.getElementById('dp1');
-    contPages.forEach((el, i) => { PAGE_CONTENT[i + 2] = el; });
-    TOTAL = extra + 2; PAGE_CONTENT[TOTAL] = comic;
-    spread = Math.min(spread, spreads() - 1);
-    showNumbers();
-  }
-  window.addEventListener('resize', ()=>{ if(diaryOn && bookShown()) paginate(); });
   // 지금 보이는 왼쪽/오른쪽 쪽을 그림. 내용이 있는 쪽이면 그 내용을 해당 쪽에 놓는다
   function showPages(l, r){
     pnoLeft.textContent = diaryOn && l ? l : ''; pnoRight.textContent = diaryOn && r ? r : '';
     book.classList.toggle('plain-left', diaryOn && l in PAGE_CONTENT);
-    book.classList.toggle('plain-right', diaryOn && (!r || r in PAGE_CONTENT));   // 쪽 수가 홀수일 때 마지막 빈 쪽도 일기 종이
+    book.classList.toggle('plain-right', diaryOn && r in PAGE_CONTENT);
     if(!diaryOn) return;
     for(const [n, el] of Object.entries(PAGE_CONTENT)){
       if(l === +n) insideEl.appendChild(el); else if(r === +n) pageEl.appendChild(el);
       el.hidden = !(l === +n || r === +n);
     }
+    updateLines();                                    // 1쪽이 다시 보일 때 글 칸 줄 수 확인
   }
   function showNav(){
     const [l, r] = pagesOf(spread);
-    pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${r ? `${l}–${r}` : l} / ${TOTAL}`;
+    pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${l}–${r} / ${TOTAL}`;
     prevBtn.disabled = spread === 0; nextBtn.disabled = spread === spreads() - 1;
     prevBtn.hidden = nextBtn.hidden = spreads() === 1;   // PC는 두 쪽이 한 번에 다 보여서 넘길 쪽이 없음
   }
@@ -1067,10 +1040,38 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     setDiaryText((bk && bk.diary) || '', false);
   }
   function setDiaryText(text, muted){
-    dpGrid.textContent = text; dpGrid.classList.toggle('muted', !!muted);
+    dpText.textContent = text; dpGrid.classList.toggle('muted', !!muted);
     dpGrid.setAttribute('aria-label', text ? '일기: ' + text : '일기 글 칸 (비어 있음)');
-    if(diaryOn) paginate();
+    lineView = 0; updateLines();
   }
+  // 글 칸 넘기기: 책 쪽 수는 그대로, 1쪽 글 칸만 밑줄 6줄씩 넘겨 봄. 글자 수가 아니라 실제로 그려진 줄 수로 나눔
+  const LINES = 6, dpText = document.getElementById('dpText'), dpTurn = document.getElementById('dpTurn');
+  const dpLines = document.getElementById('dpLines'), dpPrev = document.getElementById('dpPrev'), dpNext = document.getElementById('dpNext');
+  let lineView = 0, lineViews = 1;
+  function updateLines(){
+    const lh = parseFloat(getComputedStyle(dpGrid).lineHeight);
+    if(!lh || !dpGrid.clientHeight) return;          // 글 칸이 화면에 없음: 보일 때 다시 계산
+    lineViews = Math.max(1, Math.ceil(Math.round(dpText.offsetHeight / lh) / LINES));
+    lineView = Math.min(lineView, lineViews - 1);
+    dpText.style.marginTop = `calc(${-lineView * LINES} * 10cqw)`;   // 줄 높이 10cqw (.dp1-grid)
+    dpTurn.hidden = lineViews < 2;
+    dpLines.textContent = `${lineView + 1} / ${lineViews}`;
+    dpPrev.disabled = lineView === 0; dpNext.disabled = lineView === lineViews - 1;
+  }
+  function turnLines(d){
+    const next = lineView + d;
+    if(next < 0 || next >= lineViews || dpText.getAnimations().length) return;
+    const go = ()=>{ lineView = next; updateLines(); };
+    if(reduce){ go(); return; }
+    // 글만 페이드 아웃 → 다음 여섯 줄로 바꾼 뒤 페이드 인 (밑줄은 그대로)
+    dpText.animate([{opacity:1}, {opacity:0}], {duration:180, easing:'ease-in'}).finished
+      .then(()=>{ go(); return dpText.animate([{opacity:0}, {opacity:1}], {duration:180, easing:'ease-out'}).finished; })
+      .catch(()=>{});
+  }
+  dpPrev.addEventListener('click', ()=> turnLines(-1));
+  dpNext.addEventListener('click', ()=> turnLines(1));
+  dpTurn.addEventListener('click', e=> e.stopPropagation());   // 책 쪽 넘김(책 누르기)으로 번지지 않게
+  window.addEventListener('resize', ()=>{ if(bookShown() && diaryOn) updateLines(); });
   function setPicture(bk){
     dpPic.innerHTML = '';
     dpPic.classList.toggle('blank', !(bk && bk.drawing));
