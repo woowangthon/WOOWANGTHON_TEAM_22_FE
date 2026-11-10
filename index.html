@@ -88,8 +88,16 @@ body{
 .mascot .mascot-face{display:block;width:100%;height:100%}
 
 /* 재화(코인·물방울) 잔액: 방 왼쪽 아래 바닥. 보기 전용이라 클릭을 막지 않음 */
-.wallet{position:absolute;left:48px;top:806px;z-index:3;display:flex;gap:10px;pointer-events:none}
-.portrait .wallet{left:24px;top:926px}
+.floor-bar{position:absolute;left:48px;top:806px;z-index:3;display:flex;gap:10px;align-items:center}
+.portrait .floor-bar{left:24px;right:24px;top:926px;justify-content:space-between}   /* 세로: 상점 버튼은 오른쪽 끝 (가운데는 책장 안내 문구) */
+.wallet{display:flex;gap:10px;pointer-events:none}
+.wallet[hidden]{display:none}
+/* 상점 입구: 재화 옆 알약 버튼 (Awwwards 기본 버튼: ink 바탕, 흰 글자, radius-pill) */
+.shop-btn{appearance:none;display:flex;align-items:center;gap:6px;border:2px solid var(--ink);background:var(--ink);color:var(--white);font:inherit;font-size:16px;line-height:1.2;
+  padding:5px 16px 5px 8px;border-radius:var(--radius-pill);cursor:pointer;transition:opacity var(--ease)}
+.shop-btn img{width:24px;height:24px;display:block}
+.shop-btn:hover{opacity:.85}
+.shop-btn:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
 .wallet .w-item,.wallet .w-msg{display:flex;align-items:center;gap:6px;padding:4px 14px 4px 6px;border:2px solid var(--ink);border-radius:var(--radius-pill);
   background:var(--white);font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
 .wallet .w-msg{padding:6px 14px;font-size:14px}
@@ -544,6 +552,40 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .page-nav .del{white-space:nowrap}   /* keep each label on one line on narrow screens */
 .log{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.5);opacity:0;transition:opacity .3s ease}
 .log.show{opacity:1}
+/* 상점 창: 대화 기록 창(.log) 카드를 넓힌 것. 틀·탭·버튼은 적용 테마의 디자인 시스템 (지금은 default 토큰 = 페이지 변수) */
+#shop{padding-top:var(--logo-clear, 16px)}   /* 세로: 로고(z 39) 아래부터 */
+.shop-card{width:min(900px, 100%);max-height:min(88vh, 100%)}
+.shop-card .auth-tabs{margin:0;padding:0 16px;flex:none}
+.shop-note{margin:0;padding:10px 24px 0;font-size:14px;line-height:1.5;flex:none}
+.shop-note[hidden]{display:none}
+.shop-note.err{color:var(--error)}
+.shop-note button{margin-left:8px}
+.shop-grid{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 24px 24px;display:grid;grid-template-columns:repeat(auto-fill, minmax(136px, 1fr));gap:12px;align-content:start;grid-auto-rows:max-content}   /* 카드가 줄어들어 버튼이 잘리지 않게 */
+.shop-item{display:flex;flex-direction:column;align-items:center;gap:6px;padding:14px 10px 12px;border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--white);text-align:center}
+.shop-item .si-art{width:72px;height:72px;display:block}
+.shop-item .si-name{font-size:17px;line-height:1.3}
+.shop-item .si-price{display:flex;align-items:center;gap:4px;font-size:15px;font-variant-numeric:tabular-nums}
+.shop-item .si-price img{width:18px;height:18px}
+.shop-item .si-msg{min-height:18px;font-size:13px;line-height:1.4;color:var(--error)}
+.shop-item .si-msg.plain{color:var(--ink)}
+.si-buy{appearance:none;border:2px solid var(--ink);background:var(--ink);color:var(--white);font:inherit;font-size:15px;padding:7px 18px;border-radius:var(--radius-pill);cursor:pointer;transition:opacity var(--ease),background var(--ease)}
+.si-buy.armed{background:var(--color-learn);color:var(--ink)}   /* 한 번 더 누르면 구매: primary는 바탕에만, 글자는 ink */
+.si-buy:disabled{opacity:.3;cursor:default}
+.si-buy:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.si-owned{display:inline-block;padding:3px 10px;border-radius:var(--radius-sm);background:var(--ink);color:var(--white);font-size:13px}
+.shop-empty{grid-column:1 / -1;margin:24px 0;text-align:center;font-size:15px}
+/* 테마 미리보기 카드: 그 테마 디자인 시스템의 토큰 값 (design-system/<이름>/project/tokens.json). 대비는 각 README 규칙 */
+.shop-item.theme{padding:0;overflow:hidden;gap:0;background:var(--tc-body)}
+.shop-item.theme .tc-art{align-self:stretch;height:96px;display:flex;align-items:center;justify-content:center;gap:10px;background:var(--tc-art);border-bottom:2px solid var(--ink)}
+.shop-item.theme .tc-art img{width:56px;height:56px}
+.shop-item.theme .tc-body{align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 10px 12px;color:var(--tc-text)}
+.shop-item.theme .si-msg{color:var(--tc-text)}
+.tc-christmas{--tc-art:#e2f4e9; --tc-body:#ffffff; --tc-text:#222222; box-shadow:inset 0 -6px 0 #3ea094}   /* christmas: inspire-tint 면 + white 카드 + ink 글자, teal은 장식 선만 */
+.tc-halloween{--tc-art:#fff083; --tc-body:#101010; --tc-text:#ffffff}   /* halloween: primary 면(위 글자 없음) + ink-deep 바탕에 surface 글자 */
+.tc-default{--tc-art:#dbd6c0; --tc-body:#f8f8f8; --tc-text:#222222}     /* default: color-read-3 면 + bg-primary 바탕에 ink 글자 */
+.tc-halloween .si-buy{background:#fff083;border-color:#fff083;color:#222222}   /* ink-deep 위 버튼: primary 바탕 + ink 글자 */
+.tc-halloween .si-owned{background:#ffffff;color:#222222}
+.tc-halloween .si-buy.armed{background:#ffffff;border-color:#ffffff}
 /* 나무 물 주기 창: 대화 기록 창(.log)과 같은 카드 */
 .tw-body{padding:20px 24px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
 .tw-view{position:relative;width:200px;height:200px;margin-top:40px}
@@ -623,7 +665,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     <div class="asset plant" id="plant" role="button" tabindex="0" aria-label="나무에 물 주기"><img class="tree-img" alt="" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><g fill="none"><path style="fill:var(--color-read-3)" stroke="#222222" stroke-linejoin="round" d="m9.007 23.996l.78 4.69c.13.76.78 1.31 1.54 1.31h9.35c.76 0 1.42-.55 1.54-1.31l.79-4.69l-7-1.59z"/><path style="fill:var(--white)" stroke="#222222" stroke-linejoin="round" d="M23.5 24h-15c-.28 0-.5-.22-.5-.5v-3c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5"/></g></svg><span class="hint" aria-hidden="true">나무에 물 주기</span></div>
     <div class="asset shelf" id="shelf" role="button" tabindex="0" aria-label="오늘의 일기 쓰기: 책장 열기"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-connect)" d="M8.174 14.391h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479"/><path style="fill:var(--white)" d="M10.087 14.391h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-learn)" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668"/><path style="fill:var(--ink)" d="M18.217 10.565h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478z"/><path style="fill:var(--color-inspire-3)" d="M16.304 10.565H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path style="fill:var(--color-learn-3)" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667z"/><path style="fill:var(--color-read)" d="M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/><path style="fill:var(--color-read-3)" d="M1 11.522a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957zm0 9.565a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479m1.914 0h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479m1.913 0h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668m6.497-4.625h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478zm-1.913 0H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667zm-8.319.001V1.956m18.174 8.609V1.956M2.913 20.13v-7.652m18.174 7.652v-7.652M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/></g></svg><span class="hint" aria-hidden="true">오늘의 일기 쓰기</span></div>
 
-    <div class="wallet" id="wallet" hidden role="status" aria-label="내 재화"><span class="w-item"><img src="assets/icon/coin.svg" alt="코인"><b id="wCoins">—</b></span><span class="w-item"><img src="assets/icon/droplet.svg" alt="물방울"><b id="wDrops">—</b></span><span class="w-msg">재화 확인 불가</span></div>
+    <div class="floor-bar"><div class="wallet" id="wallet" hidden role="status" aria-label="내 재화"><span class="w-item"><img src="assets/icon/coin.svg" alt="코인"><b id="wCoins">—</b></span><span class="w-item"><img src="assets/icon/droplet.svg" alt="물방울"><b id="wDrops">—</b></span><span class="w-msg">재화 확인 불가</span></div><button type="button" class="shop-btn" id="shopBtn"><img src="assets/icon/coin.svg" alt="">상점</button></div>
     <p class="credit">일러스트: OpenMoji (CC BY-SA 4.0), Streamline (CC BY 4.0), Fluent Emoji (MIT)</p>
   </div>
 </div>
@@ -712,6 +754,22 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       <button type="button" class="log-close" id="logClose">닫기</button>
     </div>
     <div class="log-list" id="logList"></div>
+  </div>
+</div>
+
+<div class="log" id="shop" hidden>
+  <div class="log-card shop-card" role="dialog" aria-modal="true" aria-labelledby="shopTitle">
+    <div class="log-head">
+      <div><span class="date" id="shopCoins">코인 —</span><h2 id="shopTitle">상점</h2></div>
+      <button type="button" class="log-close" id="shopClose">닫기</button>
+    </div>
+    <div class="auth-tabs" role="tablist" aria-label="상품 종류">
+      <button type="button" role="tab" id="tab-furniture" data-cat="furniture" aria-selected="true" aria-controls="shopGrid">가구</button>
+      <button type="button" role="tab" id="tab-decoration" data-cat="decoration" aria-selected="false" aria-controls="shopGrid" tabindex="-1">장식</button>
+      <button type="button" role="tab" id="tab-theme" data-cat="theme" aria-selected="false" aria-controls="shopGrid" tabindex="-1">테마</button>
+    </div>
+    <p class="shop-note" id="shopNote" role="status" hidden></p>
+    <div class="shop-grid" id="shopGrid" role="tabpanel" aria-labelledby="tab-furniture"></div>
   </div>
 </div>
 
@@ -1931,6 +1989,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     if(!auth.hidden) closeAuth();                  // 로그인 창이 열려 있으면 그것부터
     else if(!logEl.hidden) closeLog();             // 대화 기록 창이 열려 있으면 그것부터
     else if(!waterEl.hidden) closeWater();         // 나무 물 주기 창
+    else if(!shopEl.hidden) closeShop();           // 상점
     else if(!sketch.hidden) return;                // 스케치북은 "그림일기 완성"으로만 닫음 (그리던 그림이 날아가지 않게)
     else if(bookShown()) closeBook();               // 책이 열려 있으면 책부터 닫기
     else if(!calpage.hidden) closeCalendarPage();
@@ -1950,6 +2009,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     if(!sketch.hidden) closeSketch();
     if(!calpage.hidden) closeCalendarPage();
     if(!waterEl.hidden) closeWater();
+    if(!shopEl.hidden) closeShop();
   });
 
   // ---- 로그인 / 회원가입 (Supabase Auth) ----
@@ -2058,6 +2118,8 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     room = null; wallet = null; roomSeq++;   // 회원이 바뀌면 방·재화·물 주기 요청도 새로
     waterReq = null; waterBusy = waterUnknown = checking = false; twView.classList.remove('pour');
     if(!waterEl.hidden) closeWater();
+    shop = null; shopState = 'idle'; buyReq = null; buyBusy = buyUnknown = shopChecking = false; armed = null;
+    if(!shopEl.hidden) closeShop();
     showWallet();
     if(user) loadRoom();
   }
@@ -2072,6 +2134,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     document.getElementById('wCoins').textContent = wallet ? wallet.coins : '—';
     document.getElementById('wDrops').textContent = wallet ? wallet.water_drops : '—';
     renderTree();
+    if(!shopEl.hidden) renderShop();
   }
   // 보상 동기화 (POST /api/me/rewards/sync, 본문 {}). celebrate면 새 보상을 "+30코인 +1물방울"로 알림
   async function syncRewards(seq, celebrate){
@@ -2186,6 +2249,143 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   document.getElementById('twClose').addEventListener('click', closeWater);
   waterEl.addEventListener('click', e=>{ if(e.target === waterEl) closeWater(); });
   renderTree();   // 로그인·방 응답 전에도 기본 그림을 제 크기로
+
+  // ---- 상점 (v0.3 제안 API GET /api/shop/items, POST /api/shop/purchases: 서버에 없을 수 있음) ----
+  // 목록·가격·보유 여부·잔액은 서버 응답이 기준. 상품 그림은 asset_key와 같은 이름의 assets/item 파일 (상품 확정 목록은 7-6대로 FE가 정해 BE에 공유)
+  // 테마 미리보기: 테마 → 디자인 시스템 카드 색(.tc-*)과 장식 그림(assets/theme). 전용 시스템이 없으면 default
+  const THEME_CARDS = {
+    theme_christmas:{sys:'christmas', art:['snowman', 'wrapped_gift']},
+    theme_halloween:{sys:'halloween', art:['black_cat', 'crescent_moon']},
+    theme_seollal:{sys:'default', art:['full_moon']},
+  };
+  const safeKey = k => /^[a-z0-9_]+$/.test(k || '') ? k : null;   // 서버 값을 파일 경로에 넣기 전 확인
+  const shopEl = document.getElementById('shop'), shopGrid = document.getElementById('shopGrid'), shopNote = document.getElementById('shopNote');
+  const shopBtn = document.getElementById('shopBtn'), shopTabs = [...shopEl.querySelectorAll('[role="tab"]')];
+  // shop: 상품 목록(null: 아직 없음). buyReq: 확정 응답 전까지 같은 {client_request_id, item_id}로만 재전송 (가격은 보내지 않음)
+  // buyUnknown: 결과 불명 → 구매 잠금, "다시 확인"(GET room + GET shop/items)만 가능. armed: 한 번 누른 상품 (3초 안에 다시 누르면 구매)
+  let shop = null, shopState = 'idle', shopCat = 'furniture', buyReq = null, buyBusy = false, buyUnknown = false, shopChecking = false, armed = null, armTimer;
+  const mk = (tag, cls, text) => { const e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; };
+  function itemCard(it){
+    const theme = it.category === 'theme', card = mk('div', 'shop-item');
+    let body = card;
+    if(theme){
+      const tc = THEME_CARDS[it.item_id] || {sys:'default', art:[]};
+      card.classList.add('theme', 'tc-' + tc.sys);
+      const art = mk('div', 'tc-art');
+      tc.art.forEach(a => { const img = mk('img'); img.src = `assets/theme/${a}.svg`; img.alt = ''; art.append(img); });
+      body = mk('div', 'tc-body'); card.append(art, body);
+    } else if(safeKey(it.asset_key)){
+      const img = mk('img', 'si-art'); img.src = `assets/item/${it.asset_key}.svg`; img.alt = ''; card.append(img);
+    }
+    const price = mk('span', 'si-price'), coin = mk('img'); coin.src = 'assets/icon/coin.svg'; coin.alt = '코인';
+    price.append(coin, String(it.price_coins));
+    body.append(mk('span', 'si-name', it.name), price);
+    if(theme) body.append(mk('span', 'si-msg plain', '영구 보유 · 환불 불가'));   // 7-5
+    if(it.owned){
+      body.append(mk('span', 'si-owned', '보유'));
+      if(theme){ const b = mk('button', 'si-buy', '적용하기'); b.type = 'button'; b.disabled = true; b.title = '테마 적용은 아직 연결 전'; body.append(b); }   // 구매해도 자동 적용 안 함
+      return card;
+    }
+    const lack = wallet ? it.price_coins - wallet.coins : null, mine = buyBusy && buyReq && buyReq.item_id === it.item_id;
+    if(lack > 0) body.append(mk('span', 'si-msg', `${lack}코인 부족`));
+    const b = mk('button', 'si-buy' + (armed === it.item_id ? ' armed' : ''), mine ? '구매 중…' : armed === it.item_id ? '한 번 더 누르면 구매' : '구매');
+    b.type = 'button'; b.dataset.item = it.item_id;
+    b.disabled = buyBusy || buyUnknown || shopChecking || !wallet || lack > 0;
+    b.setAttribute('aria-label', `${it.name} ${it.price_coins}코인 ${b.textContent}`);
+    b.addEventListener('click', ()=> onBuy(it));
+    body.append(b);
+    return card;
+  }
+  function renderShop(){
+    document.getElementById('shopCoins').textContent = `코인 ${wallet ? wallet.coins : '—'}`;
+    let note = '', err = true;
+    if(buyUnknown) note = '결과 불명 · 보유·잔액 확인 필요';
+    else if(shopState === 'loading') { note = '불러오는 중…'; err = false; }
+    else if(shopState === 'err') note = '상품 목록 확인 불가';
+    else if(!wallet) note = '잔액 확인 불가 · 구매 잠김';
+    shopNote.hidden = !note; shopNote.classList.toggle('err', err); shopNote.textContent = note;
+    if(note && err){
+      const b = mk('button', 'log-close', shopChecking ? '확인 중…' : '다시 확인'); b.type = 'button'; b.disabled = shopChecking;
+      b.addEventListener('click', checkShop); shopNote.append(b);
+    }
+    shopTabs.forEach(t => { const on = t.dataset.cat === shopCat; t.setAttribute('aria-selected', String(on)); t.tabIndex = on ? 0 : -1; });
+    shopGrid.setAttribute('aria-labelledby', 'tab-' + shopCat);
+    const fid = document.activeElement && shopGrid.contains(document.activeElement) ? document.activeElement.dataset.item : null;
+    const list = (shop || []).filter(it => it.category === shopCat);
+    shopGrid.replaceChildren(...list.map(itemCard));
+    if(shop && !list.length) shopGrid.append(mk('p', 'shop-empty', '상품 없음'));
+    const f = fid && shopGrid.querySelector(`[data-item="${CSS.escape(fid)}"]`);
+    if(f) f.focus({preventScroll:true});
+  }
+  async function getRoom(seq){
+    const r = await api('/api/me/room');
+    if(seq !== roomSeq) return;
+    room = r; if(r.wallet) wallet = r.wallet; showWallet();
+  }
+  // 상점 열기·다시 확인: GET room(잔액·보유) + GET shop/items(목록·owned). 둘 다 성공해야 결과 불명 해제
+  async function checkShop(){
+    if(shopChecking) return;
+    const seq = roomSeq; shopChecking = true; if(!shop) shopState = 'loading'; renderShop();
+    const [a, b] = await Promise.allSettled([getRoom(seq), api('/api/shop/items')]);
+    if(seq !== roomSeq) return;
+    shopChecking = false;
+    if(b.status === 'fulfilled'){ shop = b.value.items || []; shopState = 'ok'; } else if(!shop) shopState = 'err';
+    if(a.status === 'fulfilled' && b.status === 'fulfilled'){
+      buyUnknown = false;
+      if(buyReq && shop.some(x => x.item_id === buyReq.item_id && x.owned)) buyReq = null;   // 이미 반영된 구매
+    } else { const e = a.status === 'rejected' ? a.reason : b.reason; errToast('상점 확인: ' + errText(e)); handleAuth(e); }
+    renderShop();
+  }
+  function onBuy(it){
+    clearTimeout(armTimer);
+    if(armed !== it.item_id){ armed = it.item_id; armTimer = setTimeout(()=>{ armed = null; renderShop(); }, 3000); renderShop(); return; }
+    armed = null; buy(it);
+  }
+  async function buy(it){
+    if(buyReq && buyReq.item_id !== it.item_id) buyReq = null;   // 남은 요청은 확인을 거친 미반영 구매뿐
+    if(!buyReq) buyReq = {client_request_id: rid('purchase'), item_id: it.item_id};
+    const seq = roomSeq; buyBusy = true; renderShop();
+    let r;
+    try{ r = await api('/api/shop/purchases', {method:'POST', json:buyReq}); }
+    catch(e){
+      if(seq !== roomSeq) return;
+      buyBusy = false;
+      if(e.status === 0 || e.status >= 500 || e.code === 'INVALID_RESPONSE') buyUnknown = true;   // 구매 반영 여부 모름: 새 ID로 다시 사지 않음
+      if(!buyUnknown && !sameIdRetry(e)) buyReq = null;
+      errToast('구매: ' + errText(e)); handleAuth(e);
+      if(['INSUFFICIENT_COINS','ITEM_ALREADY_OWNED','ITEM_NOT_FOUND'].includes(e.code)) checkShop();   // 화면 상태가 서버와 다름
+      else renderShop();
+      return;
+    }
+    if(seq !== roomSeq) return;
+    buyReq = null; buyBusy = false;
+    const s = shop && shop.find(x => x.item_id === r.item_id); if(s) s.owned = !!r.owned;
+    if(r.wallet){ wallet = r.wallet; if(room) room.wallet = r.wallet; }
+    showWallet(); renderShop();
+    toast(it.category === 'theme' ? `${it.name} 구매 · 적용은 따로` : `${it.name} 구매 완료`); setMascot('happy');
+    getRoom(seq).catch(()=>{});   // 보유 목록(inventory)은 서버 값으로 새로
+  }
+  function openShop(){
+    if(!user){ toast('로그인이 필요해요'); openAuth('login', shopBtn); return; }
+    shopEl.hidden = false; renderShop();
+    requestAnimationFrame(()=>{ shopEl.classList.add('show'); shopTabs.find(t => t.tabIndex === 0).focus({preventScroll:true}); });
+    checkShop();
+  }
+  function closeShop(){
+    armed = null; clearTimeout(armTimer);
+    shopEl.classList.remove('show');
+    setTimeout(()=>{ if(shopEl.classList.contains('show')) return; shopEl.hidden = true; if(reader.hidden && calpage.hidden) shopBtn.focus({preventScroll:true}); }, reduce ? 0 : 300);
+  }
+  shopBtn.addEventListener('click', openShop);
+  document.getElementById('shopClose').addEventListener('click', closeShop);
+  shopEl.addEventListener('click', e=>{ if(e.target === shopEl) closeShop(); });
+  shopTabs.forEach((t, i) => {
+    t.addEventListener('click', ()=>{ shopCat = t.dataset.cat; armed = null; renderShop(); });
+    t.addEventListener('keydown', e=>{   // 탭 사이 화살표 이동
+      const d = e.key === 'ArrowRight' ? 1 : e.key === 'ArrowLeft' ? -1 : 0; if(!d) return;
+      const n = shopTabs[(i + d + shopTabs.length) % shopTabs.length]; shopCat = n.dataset.cat; armed = null; renderShop(); n.focus();
+    });
+  });
   if(sb){
     // 콜백 안에서 다른 Supabase 호출을 기다리지 않도록 한 박자 뒤에 처리
     sb.auth.onAuthStateChange((event, session)=>{ setTimeout(()=> setUser(session ? session.user : null), 0); });
@@ -2220,6 +2420,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     const sw = portrait ? 600 : 1440, sh = portrait ? 1000 : 900;
     const s = Math.min(w / sw, h / sh);
     [stage, stageTop].forEach(el =>{ el.classList.toggle('portrait', portrait); el.style.transform = `scale(${s}) translate(-50%,-50%)`; });
+    document.documentElement.style.setProperty('--logo-clear', portrait ? Math.ceil(document.getElementById('logoBtn').getBoundingClientRect().bottom + 8) + 'px' : '16px');   // 세로: 상점 창을 로고 아래로
   }
   window.addEventListener('resize', fit);
   const unscroll = el => el.addEventListener('scroll', ()=>{ if(el.scrollTop || el.scrollLeft){ el.scrollTop = 0; el.scrollLeft = 0; } });
