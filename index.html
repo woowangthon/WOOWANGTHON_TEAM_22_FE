@@ -344,8 +344,8 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .dp1-pic.blank{background:transparent}
 .dp1-pic.blank::after{content:"그린 그림이 없어요";font-size:13px;font-weight:500;opacity:.5}
 /* writing lines: six underlined lines (each 10cqw of the page width, so the box keeps the 10:6 height the picture box is sized against);
-   the lines scroll with the text when it runs longer */
-.dp1-grid{flex:none;height:60cqw;overflow-y:auto;overscroll-behavior:contain;padding:0 6px;
+   longer text continues on lined-only pages (.dpn, built by paginate()) */
+.dp1-grid{flex:none;height:60cqw;overflow:hidden;padding:0 6px;
   font-size:4.4cqw;line-height:10cqw;font-weight:500;white-space:pre-wrap;overflow-wrap:anywhere;
   background:repeating-linear-gradient(to bottom, transparent 0 calc(10cqw - 1.5px), rgba(34,34,34,.6) calc(10cqw - 1.5px) 10cqw) local}
 .comic .panel.blank::after{content:"그림이 들어갈 자리";font-size:13px;font-weight:500;opacity:.5}
@@ -379,6 +379,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .page-nav .act[hidden],.page-nav .log-btn[hidden]{display:none}
 @media (max-width:420px){ .page-nav{gap:4px} .page-nav .act,.page-nav .log-btn{padding:0 10px} }
 .dp1-grid.muted{opacity:.55}
+/* 줄 수 재기용 보이지 않는 글 칸 (1쪽 글 칸과 같은 너비·글꼴) */
+.dp-measure{visibility:hidden;pointer-events:none}
+.dp-measure .dp1-grid{height:auto}
 
 /* chat: message being sent, failed message (retry with the same request id), notes */
 .msg.user.sending{opacity:.6}
@@ -575,6 +578,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     <div class="page">
       <span class="pno" id="pnoRight"></span>
       <div class="comic" id="comic" hidden role="img" aria-label="4컷 만화"></div>
+      <div class="dp1 dp-measure" id="dpMeasure" aria-hidden="true"><div class="dp1-grid"></div></div>
       <div class="chat">
         <div class="chat-head">
           <div class="title"><span class="date" id="chatDate"></span><h2 id="chatTitle">AI와 대화</h2></div>
@@ -898,6 +902,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     renderEntries(mode, bk);
     if(reviewing) renderReview();
     reader.hidden = false;
+    if(mode === 'diary') paginate();                 // 책이 화면에 놓인 뒤에야 줄 수를 잴 수 있음
     requestAnimationFrame(()=>{ reader.classList.add('show');
       later(()=> book.classList.add('open'), 200);                                          // 표지가 넘어가며 책이 펼쳐짐
       later(()=>{ book.classList.add('ready'); if(mode === 'chat') input.focus({preventScroll:true}); else { pageNav.classList.add('show'); } }, 1100);  // 오른쪽 페이지 내용이 나타남
@@ -917,22 +922,52 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 
   // ---- 그림일기: 넘길 수 있는 책 ----
   // PC: 두 쪽씩 펼침 / 휴대폰: 한 쪽씩
-  const TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 2쪽: 4컷 만화
+  let TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 이어지는 글 쪽(긴 일기) / 끝 쪽: 4컷 만화. paginate()가 계산
   const pageNav = document.getElementById('pageNav'), pageInfo = document.getElementById('pageInfo');
   const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
   const pnoLeft = document.getElementById('pnoLeft'), pnoRight = document.getElementById('pnoRight');
   let spread = 0, turning = false, diaryOn = false;
   const perSpread = () => narrow.matches ? 1 : 2;
-  const spreads = () => TOTAL / perSpread();
-  function pagesOf(i){ return narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; }
+  const spreads = () => Math.ceil(TOTAL / perSpread());
+  function pagesOf(i){ const [l, r] = narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; return [l, r <= TOTAL ? r : null]; }   // 쪽 수가 홀수면 마지막 오른쪽은 빈 쪽
   const insideEl = book.querySelector('.inside'), pageEl = book.querySelector('.page');
-  // 그림일기의 내용이 있는 쪽: 1쪽 = 날짜·그림·일기 글, 2쪽 = 4컷 만화 (둘 다 줄 없는 종이)
+  // 그림일기의 내용이 있는 쪽: 1쪽 = 날짜·그림·일기 글, 이어지는 글 쪽들, 끝 쪽 = 4컷 만화 (모두 줄 없는 종이)
   const PAGE_CONTENT = {1: document.getElementById('dp1'), 2: comic};
+  // 긴 일기: 1쪽 밑줄 6줄을 넘친 글을 밑줄만 있는 쪽으로 이어 씀. 글자 수가 아니라 실제로 그려진 줄 수로 나눔
+  // 이어지는 쪽은 같은 글을 앞쪽 줄 수만큼 위로 밀어 보여 줌 (같은 너비라 줄바꿈 위치가 1쪽과 똑같음)
+  const FIRST_LINES = 6, dpMeasure = document.getElementById('dpMeasure');
+  let contPages = [];
+  function paginate(){
+    const src = document.getElementById('dpGrid'), g = dpMeasure.firstElementChild;
+    g.textContent = src.textContent;
+    const lh = parseFloat(getComputedStyle(g).lineHeight);
+    if(!lh || !dpMeasure.clientHeight) return;            // 책이 아직 화면에 없음: 책이 보일 때 다시 계산
+    const lines = Math.round(g.scrollHeight / lh);
+    const per = Math.max(1, Math.floor(dpMeasure.clientHeight / lh));
+    const extra = Math.ceil(Math.max(0, lines - FIRST_LINES) / per);
+    clearLeaves();
+    contPages.forEach(el => el.remove());
+    contPages = Array.from({length: extra}, (_, i)=>{
+      const el = document.createElement('section'); el.className = 'dp1 dpn'; el.hidden = true; el.setAttribute('aria-hidden', 'true');
+      const grid = document.createElement('div'); grid.className = 'dp1-grid' + (src.classList.contains('muted') ? ' muted' : '');
+      grid.style.height = `calc(${per} * 10cqw)`;
+      const t = document.createElement('div'); t.textContent = src.textContent; t.style.marginTop = `calc(${-(FIRST_LINES + i * per)} * 10cqw)`;
+      grid.appendChild(t); el.appendChild(grid);
+      return el;
+    });
+    Object.keys(PAGE_CONTENT).forEach(k => delete PAGE_CONTENT[k]);
+    PAGE_CONTENT[1] = document.getElementById('dp1');
+    contPages.forEach((el, i) => { PAGE_CONTENT[i + 2] = el; });
+    TOTAL = extra + 2; PAGE_CONTENT[TOTAL] = comic;
+    spread = Math.min(spread, spreads() - 1);
+    showNumbers();
+  }
+  window.addEventListener('resize', ()=>{ if(diaryOn && bookShown()) paginate(); });
   // 지금 보이는 왼쪽/오른쪽 쪽을 그림. 내용이 있는 쪽이면 그 내용을 해당 쪽에 놓는다
   function showPages(l, r){
     pnoLeft.textContent = diaryOn && l ? l : ''; pnoRight.textContent = diaryOn && r ? r : '';
     book.classList.toggle('plain-left', diaryOn && l in PAGE_CONTENT);
-    book.classList.toggle('plain-right', diaryOn && r in PAGE_CONTENT);
+    book.classList.toggle('plain-right', diaryOn && (!r || r in PAGE_CONTENT));   // 쪽 수가 홀수일 때 마지막 빈 쪽도 일기 종이
     if(!diaryOn) return;
     for(const [n, el] of Object.entries(PAGE_CONTENT)){
       if(l === +n) insideEl.appendChild(el); else if(r === +n) pageEl.appendChild(el);
@@ -941,7 +976,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   }
   function showNav(){
     const [l, r] = pagesOf(spread);
-    pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${l}–${r} / ${TOTAL}`;
+    pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${r ? `${l}–${r}` : l} / ${TOTAL}`;
     prevBtn.disabled = spread === 0; nextBtn.disabled = spread === spreads() - 1;
     prevBtn.hidden = nextBtn.hidden = spreads() === 1;   // PC는 두 쪽이 한 번에 다 보여서 넘길 쪽이 없음
   }
@@ -1034,6 +1069,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   function setDiaryText(text, muted){
     dpGrid.textContent = text; dpGrid.classList.toggle('muted', !!muted);
     dpGrid.setAttribute('aria-label', text ? '일기: ' + text : '일기 글 칸 (비어 있음)');
+    if(diaryOn) paginate();
   }
   function setPicture(bk){
     dpPic.innerHTML = '';
