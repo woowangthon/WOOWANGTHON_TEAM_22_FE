@@ -87,6 +87,10 @@ body{
 .logo{position:absolute;left:48px;top:40px;margin:0;font-size:46px;line-height:1.1;font-weight:600;letter-spacing:-.02em;color:var(--ink);z-index:3}
 .logo span{font-weight:300;opacity:.6}
 .portrait .logo{left:24px;top:28px;font-size:40px}
+.stage-top{z-index:39;pointer-events:none}   /* 오버레이(최대 38) 위, 토스트(40) 아래 */
+body:has(.reader:not([hidden])) .stage-top{z-index:34}   /* 책이 열려 있으면 책(35)을 가리지 않게 책 아래로 (달력 30 위) */
+.logo button{appearance:none;border:0;background:none;padding:0;margin:0;font:inherit;letter-spacing:inherit;color:inherit;cursor:pointer;pointer-events:auto;border-radius:var(--radius-sm)}
+.logo button:focus-visible{outline:3px solid var(--color-connect);outline-offset:4px}
 
 /* cast shadows: the window is on the right, so shadows fall to the left */
 .window svg{filter:drop-shadow(-6px 14px 14px var(--shadow))}
@@ -531,6 +535,10 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 </head>
 <body>
 <div class="viewport" id="viewport">
+  <!-- 로고만 오버레이(책·달력·스케치북) 위에 두는 투명 무대: #stage와 같은 크기·배율 (fit) -->
+  <div class="stage stage-top" id="stageTop">
+    <h1 class="logo"><button type="button" id="logoBtn" aria-label="오늘, 그리고: 방으로 돌아가기">오늘, <span>그리고</span></button></h1>
+  </div>
   <div class="stage" id="stage">
     <div class="wall" aria-hidden="true"></div>
     <div class="floor" aria-hidden="true"></div>
@@ -539,7 +547,6 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     <div class="cshadow cs-plant" aria-hidden="true"></div>
     <div class="cshadow cs-sofa" aria-hidden="true"></div>
     <div class="cshadow cs-shelf" aria-hidden="true"></div>
-    <h1 class="logo">오늘, <span>그리고</span></h1>
     <div class="auth-btns"><span class="auth-name" id="authName" hidden></span><button type="button" class="auth-btn" id="openLogin">로그인</button><button type="button" class="auth-btn solid" id="openSignup">회원가입</button><button type="button" class="auth-btn" id="logoutBtn" hidden>로그아웃</button></div>
 
     <div class="asset window" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.713v42.455m-21.179-21.21h42.562"/><rect width="42.775" height="42.775" x="14.513" y="14.613" style="fill:var(--color-jobs-3)" rx=".784"/><path fill="#fff" opacity=".85" d="m14.535 26.666l12.053-12.053H55.23L14.514 55.477z"/><path style="fill:var(--color-read)" d="M60.94 62H11.018a1.06 1.06 0 0 1-1.06-1.06V11.018a1.06 1.06 0 0 1 1.06-1.06H60.94a1.06 1.06 0 0 1 1.06 1.06V60.94A1.06 1.06 0 0 1 60.94 62m-44.367-5.612h38.655a1.06 1.06 0 0 0 1.06-1.06V16.672a1.06 1.06 0 0 0-1.06-1.06H16.573a1.06 1.06 0 0 0-1.06 1.06v38.656a1.06 1.06 0 0 0 1.06 1.06"/><path fill="none" stroke="#c0ab3c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.613v42.774M14.513 35.958h42.775"/><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M61 61H10.958m0-3.832v-46.21H61v46.21"/></svg></div>
@@ -1803,6 +1810,21 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     else if(bookShown()) closeBook();               // 책이 열려 있으면 책부터 닫기
     else if(!calpage.hidden) closeCalendarPage();
   });
+  // 로고: 방(책장)으로. Esc와 같은 닫기 함수로 스케치북·달력을 닫음 (flow는 그대로, 책장에서 이어 하기)
+  // 책이 열려 있는 동안 로고는 책 아래에 있어 눌리지 않음 (책은 바깥 누르기·Esc로 닫음)
+  // 스케치북은 두 번 눌러야 나감: 3초 안에 다시 누르지 않으면 원래대로 (대화 끝내기와 같은 방식)
+  let homeArmed = false, homeTimer;
+  document.getElementById('logoBtn').addEventListener('click', ()=>{
+    if(!auth.hidden){ closeAuth(); return; }           // 로그인 창만 닫음
+    if(!sketch.hidden && !homeArmed){
+      homeArmed = true; toast('한 번 더 누르면 나가요');
+      homeTimer = setTimeout(()=>{ homeArmed = false; }, 3000);
+      return;
+    }
+    clearTimeout(homeTimer); homeArmed = false;
+    if(!sketch.hidden) closeSketch();
+    if(!calpage.hidden) closeCalendarPage();
+  });
 
   // ---- 로그인 / 회원가입 (Supabase Auth) ----
   // 성공하면 {ok:true, message?}, 실패하면 {ok:false, message:'…'}
@@ -1934,14 +1956,13 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   }
 
   // ---- 화면 크기에 맞추기 (스크롤 없음) ----
-  const vp = document.getElementById('viewport'), stage = document.getElementById('stage');
+  const vp = document.getElementById('viewport'), stage = document.getElementById('stage'), stageTop = document.getElementById('stageTop');
   function fit(){
     const w = vp.clientWidth, h = vp.clientHeight;
     const portrait = w / h < 1.05;
-    stage.classList.toggle('portrait', portrait);
     const sw = portrait ? 600 : 1440, sh = portrait ? 1000 : 900;
     const s = Math.min(w / sw, h / sh);
-    stage.style.transform = `scale(${s}) translate(-50%,-50%)`;
+    [stage, stageTop].forEach(el =>{ el.classList.toggle('portrait', portrait); el.style.transform = `scale(${s}) translate(-50%,-50%)`; });
   }
   window.addEventListener('resize', fit);
   const unscroll = el => el.addEventListener('scroll', ()=>{ if(el.scrollTop || el.scrollLeft){ el.scrollTop = 0; el.scrollLeft = 0; } });
