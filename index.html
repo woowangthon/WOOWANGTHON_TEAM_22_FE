@@ -4,9 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>오늘, 그리고</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@300;500;600&display=swap">
 <!--
   일러스트 출처 (모두 디자인 시스템 색으로 변경)
   - 창문, 소파(Couch and Lamp, 조명 제외), 액자(Framed Picture), 달력의 책 아이콘(Closed Book), 표지 크레용(Crayon): OpenMoji (https://openmoji.org) — CC BY-SA 4.0
@@ -17,13 +14,15 @@
 <style>
 /* Layout: room wall on a fixed stage that scales to fit the screen, so the page never scrolls.
    Landscape stage 1440×900, portrait stage 600×1000. Colors from the Awwwards design system. */
+/* 윤초록우산어린이 만세 (눈누, 웹 임베딩 허용): 굵기 하나뿐 */
+@font-face{font-family:'YoonChoWooSan';src:url('https://cdn.jsdelivr.net/gh/projectnoonnu/2408@1.0/YoonChildfundkoreaManSeh.woff2') format('woff2');font-weight:normal;font-display:swap}
 :root{
   --bg-primary:#f8f8f8; --ink:#222222; --white:#ffffff;
   --color-learn:#fff083; --color-learn-3:#fffbe2;
   --color-jobs-3:#b4d7f8; --color-read:#c0ab3c; --color-read-3:#dbd6c0;
   --color-inspire-3:#e2f4e9; --color-connect:#ff602c;
   --border-gray:#ededed; --neutral:#a7a7a7; --error:#c2410c; /* color-connect darkened for small text */
-  --sans:"Inter Tight", system-ui, -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --sans:'YoonChoWooSan', system-ui, sans-serif;
   --radius-sm:8px; --radius-pill:72px;
   --ease:.3s ease;
   color-scheme:light;
@@ -37,6 +36,7 @@ input,textarea{-webkit-user-select:text;user-select:text}
 img,svg,canvas{-webkit-user-drag:none;user-drag:none}
 body{
   background:var(--bg-primary); color:var(--ink); font-family:var(--sans);
+  font-synthesis:none;   /* 굵기 하나뿐인 글꼴: 가짜 굵게 없이 같은 굵기로, 강조는 크기·색으로 */
   padding-left:max(16px, env(safe-area-inset-left, 0px));
   padding-right:max(16px, env(safe-area-inset-right, 0px));
   padding-block:0; overscroll-behavior:none; word-break:keep-all;
@@ -85,7 +85,7 @@ body{
 
 /* logo */
 .logo{position:absolute;left:48px;top:40px;margin:0;font-size:46px;line-height:1.1;font-weight:600;letter-spacing:-.02em;color:var(--ink);z-index:3}
-.logo span{font-weight:300}
+.logo span{font-weight:300;opacity:.6}
 .portrait .logo{left:24px;top:28px;font-size:40px}
 
 /* cast shadows: the window is on the right, so shadows fall to the left */
@@ -121,7 +121,7 @@ body{
   height:30px;border-radius:var(--radius-sm);font-variant-numeric:tabular-nums}
 .portrait .day{font-size:13px;height:29px}
 .portrait .cal-dow{font-size:9px;padding-bottom:2px}
-.day.sun{font-weight:600}
+.day.sun{font-weight:600;color:var(--error)}
 .day.today{background:var(--color-learn);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 1.5px var(--ink)}
 .day.empty{visibility:hidden}
 .calendar{cursor:pointer;outline:none;transition:transform var(--ease)}
@@ -201,7 +201,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .book .cover-icon svg{width:100%;height:100%;display:block;overflow:visible}
 .book .cover-icon [stroke]:not([stroke="none"]),.book .cover-icon [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke;stroke-width:2.5px}
 .book .cover-logo{font-size:calc(var(--bw) * .108);line-height:1.1;font-weight:600;letter-spacing:-.02em;white-space:nowrap;color:var(--ink)}
-.book .cover-logo span{font-weight:300}
+.book .cover-logo span{font-weight:300;opacity:.6}
 /* left-hand page (inside of the cover): plain paper */
 .book .inside{background:var(--cover);transform:rotateY(180deg);padding:10px 0 10px 10px}
 /* insets measured from inside the cover's 3px border, so the left page is exactly as tall as the right page (0 … book height) */
@@ -269,7 +269,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   font-size:4.12cqw;font-weight:500;font-variant-numeric:tabular-nums;transition:background var(--ease)}
 .cell:hover{background:var(--border-gray)}
 .cell .num{line-height:1}
-.cell.sun{font-weight:600}
+.cell.sun{font-weight:600;color:var(--error)}
 .cell.today,.cell.today:hover{background:var(--color-learn);color:var(--ink);font-weight:600;box-shadow:inset 0 0 0 .44cqw var(--ink)}
 .cell.empty{visibility:hidden}
 /* phone: the home calendar is 320px with its own sizes, so scale those instead */

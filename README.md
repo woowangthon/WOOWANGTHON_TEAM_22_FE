@@ -114,5 +114,6 @@ cp config.example.js config.js   # 값을 채움
 
 ## 디자인
 
-- Awwwards 디자인 시스템의 색, 글꼴(Inter Tight), 모서리 값을 사용합니다.
+- Awwwards 디자인 시스템의 색, 모서리 값을 사용합니다.
+- 글꼴: 윤초록우산어린이 만세 (눈누, 웹 임베딩 허용)
 - 일러스트 출처: OpenMoji (CC BY-SA 4.0), Streamline (CC BY 4.0), Fluent Emoji (MIT)
