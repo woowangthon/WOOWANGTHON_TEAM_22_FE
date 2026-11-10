@@ -87,6 +87,15 @@ body{
 .mascot{position:relative;display:block}
 .mascot .mascot-face{display:block;width:100%;height:100%}
 
+/* 재화(코인·물방울) 잔액: 방 왼쪽 아래 바닥. 보기 전용이라 클릭을 막지 않음 */
+.wallet{position:absolute;left:48px;top:806px;z-index:3;display:flex;gap:10px;pointer-events:none}
+.portrait .wallet{left:24px;top:926px}
+.wallet .w-item,.wallet .w-msg{display:flex;align-items:center;gap:6px;padding:4px 14px 4px 6px;border:2px solid var(--ink);border-radius:var(--radius-pill);
+  background:var(--white);font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
+.wallet .w-msg{padding:6px 14px;font-size:14px}
+.wallet img{width:26px;height:26px;display:block}
+.wallet.err .w-item,.wallet:not(.err) .w-msg{display:none}
+
 /* logo */
 .logo{position:absolute;left:48px;top:40px;margin:0;font-size:46px;line-height:1.1;font-weight:600;letter-spacing:-.02em;color:var(--ink);z-index:3}
 .logo span{font-weight:300;opacity:.6}
@@ -587,6 +596,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     <div class="asset plant" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><g fill="none"><path style="fill:var(--color-read)" d="M16.008 19.236c-.25 0-.45-.2-.45-.45V16.88l-2.43-.727l-1.71-1.46l4.14 1.24v-.276c0-1 .28-1.99.84-2.83q.251-.38.415-.8l-2.216-.663l-2.58-1.721l5.034 1.509q.057-.348.057-.705v-2.1h.9v2.1q0 .174-.012.346l3.881-1.16l-3.002 1.845l-1.041.31a5.1 5.1 0 0 1-.677 1.51c-.46.7-.7 1.52-.7 2.36v.992l4.13-1.238l-2.536 1.708l-1.593.477v1.19c0 .25-.2.45-.45.45"/><path style="fill:var(--color-inspire-3)" stroke="#222222" stroke-linejoin="round" d="M17.41 2.072c-1.832 2.13-1.886 5.642-.118 7.849c.082.098.217.109.298.01c1.832-2.13 1.886-5.641.118-7.848c-.082-.109-.217-.109-.298-.01m-6.752 9.453l-3.5-1.05c-.59 1.97.53 4.04 2.49 4.64l3.5 1.05c.6-1.97-.52-4.05-2.49-4.64m13.38-.09l-3.5 1.05c-1.97.6-3.09 2.67-2.49 4.64l3.5-1.05c1.96-.6 3.08-2.67 2.49-4.64m-11.91-4.7l-3.5-1.05c-.58 1.97.53 4.04 2.5 4.64l3.5 1.05a3.73 3.73 0 0 0-2.5-4.64m12.73-.94l-3.5 1.05a3.71 3.71 0 0 0-2.49 4.64l3.5-1.05c1.96-.6 3.08-2.67 2.49-4.64"/><path style="fill:var(--ink)" d="M22 20a9.98 9.98 0 0 0-6-2c-2.251 0-4.335.75-6 2l6 1.969z"/><path style="fill:var(--color-read-3)" stroke="#222222" stroke-linejoin="round" d="m9.007 23.996l.78 4.69c.13.76.78 1.31 1.54 1.31h9.35c.76 0 1.42-.55 1.54-1.31l.79-4.69l-7-1.59z"/><path style="fill:var(--white)" stroke="#222222" stroke-linejoin="round" d="M23.5 24h-15c-.28 0-.5-.22-.5-.5v-3c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5"/></g></svg></div>
     <div class="asset shelf" id="shelf" role="button" tabindex="0" aria-label="오늘의 일기 쓰기: 책장 열기"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-connect)" d="M8.174 14.391h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479"/><path style="fill:var(--white)" d="M10.087 14.391h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-learn)" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668"/><path style="fill:var(--ink)" d="M18.217 10.565h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478z"/><path style="fill:var(--color-inspire-3)" d="M16.304 10.565H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path style="fill:var(--color-learn-3)" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667z"/><path style="fill:var(--color-read)" d="M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/><path style="fill:var(--color-read-3)" d="M1 11.522a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957zm0 9.565a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479m1.914 0h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479m1.913 0h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668m6.497-4.625h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478zm-1.913 0H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667zm-8.319.001V1.956m18.174 8.609V1.956M2.913 20.13v-7.652m18.174 7.652v-7.652M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/></g></svg><span class="hint" aria-hidden="true">오늘의 일기 쓰기</span></div>
 
+    <div class="wallet" id="wallet" hidden role="status" aria-label="내 재화"><span class="w-item"><img src="assets/icon/coin.svg" alt="코인"><b id="wCoins">—</b></span><span class="w-item"><img src="assets/icon/droplet.svg" alt="물방울"><b id="wDrops">—</b></span><span class="w-msg">재화 확인 불가</span></div>
     <p class="credit">일러스트: OpenMoji (CC BY-SA 4.0), Streamline (CC BY 4.0), Fluent Emoji (MIT)</p>
   </div>
 </div>
@@ -837,6 +847,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       NO_CHILD_MESSAGES:'대화 내용 없음', CONVERSATION_LIMIT_REACHED:'대화 길이 초과',
       AI_OUTCOME_UNKNOWN:'결과 불명', DRAWING_ALREADY_EXISTS:'이미 저장된 그림', DRAWING_TOO_LARGE:'그림 크기 초과', DRAWING_DIMENSIONS_EXCEEDED:'그림 크기 초과',
       DRAWING_INVALID_IMAGE:'그림 형식 오류',
+      AUTHENTICATION_FAILED:'인증 실패', ITEM_NOT_FOUND:'상품 없음', INSUFFICIENT_COINS:'코인 부족', INSUFFICIENT_WATER:'물방울 부족',
+      ITEM_ALREADY_OWNED:'이미 가진 상품', ITEM_NOT_OWNED:'가지지 않은 상품', TREE_ALREADY_WATERED_TODAY:'오늘 물 주기 완료', TREE_FULL_GROWN:'나무 다 자람',
+      ROOM_POSITION_INVALID:'배치 위치 오류', ROOM_STORAGE_UNAVAILABLE:'방 데이터 오류', ITEM_NOT_PLACEABLE:'배치할 수 없는 상품',
     };
     if(known[c]) return known[c];
     if(c.startsWith('AI_')) return 'AI 응답 실패';
@@ -1636,6 +1649,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     const [y, m, dd] = String(d.diary_date).split('-').map(Number);
     const after = ()=>{
       openCalendarPage(shelf, y, m); toast('그림일기를 완성했어요'); setMascot('happy');
+      syncRewards(roomSeq, true).catch(()=>{});      // 보상은 일기 저장과 별개: 실패해도 일기·flow·달력은 그대로
       setTimeout(()=>{ if(!calpage.hidden && !bookShown() && viewY === y && viewM === m) openDiaryAt(y, m, dd, bigGrid.cells[dd], d.diary_id); }, reduce ? 0 : 800);
     };
     bookShown() ? closeBook(after) : after();
@@ -1997,6 +2011,42 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     markGrid(homeGrid); if(bigGrid.ym) markGrid(bigGrid);
     updateShelf();
     if(user){ loadMonth(today.y, today.m); if(!calpage.hidden) loadMonth(viewY, viewM); }
+    room = null; wallet = null; roomSeq++; showWallet();   // 회원이 바뀌면 방·재화도 새로
+    if(user) loadRoom();
+  }
+
+  // ---- 방·재화 (v0.3 제안 API: 서버에 없을 수 있음 → 잔액만 "확인 불가", 다른 흐름에는 영향 없음) ----
+  // room: GET /api/me/room 응답 그대로, wallet: room 또는 rewards/sync 응답의 wallet (서버 값이 기준). localStorage 안 씀
+  let room = null, wallet = null, roomSeq = 0;
+  const walletEl = document.getElementById('wallet');
+  function showWallet(failed){
+    walletEl.hidden = !user;
+    walletEl.classList.toggle('err', !!failed && !wallet);
+    document.getElementById('wCoins').textContent = wallet ? wallet.coins : '—';
+    document.getElementById('wDrops').textContent = wallet ? wallet.water_drops : '—';
+  }
+  // 보상 동기화 (POST /api/me/rewards/sync, 본문 {}). celebrate면 새 보상을 "+30코인 +1물방울"로 알림
+  async function syncRewards(seq, celebrate){
+    const r = await api('/api/me/rewards/sync', {method:'POST', json:{}});
+    if(seq !== roomSeq) return;                       // 그 사이 로그아웃·회원 변경
+    if(r.wallet){ wallet = r.wallet; if(room) room.wallet = r.wallet; }
+    showWallet();
+    const got = r.new_rewards || [];
+    if(celebrate && got.length){
+      const coins = got.reduce((s, x) => s + (x.coins || 0), 0), drops = got.reduce((s, x) => s + (x.water_drops || 0), 0);
+      setTimeout(()=>{ if(seq === roomSeq){ toast(`+${coins}코인 +${drops}물방울`); setMascot('happy'); } }, 2300);   // "그림일기를 완성했어요" 다음에
+    }
+  }
+  // 로그인 직후: 보상 동기화 → 방 순서. 둘 다 실패하면 잔액 "확인 불가" (토스트·로그인 창 없음)
+  async function loadRoom(){
+    const seq = roomSeq;
+    try{ await syncRewards(seq, false); }catch(e){}
+    try{
+      const r = await api('/api/me/room');
+      if(seq !== roomSeq) return;
+      room = r; if(r.wallet) wallet = r.wallet;
+      showWallet();
+    }catch(e){ if(seq === roomSeq) showWallet(true); }
   }
   if(sb){
     // 콜백 안에서 다른 Supabase 호출을 기다리지 않도록 한 박자 뒤에 처리
