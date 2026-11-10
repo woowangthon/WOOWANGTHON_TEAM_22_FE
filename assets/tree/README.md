@@ -20,3 +20,23 @@
 | Jack-o-lantern | `jack_o_lantern.svg` | `assets/Jack-o-lantern/Flat/jack-o-lantern_flat.svg` |
 | Ghost | `ghost.svg` | `assets/Ghost/Flat/ghost_flat.svg` |
 | Kite | `kite.svg` | `assets/Kite/Flat/kite_flat.svg` |
+
+## 나무 `asset_key` → 파일 매핑 (FE `TREE_ASSETS`)
+
+FE는 서버 응답의 `tree.asset_key`만 보고 아래 파일을 고름 (단계·테마를 FE가 조합하지 않음). 화분 그릇은 고정 그림이고 식물만 바뀜. 크기는 식물 그림 폭(화분 칸의 80%) 대비 배율. 밑동 아래 여백(viewBox 32 기준)만큼 그림을 내려 줄기·밑동 끝이 화분 테두리 뒤에 묻히게 함 (새싹의 갈색 흙더미도 테두리 뒤로 가려짐, 원본 SVG는 그대로).
+
+| `asset_key` | 파일 | 크기 | 밑동 아래 여백 |
+|---|---|---|---|
+| `tree_stage_0` | 없음 (빈 화분) | — | — |
+| `tree_stage_1` | `seedling.svg` | 0.26 | 10.39 |
+| `tree_stage_2` | `seedling.svg` | 0.38 | 10.39 |
+| `tree_stage_3` | `evergreen_tree.svg` | 0.56 | 2 |
+| `tree_stage_4` | `evergreen_tree.svg` | 0.67 | 2 |
+| `tree_stage_5` | `evergreen_tree.svg` | 0.78 | 2 |
+| `tree_stage_6` | `evergreen_tree.svg` | 0.88 | 2 |
+| `tree_adult_default` | `evergreen_tree.svg` | 1 | 2 |
+
+- 모르는 키: `tree_adult_`로 시작하면 `tree_adult_default`, 그 밖에는 `tree_stage_0`(빈 화분)
+- 단계 그림에 쓰지 않는 파일: `tree_seed.svg`, `herb.svg`, `leafy_green.svg`, `deciduous_tree.svg`
+- 미정: 테마별 성체 키(예: `tree_adult_christmas`, `tree_adult_halloween`)와 그림. 테마 추가 때 함께 정함 (그 전에는 모르는 성체 키로 보고 기본 성체 표시)
+- 성장 단계용으로 그린 세트가 아니라 Fluent 낱개 그림을 단계에 맞춰 배치한 것 (상업 이용 가능한 단계별 세트를 찾으면 교체)

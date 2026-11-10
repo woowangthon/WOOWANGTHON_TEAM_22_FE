@@ -109,6 +109,7 @@ cp config.example.js config.js   # 값을 채움
 |---|---|
 | 확정 후 일기 글 수정 / 일기 삭제 / 대화 이어쓰기 | BE API가 없어 제공하지 않음 (오늘 일기가 있으면 보기만 가능) |
 | 사용자가 직접 고친 일기 본문 저장 | BE API가 없어 AI 초안 글 그대로 저장 |
+| 나무 물 주기 (화분 누르기) | v0.3 제안 API `POST /api/me/tree/water` 호출. 서버에 없으면 오류 안내만 표시. 그림은 `tree.asset_key`로만 고름 ([assets/tree/README.md](assets/tree/README.md)) |
 | 4컷 만화 (2쪽) | 빈 자리만 표시 (BE에서 만화 데이터가 오면 `comic`에 그림 주소를 넣어 표시) |
 | 새로고침 뒤 저장 전 대화·그림 이어가기 | BE 세션이 메모리에만 있어 지원하지 않음 (저장 전에 새로고침하면 처음부터) |
 
