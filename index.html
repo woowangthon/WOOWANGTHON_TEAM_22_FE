@@ -1040,6 +1040,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     const g = t => +p.find(x => x.type === t).value;
     return {y:g('year'), m:g('month'), d:g('day')};
   }
+  const seoulKey = () => { const t = seoulToday(); return `${t.y}-${t.m}-${t.d}`; };   // 날짜 비교용 문자열 (서울)
   let today = seoulToday();
   const isToday = (y,m,d) => y === today.y && m === today.m && d === today.d;
   const fmtDate = (y,m,d) => `${y}. ${m}. ${d}. (${WD[new Date(y, m-1, d).getDay()]})`;
@@ -2185,7 +2186,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     const saved = bookMode === 'diary' && !reviewing && !!curDet, ask = saved && delAsk && !edit, busy = !!(edit && edit.busy);
     editBtn.hidden = !saved || ask; delBtn.hidden = !saved || !!edit || ask;
     editCancel.hidden = !edit; delQ.hidden = delYes.hidden = delNo.hidden = !ask;
-    editBtn.textContent = !edit ? '일기 수정' : busy ? '저장 중…' : edit.unknown ? '수정 결과 확인' : '수정 완료';
+    editBtn.textContent = !edit ? '일기 수정' : busy ? '저장 중…' : edit.unknown ? (edit.receipt ? '같은 요청으로 확인' : '수정 결과 확인') : '수정 완료';
     editBtn.classList.toggle('solid', !!edit);
     editBtn.disabled = busy || (!edit && (delBusy || delUnknown)); editCancel.disabled = busy;
     delBtn.textContent = delBusy ? '삭제 중…' : delUnknown ? '삭제 결과 확인' : '일기 삭제'; delBtn.disabled = delBusy;
@@ -2201,7 +2202,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(edit || !curDet || delBusy || delUnknown) return;   // 삭제 결과 불명이면 먼저 확인
     delAsk = false;
     if(spread) goSpread(0);                          // 휴대폰: 1쪽으로
-    edit = {det:curDet, blob:null, blobUrl:null, req:null, busy:false, unknown:false, loadingPic:false};
+    edit = {det:curDet, blob:null, blobUrl:null, req:null, busy:false, unknown:false, receipt:false, loadingPic:false};   // receipt: 같은 요청 재전송으로 결과 확인할 차례
     dpEdit.value = curDet.confirmed_text || '';
     renderActs(); dpEdit.scrollTop = 0;
     toast('글 칸이나 그림을 눌러 고쳐요');
@@ -2229,7 +2230,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   }
   async function saveEdit(){
     const e = edit; if(!e || e.busy || e.loadingPic) return;
-    if(e.unknown) return checkEdit(e);
+    if(e.unknown && !e.receipt) return checkEdit(e);   // 결과 불명: 먼저 상세 GET, 그래도 모르면 같은 요청 재전송(아래)
     if(!e.req){
       const text = dpEdit.value;
       if(text === (e.det.confirmed_text || '') && !e.blob){ endEdit(); toast('바뀐 내용 없음'); return; }
@@ -2253,7 +2254,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       if(er.code === 'DIARY_NOT_FOUND'){ errToast('일기 없음'); diaryGone(e.det); return; }
       if(verConflict(er)){ e.req = null; conflictEdit(e); return; }   // 확정 실패(반영 안 됨): 고친 글·그림은 보존
       if(unknownResult(er)){ e.unknown = true; errToast('수정 결과 불명 · 확인 필요'); }
-      else { if(!sameIdRetry(er)) e.req = null; errToast('수정 실패: ' + errText(er)); handleAuth(er); }
+      else { if(!sameIdRetry(er)){ e.req = null; e.unknown = e.receipt = false; } errToast('수정 실패: ' + errText(er)); handleAuth(er); }   // 확정 실패: 새 요청 가능
       renderActs();
     }
   }
@@ -2269,9 +2270,9 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(e !== edit) return;
     endEdit(det); putDiaryItem(det);
   }
-  // 버전 충돌·그림 미저장: 고친 글(dpEdit)·그림 Blob은 그대로 두고 최신 일기(버전) 기준으로 새 요청을 만들 수 있게 함
+  // 버전 충돌: 고친 글(dpEdit)·그림 Blob은 그대로 두고 최신 일기(버전) 기준으로 새 요청을 만들 수 있게 함
   function rebaseEdit(e, det, msg){
-    e.det = det; e.req = null; e.unknown = false; e.busy = false;
+    e.det = det; e.req = null; e.unknown = e.receipt = false; e.busy = false;
     if(!e.blob) setPicture({drawing: det.imageUrl || null, diaryId: det.diary_id});   // 그림을 안 고쳤으면 최신 그림 표시
     renderActs(); errToast(msg);
   }
@@ -2285,27 +2286,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       e.busy = false; errToast('일기 버전 충돌 · 최신 일기 확인 실패: ' + errText(er)); handleAuth(er); renderActs();
     }
   }
-  // 보낸 그림이 서버에 저장됐는지: 원본 그림 식별 값이 바뀌었거나, 내려받은 원본이 보낸 Blob과 같은 바이트면 저장됨
-  const drawAsset = d => (d && (d.assets || []).find(x => x.asset_kind === 'original_drawing')) || null;
-  const drawId = a => a ? JSON.stringify(['id','asset_id','drawing_id','storage_key','object_key','sha256','checksum','content_hash'].filter(k => a[k] != null).map(k => [k, a[k]])) : '[]';
-  async function pictureSaved(before, after, blob){
-    const a = drawAsset(after), id = drawId(a);
-    if(id !== '[]' && id !== drawId(drawAsset(before))) return true;
-    const url = (a && a.imageUrl) || after.imageUrl;
-    if(!url) return false;
-    const ctl = new AbortController(), t = setTimeout(()=> ctl.abort(), TMO.request);
-    try{
-      const res = await fetch(url, {mode:'cors', cache:'no-store', signal:ctl.signal});
-      if(!res.ok) return false;
-      const [x, y] = await Promise.all([res.arrayBuffer(), blob.arrayBuffer()]);
-      if(x.byteLength !== y.byteLength) return false;
-      const [hx, hy] = await Promise.all([crypto.subtle.digest('SHA-256', x), crypto.subtle.digest('SHA-256', y)]);
-      const p = new Uint8Array(hx), q = new Uint8Array(hy);
-      return p.every((b, i) => b === q[i]);
-    }catch(_){ return false; }                       // 못 받으면 저장 확인 불가 → 완료 아님
-    finally{ clearTimeout(t); }
-  }
-  // 결과 불명: 상세 GET으로만 확인 (자동 재전송 없음)
+  // 결과 불명: 상세 GET으로 확인 (자동 재전송 없음). 버전 그대로면 반영 안 됨, 바뀌었으면 사용자가 다시 눌러 같은 요청 재전송
   async function checkEdit(e){
     e.busy = true; renderActs();
     try{
@@ -2313,15 +2294,9 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       if(e !== edit) return;
       const v = verOf(det);
       if(v != null && v === e.req.expected_version){ e.unknown = false; toast('수정 안 됨 · 같은 내용으로 다시 저장 가능'); }
-      else if(v != null && det.confirmed_text === e.req.confirmed_text){
-        // 글·버전만으로는 완료가 아님: 그림을 고쳐 보냈으면 새 그림까지 저장된 경우에만 완료
-        const picOk = !e.req.blob || await pictureSaved(e.det, det, e.req.blob);
-        if(e !== edit) return;
-        if(picOk){ toast('일기를 고쳤어요'); endEdit(det); putDiaryItem(det); return; }
-        rebaseEdit(e, det, '그림 저장 확인 안 됨 · 수정 완료를 다시 눌러 그림 저장'); return;
-      }
-      else if(v != null){ rebaseEdit(e, det, '일기 버전 충돌 · 고친 내용은 그대로, 다시 저장 가능'); return; }
-      else errToast('수정 결과 확인 불가');
+      // 버전이 바뀌어도 내 요청이 반영됐다는 근거가 아님 (다른 요청일 수 있음): 결과 불명 유지, 글·그림 보존.
+      // 다음 확인은 같은 client_request_id·같은 본문 재전송 → 서버가 이 요청 ID의 결과로 답함
+      else { e.receipt = true; errToast('수정 결과 확인 불가 · 다시 누르면 같은 요청으로 확인'); }
     }catch(er){
       if(e !== edit) return;
       if(er.code === 'DIARY_NOT_FOUND'){ errToast('일기 없음'); diaryGone(e.det); return; }
@@ -2691,14 +2666,17 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     document.getElementById('twStage').textContent = t ? `${t.stage} / ${t.max_stage}단계` : '— / 7단계';
     document.getElementById('twDays').textContent = `물 준 날 ${t ? t.days_watered : '—'}일`;
     let why = '';
+    const stale = !!(waterUnknown && waterReq && waterDay !== seoulKey());   // 지난 날 보낸 물 주기 결과 불명: GET으로는 확인 불가
     if(!t) why = '나무 정보 확인 불가';
+    else if(stale) why = '지난 물 주기 결과 불명 · 같은 요청으로 확인 필요';
     else if(waterUnknown) why = '결과 불명 · 다시 확인 필요';
     else if(t.stage >= t.max_stage) why = '나무가 다 자랐어요';
     else if(t.watered_today) why = '오늘은 이미 물을 줬어요';
     else if(!wallet || !wallet.water_drops) why = '물방울 없음 · 그림일기를 쓰면 받아요';
-    twBtn.disabled = waterBusy || checking || !!why;
+    twBtn.disabled = waterBusy || checking || (!!why && !stale);   // 지난 날 결과 불명이면 이 버튼 = 같은 요청 재전송
+    twBtn.textContent = stale ? '같은 요청으로 확인' : '물 주기';
     twMsg.textContent = checking ? '확인 중…' : waterBusy ? '물 주는 중…' : why;
-    twCheck.hidden = !(waterUnknown || !t);
+    twCheck.hidden = !(waterUnknown || !t) || stale;
     twCheck.disabled = checking || waterBusy;
   }
   function openWater(){
@@ -2711,23 +2689,25 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     waterEl.classList.remove('show');
     setTimeout(()=>{ if(waterEl.classList.contains('show')) return; waterEl.hidden = true; if(reader.hidden && calpage.hidden) plantEl.focus({preventScroll:true}); }, reduce ? 0 : 300);
   }
-  // 다시 확인: GET /api/me/room으로 상태만 확인 (물 주기 재전송 없음). 반영 안 됐으면 waterReq 유지 → 그날 다음 물 주기도 같은 ID
+  // 다시 확인: GET /api/me/room으로 상태만 확인 (물 주기 재전송 없음). 오늘 만든 요청만 판단, 지난 날 요청은 결과 불명 유지
   async function checkRoom(){
     const seq = roomSeq; checking = true; renderTree();
     try{
       const r = await api('/api/me/room');
       if(seq !== roomSeq) return;
-      room = r; if(r.wallet) wallet = r.wallet; waterUnknown = false;
-      // 불명이던 물 주기가 이미 반영됨(오늘 물 줌·성체) → 그 요청은 끝남. 남겨 두면 다음 날 같은 ID로 지난 결과가 재생됨
-      if(waterReq && r.tree && (r.tree.watered_today || r.tree.stage >= r.tree.max_stage)) waterReq = null;
+      room = r; if(r.wallet) wallet = r.wallet;
+      // GET room으로 판단할 수 있는 건 "오늘" 만든 요청뿐 (watered_today는 오늘 상태). 지난 날 요청은 결과 불명 유지 → 같은 요청 재전송으로만 확인
+      if(waterUnknown && waterReq && waterDay === seoulKey() && r.tree){
+        if(r.tree.watered_today) waterReq = null;   // 오늘 물 줌: 이 요청은 끝남 (남기면 같은 ID로 지난 결과가 재생됨)
+        waterUnknown = false;                       // 안 줬으면 waterReq 유지: 다음 물 주기도 같은 ID
+      } else if(!waterReq) waterUnknown = false;
     }catch(e){ if(seq === roomSeq){ errToast('나무 확인: ' + errText(e)); handleAuth(e); } }
     finally{ checking = false; if(seq === roomSeq) showWallet(); }
   }
   async function waterTree(){
     if(twBtn.disabled) return;
     const seq = roomSeq;
-    if(waterReq && waterDay !== seoulToday()) waterReq = null;   // 같은 ID 재전송은 그날의 물 주기에만: 날짜가 바뀌면 새 작업
-    if(!waterReq){ waterReq = {client_request_id: rid('water')}; waterDay = seoulToday(); }
+    if(!waterReq){ waterReq = {client_request_id: rid('water')}; waterDay = seoulKey(); }   // 남은 요청이 있으면 날짜와 관계없이 같은 ID·본문 (새 ID로 우회 안 함)
     waterBusy = true; renderTree();
     let r;
     try{ r = await api('/api/me/tree/water', {method:'POST', json:waterReq}); }
@@ -2735,14 +2715,14 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       if(seq !== roomSeq) return;
       waterBusy = false;
       if(e.status === 0 || e.status >= 500 || e.code === 'INVALID_RESPONSE') waterUnknown = true;   // 서버 반영 여부 모름: 자동 재전송 없음
-      if(!waterUnknown && !sameIdRetry(e)) waterReq = null;                                    // 확정 실패: 다음 물 주기는 새 요청
+      else if(!sameIdRetry(e)){ waterUnknown = false; waterReq = null; }                     // 이 요청 ID에 대한 확정 실패: 다음 물 주기는 새 요청
       errToast('물 주기: ' + errText(e)); handleAuth(e);
       if(['TREE_ALREADY_WATERED_TODAY','TREE_FULL_GROWN','INSUFFICIENT_WATER'].includes(e.code)) checkRoom();   // 화면 상태가 서버와 다름
       else renderTree();
       return;
     }
     if(seq !== roomSeq) return;
-    waterReq = null;
+    waterReq = null; waterUnknown = false;            // 이 요청 ID의 서버 결과(영수증)를 받음: 결과 불명 해소
     const done = ()=>{
       if(seq !== roomSeq) return;
       twView.classList.remove('pour');
