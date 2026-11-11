@@ -507,7 +507,22 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .page-nav .act{width:auto;border-radius:var(--radius-pill);padding:0 14px;font-size:13px;font-weight:500;white-space:nowrap}
 .page-nav .act.solid{background:var(--ink);color:var(--white)}
 .page-nav .act.solid:hover:not(:disabled){background:var(--ink);opacity:.85}
-.page-nav .act[hidden]{display:none}
+.page-nav .act[hidden],.page-nav span[hidden]{display:none}
+.page-nav .ask{min-width:0;padding:0 4px;white-space:nowrap}
+/* 저장된 일기 고치기: 글 칸은 전체 글을 편집(밑줄이 글과 함께 스크롤), 그림 칸은 눌러 스케치북 열기 */
+.book.editing .dp1-grid{background:none;overflow:visible;padding:0}
+.book.editing #dpText,.book.editing .dp1-turn{display:none}
+.dp-edit{display:block;width:100%;height:100%;margin:0;padding:0 6px;border:0;outline:none;resize:none;overflow-y:auto;overscroll-behavior:contain;
+  font:inherit;line-height:inherit;color:var(--ink);white-space:pre-wrap;overflow-wrap:anywhere;box-shadow:0 0 0 2px var(--color-connect);border-radius:2px;
+  background:repeating-linear-gradient(to bottom, transparent 0 calc(10cqw - 1.5px), rgba(34,34,34,.6) calc(10cqw - 1.5px) 10cqw) local}
+.dp-edit:focus{box-shadow:0 0 0 3px var(--color-connect)}
+.dp-edit[readonly]{opacity:.6}
+.dp-edit[hidden]{display:none}
+.book.editing .dp1-pic{cursor:pointer;outline:2px dashed var(--color-connect);outline-offset:3px}
+.book.editing .dp1-pic:focus-visible{outline:3px solid var(--color-connect)}
+.book.editing .dp1-pic.loading{opacity:.5;cursor:progress}
+.sketch.editing .sk-weather{visibility:hidden}
+.sketch.editing .sk-head p{display:none}
 @media (max-width:420px){ .page-nav{gap:4px} .page-nav .act{padding:0 10px} }
 .dp1-grid.muted{opacity:.55}
 /* 글 칸 넘기기: 글 칸 바로 아래 가운데 (1쪽 아래 여백, 쪽 번호와 겹치지 않음) */
@@ -763,7 +778,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 </div>
 
 <div class="reader" id="reader" hidden>
-  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button></nav>
+  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button><span class="ask" id="delQ" hidden role="alert">정말로 삭제하시겠습니까?</span><button type="button" class="act solid" id="delYes" hidden>예</button><button type="button" class="act" id="delNo" hidden>아니오</button><button type="button" class="act" id="editCancel" hidden>취소</button><button type="button" class="act" id="delBtn" hidden>일기 삭제</button><button type="button" class="act" id="editBtn" hidden>일기 수정</button></nav>
   <div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
     <div class="back-cover" aria-hidden="true"></div>
     <button type="button" class="log-tab" id="logBtn" hidden><span class="bm-label">대화 기록</span><span class="mascot" aria-hidden="true"><img class="mascot-face" src="assets/mascot/mascot_default.svg" alt=""></span></button>
@@ -785,7 +800,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
         </form>
       </div>
     </div>
-    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span><img class="cover-art" id="coverArt" alt="" hidden></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"><div id="dpText"></div></div><div class="dp1-turn" id="dpTurn" hidden><button type="button" id="dpPrev" aria-label="앞 여섯 줄">‹</button><span id="dpLines"></span><button type="button" id="dpNext" aria-label="다음 여섯 줄">›</button></div></section></div></div>
+    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span><img class="cover-art" id="coverArt" alt="" hidden></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"><div id="dpText"></div><textarea class="dp-edit" id="dpEdit" hidden aria-label="일기 글 고치기"></textarea></div><div class="dp1-turn" id="dpTurn" hidden><button type="button" id="dpPrev" aria-label="앞 여섯 줄">‹</button><span id="dpLines"></span><button type="button" id="dpNext" aria-label="다음 여섯 줄">›</button></div></section></div></div>
   </div>
 </div>
 </div>
@@ -1054,7 +1069,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       DRAWING_INVALID_IMAGE:'그림 형식 오류',
       AUTHENTICATION_FAILED:'인증 실패', ITEM_NOT_FOUND:'상품 없음', INSUFFICIENT_COINS:'코인 부족', INSUFFICIENT_WATER:'물방울 부족',
       ITEM_ALREADY_OWNED:'이미 가진 상품', ITEM_NOT_OWNED:'가지지 않은 상품', TREE_ALREADY_WATERED_TODAY:'오늘 물 주기 완료', TREE_FULL_GROWN:'나무 다 자람',
-      ROOM_POSITION_INVALID:'배치 위치 오류', ROOM_STORAGE_UNAVAILABLE:'방 데이터 오류', ITEM_NOT_PLACEABLE:'배치할 수 없는 상품', ITEM_NOT_REFUNDABLE:'환불할 수 없는 상품',
+      DIARY_VERSION_CONFLICT:'일기 버전 충돌', ROOM_POSITION_INVALID:'배치 위치 오류', ROOM_STORAGE_UNAVAILABLE:'방 데이터 오류', ITEM_NOT_PLACEABLE:'배치할 수 없는 상품', ITEM_NOT_REFUNDABLE:'환불할 수 없는 상품',
     };
     if(known[c]) return known[c];
     if(c.startsWith('AI_')) return 'AI 응답 실패';
@@ -1142,6 +1157,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     resetEnd();
     logBtn.hidden = mode !== 'diary' || reviewing;   // 그림일기에서는 항상 대화 기록을 볼 수 있음 (기록이 없으면 없다고 표시)
     saveBtn.hidden = !reviewing; redrawBtn.hidden = !reviewing;
+    curDet = null; delAsk = false; renderActs();      // 수정·삭제 버튼은 저장된 일기(openDiaryBook)에서만
     chatTitle.textContent = mode === 'diary' ? '그림일기' : 'AI와 대화';
     chatDate.textContent = dateText;
     document.getElementById('coverDate').textContent = dateText;
@@ -1155,7 +1171,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     });
   }
   function closeBook(after){
-    if(!bookShown()) return;
+    if(!bookShown() || (edit && edit.busy)) return;   // 고친 내용을 보내는 중에는 닫지 않음
+    if(edit) endEdit();                                // 저장하지 않은 수정은 버림
+    delAsk = false;
     timers.forEach(clearTimeout); timers = [];
     reader.classList.add('closing');
     book.classList.remove('ready'); pageNav.classList.remove('show');
@@ -1173,6 +1191,8 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
   const pnoLeft = document.getElementById('pnoLeft'), pnoRight = document.getElementById('pnoRight');
   let spread = 0, turning = false, diaryOn = false;
+  // 저장된 일기 수정·삭제 상태 (아래 "일기 수정·삭제" 참고)
+  let curDet = null, edit = null, delReq = null, delBusy = false, delUnknown = false, delAsk = false, skEdit = null;
   const perSpread = () => narrow.matches ? 1 : 2;
   const spreads = () => TOTAL / perSpread();
   function pagesOf(i){ return narrow.matches ? [null, i+1] : [i*2+1, i*2+2]; }
@@ -1195,7 +1215,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     const [l, r] = pagesOf(spread);
     pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${l}–${r} / ${TOTAL}`;
     prevBtn.disabled = spread === 0; nextBtn.disabled = spread === spreads() - 1;
-    prevBtn.hidden = nextBtn.hidden = spreads() === 1;   // PC는 두 쪽이 한 번에 다 보여서 넘길 쪽이 없음
+    const hold = !!edit || delAsk;                     // 고치는 중·삭제 확인 중에는 쪽 넘기기 숨김
+    prevBtn.hidden = nextBtn.hidden = spreads() === 1 || hold;   // PC는 두 쪽이 한 번에 다 보여서 넘길 쪽이 없음
+    pageInfo.hidden = hold;
   }
   function showNumbers(){ const [l, r] = pagesOf(spread); showPages(l, r); showNav(); }
   function clearLeaves(){ book.querySelectorAll('.leaf').forEach(l => l.remove()); turning = false; }
@@ -1219,7 +1241,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   // 한 장을 넘기는 애니메이션: 넘어가는 종이를 만들고, 그 종이에 가려지는 쪽만 미리 바꿔 둔다.
   // 종이는 넘김(transform 전환)이 실제로 끝난 뒤에 지워서, 다 내려앉기 전에 화면이 바뀌어 보이지 않게 한다
   function goSpread(target){
-    if(turning || target === spread || target < 0 || target >= spreads()) return;
+    if(turning || edit || target === spread || target < 0 || target >= spreads()) return;
     const fwd = target > spread, [l0, r0] = pagesOf(spread), [l1, r1] = pagesOf(target);
     turning = true;
     const leaf = fwd ? makeLeaf(r0, l1, false) : makeLeaf(r1, l0, true);
@@ -1694,7 +1716,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   skCanvas.addEventListener('pointermove', e=>{ if(!skDrawing) return; const p = skPos(e); skStroke(skLast, p); skLast = p; });
   ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => skCanvas.addEventListener(t, skEnd));
   document.getElementById('skUndo').addEventListener('click', ()=>{ if(skUndo.length) skCtx.putImageData(skUndo.pop(), 0, 0); skDirty = skUndo.length > 0; });
-  document.getElementById('skReset').addEventListener('click', ()=>{ skSnapshot(); skClear(); });
+  document.getElementById('skReset').addEventListener('click', ()=>{ skSnapshot(); skClear(); if(skEdit) skDirty = true; });   // 고치기: 모두 지운 것도 바뀐 그림
   // 열기 / 완성
   const skDone = document.getElementById('skDone');
   function openSketch(){
@@ -1706,6 +1728,13 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       skWeather = null;
       skWeatherEl.querySelectorAll('.wx').forEach(x => x.setAttribute('aria-checked', 'false'));
     }
+    showSketch(false);
+  }
+  // editing: 저장된 일기 그림 고치기 (날씨 없음, 완료 버튼 이름만 다름)
+  function showSketch(editing){
+    sketch.classList.toggle('editing', editing);
+    document.getElementById('sketchTitle').textContent = editing ? '그림 고치기' : '오늘의 그림 그리기';
+    skDone.textContent = editing ? '고치기 완료' : '그림일기 완성';
     skDone.disabled = false;
     sketch.hidden = false;
     toggleBrushMenu(false);
@@ -1713,7 +1742,14 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   }
   function closeSketch(after){
     sketch.classList.remove('show');
-    setTimeout(()=>{ sketch.hidden = true; after && after(); }, reduce ? 0 : 300);
+    setTimeout(()=>{
+      sketch.hidden = true;
+      if(skEdit){                                      // 수정용으로 열기 전 스케치북(flow 그림) 되돌림
+        skCtx.putImageData(skEdit.img, 0, 0); skUndo = skEdit.undo; skDirty = skEdit.dirty; skEdit = null;
+        sketch.classList.remove('editing');
+      }
+      after && after();
+    }, reduce ? 0 : 300);
   }
   // 그림을 PNG Blob으로 (10 MiB를 넘으면 JPEG로). 이 Blob을 업로드가 끝날 때까지 그대로 보관
   function canvasBlob(){
@@ -1723,6 +1759,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     }, 'image/png'));
   }
   async function finishSketch(){
+    if(skEdit) return finishEditSketch();
     const f = flow; if(!f || f.confirmReq || skDone.disabled) return;
     skDone.disabled = true;
     const blob = skDirty ? await canvasBlob() : null;
@@ -2021,9 +2058,12 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     diaryEntries = det ? (det.messages || []).slice().sort((a, b) => a.position - b.position)
       .map(x => ({who: x.role === 'child' ? 'user' : 'ai', text: x.text})) : [];
     diaryDate = new Date(y, m - 1, d);
-    const bk = det ? {weather:det.weather, drawing:det.imageUrl || null, diary:det.confirmed_text || '', name:userName(), diaryId:det.diary_id} : null;
-    openBook('diary', fmtDate(y, m, d), opener, det ? colorOf(det.diary_id) : null, bk);
+    if(bookShown()) return;
+    openBook('diary', fmtDate(y, m, d), opener, det ? colorOf(det.diary_id) : null, bkOf(det));
+    if(!det || !delReq || delReq.id !== det.diary_id){ delReq = null; delUnknown = false; delBusy = false; }   // 다른 일기: 삭제 요청 새로
+    curDet = det; renderActs();
   }
+  const bkOf = det => det ? {weather:det.weather, drawing:det.imageUrl || null, diary:det.confirmed_text || '', name:userName(), diaryId:det.diary_id} : null;
 
   // ---- 대화 기록 보기: 이 그림일기를 쓸 때 AI와 나눈 대화를 읽기 전용으로 보여 줌 ----
   const logEl = document.getElementById('chatLog'), logList = document.getElementById('logList');
@@ -2049,6 +2089,225 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   logBtn.addEventListener('click', e=>{ e.stopPropagation(); openLog(); });
   logClose.addEventListener('click', closeLog);
   logEl.addEventListener('click', e=>{ if(e.target === logEl) closeLog(); });   // 창 바깥을 누르면 닫힘
+
+  // ---- 저장된 일기 수정·삭제 (v0.4 제안 API: PUT /api/diaries/{id}/edits, DELETE /api/diaries/{id}) ----
+  // 서버에 없을 수 있음: 404·405·501이면 "준비 중" 안내 후 원래 글·그림 그대로. 보상 없음(7-1)
+  // edit: {det, blob, blobUrl, req, busy, unknown, loadingPic}. req는 한 번 만들어 같은 ID·본문(같은 Blob)으로만 재전송
+  const editBtn = document.getElementById('editBtn'), editCancel = document.getElementById('editCancel'), dpEdit = document.getElementById('dpEdit');
+  const delBtn = document.getElementById('delBtn'), delQ = document.getElementById('delQ'), delYes = document.getElementById('delYes'), delNo = document.getElementById('delNo');
+  const verOf = d => Number.isInteger(d && d.edit_version) ? d.edit_version : null;
+  const notReady = e => e.status === 405 || e.status === 501 || (e.status === 404 && e.code !== 'DIARY_NOT_FOUND');   // API 미구현
+  const verConflict = e => (e.status === 409 || e.status === 412) && !['IDEMPOTENCY_CONFLICT','REQUEST_IN_PROGRESS'].includes(e.code);
+  const detailOf = id => api('/api/diaries/' + encodeURIComponent(id));
+  function renderActs(){
+    const saved = bookMode === 'diary' && !reviewing && !!curDet, ask = saved && delAsk && !edit, busy = !!(edit && edit.busy);
+    editBtn.hidden = !saved || ask; delBtn.hidden = !saved || !!edit || ask;
+    editCancel.hidden = !edit; delQ.hidden = delYes.hidden = delNo.hidden = !ask;
+    editBtn.textContent = !edit ? '일기 수정' : busy ? '저장 중…' : edit.unknown ? '수정 결과 확인' : '수정 완료';
+    editBtn.classList.toggle('solid', !!edit);
+    editBtn.disabled = busy || (!edit && (delBusy || delUnknown)); editCancel.disabled = busy;
+    delBtn.textContent = delBusy ? '삭제 중…' : delUnknown ? '삭제 결과 확인' : '일기 삭제'; delBtn.disabled = delBusy;
+    book.classList.toggle('editing', !!edit);
+    dpEdit.hidden = !edit; dpEdit.readOnly = !!(edit && edit.req);   // 보낸 본문은 결과가 정해질 때까지 그대로
+    if(edit){ dpGrid.removeAttribute('role'); dpPic.setAttribute('role', 'button'); dpPic.tabIndex = 0; dpPic.setAttribute('aria-label', '그림 고치기'); }
+    else { dpGrid.setAttribute('role', 'img'); dpPic.removeAttribute('role'); dpPic.removeAttribute('tabindex'); dpPic.removeAttribute('aria-label'); }
+    if(diaryOn) showNav();
+  }
+  // 서버 값으로 1쪽 다시 그림
+  function showDiary(det){ curDet = det; renderDiaryPage(bkOf(det)); }
+  function startEdit(){
+    if(edit || !curDet || delBusy || delUnknown) return;   // 삭제 결과 불명이면 먼저 확인
+    delAsk = false;
+    if(spread) goSpread(0);                          // 휴대폰: 1쪽으로
+    edit = {det:curDet, blob:null, blobUrl:null, req:null, busy:false, unknown:false, loadingPic:false};
+    dpEdit.value = curDet.confirmed_text || '';
+    renderActs(); dpEdit.scrollTop = 0;
+    toast('글 칸이나 그림을 눌러 고쳐요');
+  }
+  function endEdit(det){
+    const e = edit; if(!e) return;
+    edit = null; renderActs();                       // editing을 먼저 풀어야 6줄 넘기기를 잴 수 있음
+    if(e.blobUrl) setTimeout(()=> URL.revokeObjectURL(e.blobUrl), 3000);
+    if(skEdit && !sketch.hidden) closeSketch();
+    showDiary(det || e.det);
+  }
+  // 결과 불명이었으면 서버 상태를 다시 읽어 보여 줌
+  function cancelEdit(){
+    const e = edit; if(!e || e.busy) return;
+    if(e.unknown) reloadEdit(e); else endEdit();
+  }
+  async function reloadEdit(e){
+    e.busy = true; renderActs();
+    try{ const det = await detailOf(e.det.diary_id); if(e === edit) endEdit(det); }
+    catch(er){
+      if(e !== edit) return;
+      if(er.code === 'DIARY_NOT_FOUND'){ diaryGone(e.det); return; }
+      e.busy = false; errToast('일기 확인 실패: ' + errText(er)); handleAuth(er); renderActs();
+    }
+  }
+  async function saveEdit(){
+    const e = edit; if(!e || e.busy || e.loadingPic) return;
+    if(e.unknown) return checkEdit(e);
+    if(!e.req){
+      const text = dpEdit.value;
+      if(text === (e.det.confirmed_text || '') && !e.blob){ endEdit(); toast('바뀐 내용 없음'); return; }
+      if(!text.trim()){ toast('일기 글을 써 주세요'); dpEdit.focus(); return; }
+      e.req = {client_request_id: rid('edit'), expected_version: verOf(e.det), confirmed_text: text, blob: e.blob};
+    }
+    const r = e.req, form = new FormData();
+    form.append('client_request_id', r.client_request_id);
+    if(r.expected_version != null) form.append('expected_version', String(r.expected_version));
+    form.append('confirmed_text', r.confirmed_text);
+    if(r.blob) form.append('file', r.blob, r.blob.type === 'image/jpeg' ? 'drawing.jpg' : 'drawing.png');   // 그림을 고쳤을 때만
+    e.busy = true; renderActs();
+    try{
+      const res = await api(`/api/diaries/${encodeURIComponent(e.det.diary_id)}/edits`, {method:'PUT', form, timeout:SAVE_TIMEOUT});
+      if(e !== edit) return;
+      editSaved(e, res);
+    }catch(er){
+      if(e !== edit) return;
+      e.busy = false;
+      if(notReady(er)){ toast('수정 기능 준비 중'); endEdit(); return; }   // 원래 글·그림으로
+      if(er.code === 'DIARY_NOT_FOUND'){ errToast('일기 없음'); diaryGone(e.det); return; }
+      if(verConflict(er)){ errToast('일기 버전 충돌 · 최신 일기로 다시 불러옴'); reloadEdit(e); return; }
+      if(unknownResult(er)){ e.unknown = true; errToast('수정 결과 불명 · 확인 필요'); }
+      else { if(!sameIdRetry(er)) e.req = null; errToast('수정 실패: ' + errText(er)); handleAuth(er); }
+      renderActs();
+    }
+  }
+  // 성공: 그림 주소는 상세를 다시 받아 표시 (못 받으면 응답 글 + 내가 고친 그림)
+  async function editSaved(e, res){
+    toast('일기를 고쳤어요');
+    let det;
+    try{ det = await detailOf(e.det.diary_id); }
+    catch(_){
+      det = Object.assign({}, e.det, {confirmed_text: res.confirmed_text ?? e.req.confirmed_text, edit_version: res.edit_version, updated_at: res.updated_at},
+        e.req.blob ? {imageUrl: URL.createObjectURL(e.req.blob)} : {});
+    }
+    if(e !== edit) return;
+    endEdit(det); putDiaryItem(det);
+  }
+  // 결과 불명: 상세 GET으로만 확인 (자동 재전송 없음)
+  async function checkEdit(e){
+    e.busy = true; renderActs();
+    try{
+      const det = await detailOf(e.det.diary_id);
+      if(e !== edit) return;
+      const v = verOf(det);
+      if(v != null && v === e.req.expected_version){ e.unknown = false; toast('수정 안 됨 · 같은 내용으로 다시 저장 가능'); }
+      else if(v != null && det.confirmed_text === e.req.confirmed_text){ toast('일기를 고쳤어요'); endEdit(det); putDiaryItem(det); return; }
+      else if(v != null){ errToast('일기 버전 충돌 · 최신 일기로 다시 불러옴'); endEdit(det); return; }
+      else errToast('수정 결과 확인 불가');
+    }catch(er){
+      if(e !== edit) return;
+      if(er.code === 'DIARY_NOT_FOUND'){ errToast('일기 없음'); diaryGone(e.det); return; }
+      errToast('확인 실패: ' + errText(er)); handleAuth(er);
+    }
+    e.busy = false; renderActs();
+  }
+  // 그림 고치기: 기존 그림을 fetch(CORS)로 받아 캔버스에 올림. CORS 없는 주소는 여기서 실패해 캔버스가 오염되지 않음(toBlob 가능)
+  async function openEditSketch(){
+    const e = edit; if(!e || e.req || e.busy || e.loadingPic || !sketch.hidden) return;
+    let bmp = null;
+    e.loadingPic = true; dpPic.classList.add('loading');
+    try{
+      if(e.blob) bmp = await createImageBitmap(e.blob);
+      else if(e.det.imageUrl){
+        const det = await detailOf(e.det.diary_id);   // 그림 주소는 300초 뒤 만료: 새 주소로
+        if(det.imageUrl){
+          const ctl = new AbortController(), t = setTimeout(()=> ctl.abort(), TMO.request);
+          try{
+            const res = await fetch(det.imageUrl, {mode:'cors', cache:'no-store', signal:ctl.signal});
+            if(!res.ok) throw new Error('image ' + res.status);
+            bmp = await createImageBitmap(await res.blob());
+          }finally{ clearTimeout(t); }
+        }
+      }
+    }catch(er){
+      if(e === edit){ errToast(er instanceof ApiError ? '그림 불러오기 실패: ' + errText(er) : '그림 수정 불가 · 그림을 불러올 수 없어요'); if(er instanceof ApiError) handleAuth(er); }
+      return;
+    }finally{ e.loadingPic = false; dpPic.classList.remove('loading'); }
+    if(e !== edit || !sketch.hidden) return;
+    skEdit = {img: skCtx.getImageData(0, 0, SK_W, SK_H), undo: skUndo, dirty: skDirty};   // flow 그림 보존
+    skClear(); if(bmp) skCtx.drawImage(bmp, 0, 0, SK_W, SK_H);   // 3:2 같은 비율
+    skUndo = []; skDirty = false;
+    showSketch(true);
+  }
+  async function finishEditSketch(){
+    if(skDone.disabled) return;
+    const e = edit; skDone.disabled = true;
+    if(e && skDirty){
+      let blob = null;
+      try{ blob = await canvasBlob(); }catch(_){}    // 오염된 캔버스면 toBlob이 SecurityError
+      if(!blob){ skDone.disabled = false; errToast('그림 수정 불가'); return; }
+      if(e === edit){
+        if(e.blobUrl) URL.revokeObjectURL(e.blobUrl);
+        e.blob = blob; e.blobUrl = URL.createObjectURL(blob); setPicture({drawing:e.blobUrl});
+      }
+    }
+    closeSketch(()=>{ if(edit) dpPic.focus({preventScroll:true}); });
+  }
+  // 삭제(soft delete) 성공 또는 이미 없음: 책을 닫고 달력 목록을 다시 받음
+  function diaryGone(d){
+    edit = null; delReq = null; delBusy = delUnknown = delAsk = false;
+    const [y, m, dd] = String(d.diary_date).split('-').map(Number), mo = months[ymKey(y, m)];
+    if(mo && mo.byDay[dd]){ delete mo.byDay[dd]; refreshMonthViews(y, m); }
+    if(curDet && curDet.diary_id === d.diary_id){ curDet = null; renderActs(); closeBook(); }
+    loadMonth(y, m, true); updateShelf();
+  }
+  async function deleteDiary(){
+    const d = curDet; if(!d || delBusy || edit) return;
+    if(!delReq) delReq = {id:d.diary_id, key:rid('delete'), ver:verOf(d)};
+    const r = delReq, headers = {'Idempotency-Key': r.key};
+    if(r.ver != null) headers['If-Match'] = `"${r.ver}"`;
+    delBusy = true; renderActs();
+    try{
+      await api('/api/diaries/' + encodeURIComponent(r.id), {method:'DELETE', headers, timeout:SAVE_TIMEOUT});
+      if(r !== delReq) return;
+      toast('일기를 삭제했어요'); diaryGone(d);
+      return;
+    }catch(er){
+      if(r !== delReq) return;
+      delBusy = false;
+      if(notReady(er)){ delReq = null; toast('삭제 기능 준비 중'); }   // 일기는 그대로
+      else if(er.code === 'DIARY_NOT_FOUND'){ toast('이미 삭제된 일기'); diaryGone(d); return; }
+      else if(verConflict(er)){ delReq = null; errToast('일기 버전 충돌 · 최신 일기로 다시 불러옴'); detailOf(d.diary_id).then(det => { if(curDet === d && !edit) showDiary(det); }).catch(()=>{}); }
+      else if(unknownResult(er)){ delUnknown = true; errToast('삭제 결과 불명 · 확인 필요'); }
+      else { if(!sameIdRetry(er)) delReq = null; errToast('삭제 실패: ' + errText(er)); handleAuth(er); }
+      renderActs();
+    }
+  }
+  // 삭제 결과 불명: 상세 GET으로만 확인 (없음 = 삭제됨)
+  async function checkDelete(){
+    const r = delReq, d = curDet; if(!r || !d || delBusy) return;
+    delBusy = true; renderActs();
+    try{
+      const det = await detailOf(r.id);
+      if(r !== delReq) return;
+      delUnknown = false;
+      if(verOf(det) !== r.ver) delReq = null;        // 그 사이 고쳐짐: 다음 삭제는 새 버전으로
+      if(curDet === d) showDiary(det);
+      toast('삭제 안 됨 · 다시 삭제할 수 있어요');
+    }catch(er){
+      if(r !== delReq) return;
+      if(er.code === 'DIARY_NOT_FOUND'){ delBusy = false; toast('일기를 삭제했어요'); diaryGone(d); return; }
+      errToast('확인 실패: ' + errText(er)); handleAuth(er);
+    }
+    delBusy = false; renderActs();
+  }
+  editBtn.addEventListener('click', e=>{ e.stopPropagation(); edit ? saveEdit() : startEdit(); });
+  editCancel.addEventListener('click', e=>{ e.stopPropagation(); cancelEdit(); });
+  delBtn.addEventListener('click', e=>{
+    e.stopPropagation();
+    if(delBusy || edit) return;
+    if(delUnknown){ checkDelete(); return; }
+    delAsk = true; renderActs(); delNo.focus({preventScroll:true});
+  });
+  delNo.addEventListener('click', e=>{ e.stopPropagation(); delAsk = false; renderActs(); delBtn.focus({preventScroll:true}); });
+  delYes.addEventListener('click', e=>{ e.stopPropagation(); delAsk = false; renderActs(); deleteDiary(); });
+  dpPic.addEventListener('click', e=>{ if(!edit) return; e.stopPropagation(); openEditSketch(); });
+  dpPic.addEventListener('keydown', e=>{ if(edit && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openEditSketch(); } });
+  dpEdit.addEventListener('click', e=> e.stopPropagation());
 
   // 방의 달력 위치에서 화면 크기로 확대 (FLIP 애니메이션)
   function flipFromHome(reverse){
@@ -2097,7 +2356,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     else if(!waterEl.hidden) closeWater();         // 나무 물 주기 창
     else if(!shopEl.hidden) closeShop();           // 상점
     else if(!setEl.hidden) closeSettings();        // 설정(테마)
-    else if(!sketch.hidden) return;                // 스케치북은 "그림일기 완성"으로만 닫음 (그리던 그림이 날아가지 않게)
+    else if(!sketch.hidden){ if(skEdit) closeSketch(); return; }   // flow 스케치북은 "그림일기 완성"으로만 닫음 (그리던 그림이 날아가지 않게). 그림 고치기는 취소
+    else if(delAsk){ delAsk = false; renderActs(); delBtn.focus({preventScroll:true}); }   // 삭제 확인 → 아니오
+    else if(edit){ cancelEdit(); }                 // 일기 고치기 취소
     else if(bookShown()) closeBook();               // 책이 열려 있으면 책부터 닫기
     else if(!calpage.hidden) closeCalendarPage();
     else if(decorating) setDecorating(false);      // 꾸미기 모드 끝내기
@@ -2219,6 +2480,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     document.getElementById('logoutBtn').hidden = !user;
     if((user ? user.id : null) === prev) return;     // 토큰 갱신 등 같은 회원이면 그대로
     chat = null; flow = null; diarySeq++;
+    edit = null; curDet = null; delReq = null; delBusy = delUnknown = delAsk = false;   // 일기 수정·삭제 요청도 새로
     Object.keys(months).forEach(k => delete months[k]);
     if(!sketch.hidden) closeSketch();
     if(bookShown()) closeBook();

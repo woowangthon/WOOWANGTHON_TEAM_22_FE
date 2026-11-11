@@ -107,8 +107,10 @@ cp config.example.js config.js   # 값을 채움
 
 | 기능 | 지금 상태 |
 |---|---|
-| 확정 후 일기 글 수정 / 일기 삭제 / 대화 이어쓰기 | BE API가 없어 제공하지 않음 (오늘 일기가 있으면 보기만 가능) |
-| 사용자가 직접 고친 일기 본문 저장 | BE API가 없어 AI 초안 글 그대로 저장 |
+| 저장된 일기 수정 ("일기 수정" → "수정 완료") | v0.4 제안 API `PUT /api/diaries/{diary_id}/edits` (multipart: `client_request_id`, `expected_version`=상세의 `edit_version`, `confirmed_text`, 그림을 고쳤을 때만 `file`) 호출. 서버에 없으면(404·405·501) "수정 기능 준비 중" 안내 후 원래 글·그림 그대로. 결과 불명이면 "수정 결과 확인"(상세 GET만) |
+| 저장된 일기 삭제 ("일기 삭제" → "정말로 삭제하시겠습니까?" 예/아니오) | v0.4 제안 API `DELETE /api/diaries/{diary_id}` (`Idempotency-Key`, `If-Match: "edit_version"`) 호출. 204면 책을 닫고 달력 다시 불러옴. 서버에 없으면 "삭제 기능 준비 중" 안내 후 일기 그대로 |
+| 대화 이어쓰기 | BE API가 없어 제공하지 않음 |
+| 저장 전 확인 화면에서 직접 고친 본문 저장 | BE API가 없어 AI 초안 글 그대로 저장 (저장 뒤 "일기 수정"으로 고침, 위 제안 API) |
 | 나무 물 주기 (화분 누르기) | v0.3 제안 API `POST /api/me/tree/water` 호출. 서버에 없으면 오류 안내만 표시. 그림은 `tree.asset_key`로만 고름 ([assets/tree/README.md](assets/tree/README.md)) |
 | 상점 (재화 옆 "상점" 버튼) | v0.3 제안 API `GET /api/shop/items`, `POST /api/shop/purchases` 호출. 상품 목록·가격은 아직 예시 (확정 목록은 FE가 정해 BE에 공유). 구매한 테마는 상점 "적용하기"에서 적용 |
 | 테마 적용 (상점 "적용하기", 재화 옆 톱니바퀴 설정 창) | v0.3 제안 API `PUT /api/me/room/theme` 호출. 응답의 `background_asset_key`(방 장식·디자인 시스템), `diary_cover_asset_key`(일기장 표지), `tree.asset_key`(나무)로만 화면을 바꿈. 할로윈 등 전용 성체 그림이 없는 테마는 기본 성체 표시 |
