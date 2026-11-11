@@ -127,6 +127,37 @@ body[data-room="seollal"]{--wall:#f8e1e0; --floor:#8e3a78}     /* 벽: primary-t
 .fb-acts{display:flex;gap:10px}
 .gear-btn{padding:5px}   /* 톱니바퀴: 설정(테마) 창 */
 .gear-btn svg{width:24px;height:24px;display:block}
+.shop-btn[aria-pressed="true"]{background:var(--color-learn);color:var(--ink)}   /* 꾸미기 모드 켜짐: primary 바탕 + ink 글자 */
+.portrait #decoBtn{display:none}   /* 6-8: 세로 화면은 1차 버전에서 가구 표시·편집 제외 */
+
+/* 배치 가구 (6-8 좌표 v0.3.1): #stage 1440×900 좌표 그대로, 겹침 순서는 y + height (z-index).
+   꾸미기 모드가 아니면 클릭을 통과시켜 책장·달력·나무를 막지 않음 */
+.furn{position:absolute;left:0;top:0;width:1440px;height:900px;z-index:2;pointer-events:none}
+.portrait .furn,.portrait .tray{display:none}
+.furn-item{position:absolute;pointer-events:none}
+.furn-item img{display:block;width:100%;height:100%;object-fit:contain;filter:drop-shadow(-8px 8px 10px var(--shadow))}
+.decorating .furn-item{pointer-events:auto;cursor:grab;touch-action:none}
+.decorating .furn-item:hover,.decorating .furn-item:focus-visible{outline:2px dashed var(--ink);outline-offset:4px;border-radius:var(--radius-sm)}
+.furn-item.dragging{cursor:grabbing;pointer-events:none;opacity:.85}
+.decorating .stage .asset{pointer-events:none}   /* 꾸미는 동안 책장·달력·나무가 열리지 않게 */
+/* 꾸미기 모드의 가구 목록: 바닥 오른쪽 (방에 놓지 않은 보유 가구·장식) */
+.tray{position:absolute;left:600px;right:40px;top:794px;height:68px;z-index:3;display:flex;align-items:center;gap:12px;padding:0 12px;
+  border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--white);color:var(--ink)}
+.tray[hidden]{display:none}
+.tray-note{margin:0;font-size:14px;line-height:1.3;white-space:nowrap}
+.tray-note:empty{display:none}
+.tray-note button{margin-left:8px}
+.tray-list{display:flex;gap:8px;overflow-x:auto;min-width:0;flex:1;padding:4px 2px}
+.tray-item{appearance:none;flex:none;width:52px;height:52px;padding:4px;border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--bg-primary);cursor:grab;touch-action:none}
+.tray-item img{width:100%;height:100%;display:block;pointer-events:none}
+.tray-item:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.tray-item:disabled{opacity:.4;cursor:default}
+/* 우클릭 메뉴: 배치 가구 → 치우기, 목록 가구 → 환불 */
+.ctx{position:fixed;z-index:41;   /* 잠깐 뜨는 메뉴라 토스트(40) 위 */min-width:180px;padding:6px;border:2px solid var(--ink);border-radius:var(--radius-sm);background:var(--white);box-shadow:0 12px 24px rgba(0,0,0,.2)}
+.ctx[hidden]{display:none}
+.ctx button{appearance:none;display:block;width:100%;text-align:left;border:0;background:none;font:inherit;font-size:15px;color:var(--ink);padding:8px 10px;border-radius:6px;cursor:pointer}
+.ctx button:hover,.ctx button:focus-visible,.ctx button.armed{background:var(--color-learn);outline:none}
+.ctx button:disabled{opacity:.4;cursor:default}
 .wallet .w-item,.wallet .w-msg{display:flex;align-items:center;gap:6px;padding:4px 14px 4px 6px;border:2px solid var(--ink);border-radius:var(--radius-pill);
   background:var(--white);font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
 .wallet .w-msg{padding:6px 14px;font-size:14px}
@@ -724,7 +755,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     <div class="asset plant" id="plant" role="button" tabindex="0" aria-label="나무에 물 주기"><img class="tree-img" alt="" hidden><span class="tree-orn" hidden></span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><g fill="none"><path style="fill:var(--color-read-3)" stroke="#222222" stroke-linejoin="round" d="m9.007 23.996l.78 4.69c.13.76.78 1.31 1.54 1.31h9.35c.76 0 1.42-.55 1.54-1.31l.79-4.69l-7-1.59z"/><path style="fill:var(--white)" stroke="#222222" stroke-linejoin="round" d="M23.5 24h-15c-.28 0-.5-.22-.5-.5v-3c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5"/></g></svg><span class="hint" aria-hidden="true">나무에 물 주기</span></div>
     <div class="asset shelf" id="shelf" role="button" tabindex="0" aria-label="오늘의 일기 쓰기: 책장 열기"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-connect)" d="M8.174 14.391h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479"/><path style="fill:var(--white)" d="M10.087 14.391h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-learn)" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668"/><path style="fill:var(--ink)" d="M18.217 10.565h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478z"/><path style="fill:var(--color-inspire-3)" d="M16.304 10.565H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path style="fill:var(--color-learn-3)" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667z"/><path style="fill:var(--color-read)" d="M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/><path style="fill:var(--color-read-3)" d="M1 11.522a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957zm0 9.565a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479m1.914 0h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479m1.913 0h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668m6.497-4.625h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478zm-1.913 0H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667zm-8.319.001V1.956m18.174 8.609V1.956M2.913 20.13v-7.652m18.174 7.652v-7.652M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/></g></svg><span class="hint" aria-hidden="true">오늘의 일기 쓰기</span></div>
 
-    <div class="floor-bar"><div class="wallet" id="wallet" hidden role="status" aria-label="내 재화"><span class="w-item"><img src="assets/icon/coin.svg" alt="코인"><b id="wCoins">—</b></span><span class="w-item"><img src="assets/icon/droplet.svg" alt="물방울"><b id="wDrops">—</b></span><span class="w-msg">재화 확인 불가</span></div><span class="fb-acts"><button type="button" class="shop-btn" id="shopBtn"><img src="assets/icon/coin.svg" alt="">상점</button><button type="button" class="shop-btn gear-btn" id="setBtn" aria-label="설정" title="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="3.14 3.14"/><circle cx="12" cy="12" r="4.25" fill="none" stroke="currentColor" stroke-width="3.5"/></svg></button></span></div>
+    <div class="furn" id="furn" aria-label="배치한 가구"></div>
+    <div class="floor-bar"><div class="wallet" id="wallet" hidden role="status" aria-label="내 재화"><span class="w-item"><img src="assets/icon/coin.svg" alt="코인"><b id="wCoins">—</b></span><span class="w-item"><img src="assets/icon/droplet.svg" alt="물방울"><b id="wDrops">—</b></span><span class="w-msg">재화 확인 불가</span></div><span class="fb-acts"><button type="button" class="shop-btn" id="shopBtn"><img src="assets/icon/coin.svg" alt="">상점</button><button type="button" class="shop-btn gear-btn" id="setBtn" aria-label="설정" title="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="3.14 3.14"/><circle cx="12" cy="12" r="4.25" fill="none" stroke="currentColor" stroke-width="3.5"/></svg></button><button type="button" class="shop-btn" id="decoBtn" aria-pressed="false">꾸미기</button></span></div>
+    <div class="tray" id="tray" hidden role="region" aria-label="놓을 수 있는 가구"><p class="tray-note" id="trayNote" role="status"></p><div class="tray-list" id="trayList"></div></div>
     <p class="credit">일러스트: OpenMoji (CC BY-SA 4.0), Streamline (CC BY 4.0), Fluent Emoji (MIT)</p>
   </div>
 </div>
@@ -869,6 +902,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   </section>
 </div>
 <!-- 알림: 책·달력·로그인 창 위에도 보이도록 모든 창보다 위에 둠 -->
+<div class="ctx" id="ctx" role="menu" hidden><button type="button" role="menuitem" id="ctxBtn"></button></div>
 <div class="toast hide" id="toast" role="status" aria-live="polite"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.105.4/dist/umd/supabase.js"></script>
@@ -983,6 +1017,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
         if(data && data.session) res = await send(data.session.access_token);
       }
       serverReady = true;                      // 응답 헤더 도착 = 서버 깨어 있음
+      if(res.status === 204) return null;      // 본문 없는 성공 (DELETE). 다른 빈 본문은 그대로 INVALID_RESPONSE
       let data = null, bad = false;
       try{ data = await untilDeadline(res.json(), deadline, 'TIMEOUT', ctl); }   // 본문 읽기도 제한시간 안
       catch(e){
@@ -1019,7 +1054,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       DRAWING_INVALID_IMAGE:'그림 형식 오류',
       AUTHENTICATION_FAILED:'인증 실패', ITEM_NOT_FOUND:'상품 없음', INSUFFICIENT_COINS:'코인 부족', INSUFFICIENT_WATER:'물방울 부족',
       ITEM_ALREADY_OWNED:'이미 가진 상품', ITEM_NOT_OWNED:'가지지 않은 상품', TREE_ALREADY_WATERED_TODAY:'오늘 물 주기 완료', TREE_FULL_GROWN:'나무 다 자람',
-      ROOM_POSITION_INVALID:'배치 위치 오류', ROOM_STORAGE_UNAVAILABLE:'방 데이터 오류', ITEM_NOT_PLACEABLE:'배치할 수 없는 상품',
+      ROOM_POSITION_INVALID:'배치 위치 오류', ROOM_STORAGE_UNAVAILABLE:'방 데이터 오류', ITEM_NOT_PLACEABLE:'배치할 수 없는 상품', ITEM_NOT_REFUNDABLE:'환불할 수 없는 상품',
     };
     if(known[c]) return known[c];
     if(c.startsWith('AI_')) return 'AI 응답 실패';
@@ -2056,7 +2091,8 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   });
   document.addEventListener('keydown', e=>{
     if(e.key !== 'Escape') return;
-    if(!auth.hidden) closeAuth();                  // 로그인 창이 열려 있으면 그것부터
+    if(!ctxEl.hidden) closeCtx();                  // 우클릭 메뉴부터
+    else if(!auth.hidden) closeAuth();                  // 로그인 창이 열려 있으면 그것부터
     else if(!logEl.hidden) closeLog();             // 대화 기록 창이 열려 있으면 그것부터
     else if(!waterEl.hidden) closeWater();         // 나무 물 주기 창
     else if(!shopEl.hidden) closeShop();           // 상점
@@ -2064,6 +2100,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     else if(!sketch.hidden) return;                // 스케치북은 "그림일기 완성"으로만 닫음 (그리던 그림이 날아가지 않게)
     else if(bookShown()) closeBook();               // 책이 열려 있으면 책부터 닫기
     else if(!calpage.hidden) closeCalendarPage();
+    else if(decorating) setDecorating(false);      // 꾸미기 모드 끝내기
   });
   // 로고: 방(책장)으로. Esc와 같은 닫기 함수로 스케치북·달력을 닫음 (flow는 그대로, 책장에서 이어 하기)
   // 책이 열려 있는 동안 로고는 책 아래에 있어 눌리지 않음 (책은 바깥 누르기·Esc로 닫음)
@@ -2082,6 +2119,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     if(!waterEl.hidden) closeWater();
     if(!shopEl.hidden) closeShop();
     if(!setEl.hidden) closeSettings();
+    if(decorating) setDecorating(false);
   });
 
   // ---- 로그인 / 회원가입 (Supabase Auth) ----
@@ -2193,6 +2231,8 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     shop = null; shopState = 'idle'; buyReq = null; buyBusy = buyUnknown = shopChecking = false; armed = null;
     if(!shopEl.hidden) closeShop();
     themeReq = null; setChecking = false;
+    drag = null; furnBusy.clear(); refundReq = null; refundBusy = refundUnknown = refundChecking = false;
+    setDecorating(false);
     if(!setEl.hidden) closeSettings();
     showWallet();
     if(user) loadRoom();
@@ -2207,7 +2247,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     walletEl.classList.toggle('err', !!failed && !wallet);
     document.getElementById('wCoins').textContent = wallet ? wallet.coins : '—';
     document.getElementById('wDrops').textContent = wallet ? wallet.water_drops : '—';
-    renderTree(); applyTheme();
+    renderTree(); applyTheme(); renderFurn();
     if(!shopEl.hidden) renderShop();
     if(!setEl.hidden) renderSettings();
   }
@@ -2544,6 +2584,237 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   document.getElementById('setClose').addEventListener('click', closeSettings);
   setEl.addEventListener('click', e=>{ if(e.target === setEl) closeSettings(); });
 
+  // ---- 가구 배치 (v0.3 E·F 제안 API PUT·DELETE /api/me/room/placements/{item_id}, 좌표 6-8 v0.3.1) · 환불 (v0.4 제안 POST /api/shop/refunds) ----
+  // 가상 방 = #stage 1440×900, 원점 왼쪽 위, x·y = 가구 상자 왼쪽 위 정수, 크기는 서버 inventory 값. 세로 화면은 1차 버전에서 표시·편집 안 함
+  // 기본 방 그림(소파·액자·창문·시계 등)은 배경이라 배치 대상이 아님. 위치·보유는 서버 값이 기준 (localStorage 안 씀)
+  const ROOM_W = 1440, ROOM_H = 900;
+  const furnEl = document.getElementById('furn'), trayEl = document.getElementById('tray'), trayList = document.getElementById('trayList'), trayNote = document.getElementById('trayNote');
+  const decoBtn = document.getElementById('decoBtn'), ctxEl = document.getElementById('ctx'), ctxBtn = document.getElementById('ctxBtn');
+  // drag: 끄는 중인 가구. furnBusy: 저장 중인 item_id (끝날 때까지 다시 못 끔)
+  // refundReq: 확정 응답 전까지 같은 {client_request_id, item_id}로만 재전송. refundUnknown: 결과 불명 → 환불 잠금, "다시 확인"(GET room + GET shop/items)만
+  let decorating = false, drag = null, furnBusy = new Set(), ctxFor = null;
+  let refundReq = null, refundBusy = false, refundUnknown = false, refundChecking = false, refundArmed = false, refundArmTimer;
+  const placeable = it => !!it && (it.category === 'furniture' || it.category === 'decoration') && !!safeKey(it.asset_key) && it.width > 0 && it.height > 0;
+  const myItems = () => room ? (room.inventory || []).filter(placeable) : [];
+  const findItem = id => myItems().find(it => it.item_id === id);
+  const placed = it => !!it.position && Number.isInteger(it.position.x) && Number.isInteger(it.position.y);
+  const clampPos = (it, x, y) => ({x:Math.round(Math.min(Math.max(x, 0), ROOM_W - it.width)), y:Math.round(Math.min(Math.max(y, 0), ROOM_H - it.height))});   // 0 ≤ x ≤ 1440 - width, 0 ≤ y ≤ 900 - height
+  const unknownResult = e => e.status === 0 || e.status >= 500 || e.code === 'INVALID_RESPONSE';
+  // 화면 좌표 → 무대 좌표: fit()이 #stage에 준 배율 (화면에 그려진 폭 / 1440)
+  function toStage(cx, cy){
+    const r = document.getElementById('stage').getBoundingClientRect(), s = r.width / ROOM_W;
+    return {x:(cx - r.left) / s, y:(cy - r.top) / s};
+  }
+  function setBox(el, it, p){ el.style.cssText = `left:${p.x}px;top:${p.y}px;width:${it.width}px;height:${it.height}px;z-index:${p.y + it.height}`; }   // 겹침 순서 y + height
+  function furnNode(it, p){
+    const el = mk('div', 'furn-item'), img = mk('img');
+    img.src = `assets/item/${it.asset_key}.svg`; img.alt = ''; el.append(img);
+    el.dataset.item = it.item_id; el.setAttribute('role', 'img'); el.setAttribute('aria-label', it.name);
+    el.tabIndex = decorating ? 0 : -1;
+    setBox(el, it, p);
+    return el;
+  }
+  function renderFurn(){
+    if(drag) return;   // 끄는 중에는 다시 그리지 않음 (놓은 뒤 그림)
+    furnEl.replaceChildren(...myItems().filter(placed).map(it => furnNode(it, it.position)));
+    renderTray();
+  }
+  function renderTray(){
+    if(!decorating) return;
+    const items = myItems(), rest = items.filter(it => !placed(it));
+    let note = '', check = false;
+    if(refundUnknown){ note = '환불 결과 불명 · 확인 필요'; check = true; }
+    else if(refundChecking) note = '확인 중…';
+    else if(refundBusy) note = '환불 중…';
+    else if(!room){ note = '방 정보 확인 불가'; check = true; }
+    else if(!items.length) note = '가구 없음 · 상점에서 살 수 있어요';
+    else if(!rest.length) note = '모두 방에 놓았어요';
+    trayNote.textContent = note;
+    if(check){ const b = mk('button', 'log-close', '다시 확인'); b.type = 'button'; b.addEventListener('click', refundUnknown ? checkRefund : ()=> getRoom(roomSeq).catch(e => { errToast('방 확인: ' + errText(e)); handleAuth(e); })); trayNote.append(b); }
+    const fid = document.activeElement && trayList.contains(document.activeElement) ? document.activeElement.dataset.item : null;
+    trayList.replaceChildren(...rest.map(it => {
+      const b = mk('button', 'tray-item'), img = mk('img');
+      img.src = `assets/item/${it.asset_key}.svg`; img.alt = ''; b.append(img);
+      b.type = 'button'; b.dataset.item = it.item_id; b.title = it.name;
+      b.setAttribute('aria-label', `${it.name} · 방으로 끌어 놓기`);
+      b.disabled = furnBusy.has(it.item_id);
+      return b;
+    }));
+    const f = fid && trayList.querySelector(`[data-item="${CSS.escape(fid)}"]`);
+    if(f) f.focus({preventScroll:true});
+  }
+  function setDecorating(on){
+    if(on && document.getElementById('stage').classList.contains('portrait')) on = false;   // 가로 화면에서만
+    decorating = on; document.body.classList.toggle('decorating', on);
+    decoBtn.setAttribute('aria-pressed', String(on)); decoBtn.textContent = on ? '꾸미기 완료' : '꾸미기';
+    trayEl.hidden = !on; closeCtx();
+    if(on && !room && user) getRoom(roomSeq).catch(()=>{});
+    renderFurn();
+  }
+  decoBtn.addEventListener('click', ()=>{
+    if(!user){ toast('로그인이 필요해요'); openAuth('login', decoBtn); return; }
+    setDecorating(!decorating);
+  });
+
+  // 끌기: pointer 이벤트. 방 범위 안으로만 움직이고, 놓을 때 한 번만 PUT (안 움직였으면 보내지 않음)
+  function startDrag(e, it, el, from){
+    e.preventDefault(); closeCtx();
+    const p = toStage(e.clientX, e.clientY), off = from ? {x:p.x - from.x, y:p.y - from.y} : {x:it.width / 2, y:it.height / 2};
+    drag = {it, el, from, off, id:e.pointerId, pos:from || clampPos(it, p.x - off.x, p.y - off.y)};
+    el.classList.add('dragging'); setBox(el, it, drag.pos);
+  }
+  furnEl.addEventListener('pointerdown', e=>{
+    const el = e.target.closest('.furn-item'), it = el && findItem(el.dataset.item);
+    if(!decorating || drag || e.button !== 0 || !it || !placed(it) || furnBusy.has(it.item_id)) return;
+    startDrag(e, it, el, {x:it.position.x, y:it.position.y});
+  });
+  trayList.addEventListener('pointerdown', e=>{
+    const b = e.target.closest('.tray-item'), it = b && findItem(b.dataset.item);
+    if(!decorating || drag || e.button !== 0 || !it || b.disabled) return;
+    const el = furnNode(it, {x:0, y:0}); furnEl.append(el);   // 목록에서 꺼낸 가구: 손가락 가운데에 붙임
+    startDrag(e, it, el, null);
+  });
+  window.addEventListener('pointermove', e=>{
+    if(!drag || e.pointerId !== drag.id) return;
+    const p = toStage(e.clientX, e.clientY);
+    drag.pos = clampPos(drag.it, p.x - drag.off.x, p.y - drag.off.y); setBox(drag.el, drag.it, drag.pos);
+  });
+  function endDrag(e, cancel){
+    if(!drag || e.pointerId !== drag.id) return;
+    const d = drag; drag = null; d.el.classList.remove('dragging');
+    const backToTray = !d.from && trayEl.contains(document.elementFromPoint(e.clientX, e.clientY));   // 목록 위에 놓으면 취소
+    if(cancel || backToTray || (d.from && d.from.x === d.pos.x && d.from.y === d.pos.y)){ renderFurn(); return; }
+    savePlacement(d.it, d.pos, d.from);
+  }
+  window.addEventListener('pointerup', e => endDrag(e, false));
+  window.addEventListener('pointercancel', e => endDrag(e, true));
+  // 키보드: 목록 가구에서 Enter·Space = 책장과 화분 사이 바닥에 놓기
+  trayList.addEventListener('click', e=>{
+    const b = e.target.closest('.tray-item'), it = b && findItem(b.dataset.item);
+    if(e.detail === 0 && it && !b.disabled) savePlacement(it, clampPos(it, 1030 - it.width / 2, 790 - it.height), null);
+  });
+
+  // PUT: 놓은 자리에 바로 보이고, 실패하면 원래 자리(목록에서 꺼낸 것은 다시 목록)로. 결과를 모르면 GET room으로 서버 값 확인
+  async function savePlacement(it, pos, from){
+    const seq = roomSeq, id = it.item_id;
+    furnBusy.add(id); it.position = pos; renderFurn();
+    try{
+      const r = await api('/api/me/room/placements/' + encodeURIComponent(id), {method:'PUT', json:{x:pos.x, y:pos.y}});
+      if(seq !== roomSeq) return;
+      if(r && r.position) it.position = r.position;
+    }catch(e){
+      if(seq !== roomSeq) return;
+      it.position = from;
+      errToast('가구 배치: ' + errText(e)); handleAuth(e);
+      if(unknownResult(e) || e.status === 409) getRoom(seq).catch(()=>{});
+    }finally{ furnBusy.delete(id); if(seq === roomSeq) showWallet(); }
+  }
+  // DELETE: 방에서만 치움 (보유 목록에 남음). 성공은 204
+  async function removePlacement(it){
+    const seq = roomSeq, id = it.item_id, from = it.position;
+    furnBusy.add(id); it.position = null; renderFurn();
+    try{ await api('/api/me/room/placements/' + encodeURIComponent(id), {method:'DELETE'}); }
+    catch(e){
+      if(seq !== roomSeq) return;
+      it.position = from;
+      errToast('치우기: ' + errText(e)); handleAuth(e);
+      if(unknownResult(e) || e.status === 409) getRoom(seq).catch(()=>{});
+    }finally{ furnBusy.delete(id); if(seq === roomSeq) showWallet(); }
+  }
+
+  // 우클릭 메뉴 (꾸미기 모드): 방의 가구 → 치우기, 목록의 가구 → 환불 (금액은 inventory[].refund_coins 그대로, FE가 계산하지 않음)
+  const refundable = it => it.refundable === true && it.category !== 'theme' && Number.isInteger(it.refund_coins);
+  function renderCtx(){
+    if(!ctxFor) return;
+    const {it, kind} = ctxFor;
+    ctxBtn.classList.toggle('armed', kind === 'refund' && refundArmed);
+    ctxBtn.textContent = kind === 'remove' ? '방에서 치우기' : refundArmed ? '한 번 더 누르면 환불' : `코인 ${it.refund_coins}개 돌려받기`;
+    ctxBtn.disabled = kind === 'refund' && (refundBusy || refundUnknown || refundChecking);
+  }
+  function openCtx(e, anchor, it, kind){
+    e.preventDefault();
+    ctxFor = {it, kind, anchor}; refundArmed = false; clearTimeout(refundArmTimer);
+    renderCtx(); ctxEl.hidden = false;
+    const a = anchor.getBoundingClientRect(), x = e.clientX || a.left + a.width / 2, y = e.clientY || a.top + a.height / 2;   // 키보드(메뉴 키)면 가구 가운데
+    const w = ctxEl.offsetWidth, h = ctxEl.offsetHeight, top = y + h + 4 > innerHeight - 80 ? y - h - 4 : y + 4;   // 아래쪽(토스트 자리)이면 위로 펼침
+    ctxEl.style.left = Math.max(8, Math.min(x, innerWidth - w - 8)) + 'px';
+    ctxEl.style.top = Math.max(8, top) + 'px';
+    ctxBtn.focus({preventScroll:true});
+  }
+  function closeCtx(){
+    if(ctxEl.hidden) return;
+    const a = ctxFor && ctxFor.anchor;
+    ctxEl.hidden = true; ctxFor = null; refundArmed = false; clearTimeout(refundArmTimer);
+    if(a && a.isConnected && ctxEl.contains(document.activeElement)) a.focus({preventScroll:true});
+  }
+  furnEl.addEventListener('contextmenu', e=>{
+    const el = e.target.closest('.furn-item'), it = el && findItem(el.dataset.item);
+    if(!decorating || !it || !placed(it)) return;
+    if(furnBusy.has(it.item_id)){ e.preventDefault(); return; }
+    openCtx(e, el, it, 'remove');
+  });
+  trayList.addEventListener('contextmenu', e=>{
+    const b = e.target.closest('.tray-item'), it = b && findItem(b.dataset.item);
+    if(!decorating || !it) return;
+    if(!refundable(it) || b.disabled){ e.preventDefault(); return; }   // 테마·환불 불가 상품은 메뉴 없음
+    openCtx(e, b, it, 'refund');
+  });
+  ctxBtn.addEventListener('click', ()=>{
+    if(!ctxFor) return;
+    const {it, kind} = ctxFor;
+    if(kind === 'remove'){ closeCtx(); removePlacement(it); return; }
+    if(ctxBtn.disabled) return;
+    if(!refundArmed){   // 두 번 눌러 확인 (3초 안)
+      refundArmed = true; renderCtx();
+      refundArmTimer = setTimeout(()=>{ refundArmed = false; renderCtx(); }, 3000);
+      return;
+    }
+    closeCtx(); refund(it);
+  });
+  document.addEventListener('pointerdown', e=>{ if(!ctxEl.hidden && !ctxEl.contains(e.target)) closeCtx(); }, true);
+  window.addEventListener('resize', closeCtx);
+
+  // 환불: 본문은 {client_request_id, item_id}만. 같은 상품을 다시 시도하면 같은 ID·같은 본문
+  async function refund(it){
+    if(refundReq && refundReq.item_id !== it.item_id) refundReq = null;   // 남은 요청은 확인을 거친 미반영 환불뿐
+    if(!refundReq) refundReq = {client_request_id: rid('refund'), item_id: it.item_id};
+    const seq = roomSeq; refundBusy = true; renderTray();
+    let r;
+    try{ r = await api('/api/shop/refunds', {method:'POST', json:refundReq}); }
+    catch(e){
+      if(seq !== roomSeq) return;
+      refundBusy = false;
+      if(unknownResult(e)) refundUnknown = true;              // 반영 여부 모름: 새 ID로 다시 보내지 않음
+      if(!refundUnknown && !sameIdRetry(e)) refundReq = null;
+      errToast('환불: ' + errText(e)); handleAuth(e);
+      if(['ITEM_NOT_OWNED','ITEM_NOT_FOUND','ITEM_NOT_REFUNDABLE'].includes(e.code)) checkRefund();   // 화면 상태가 서버와 다름
+      else renderTray();
+      return;
+    }
+    if(seq !== roomSeq) return;
+    refundReq = null; refundBusy = false;
+    if(r.wallet){ wallet = r.wallet; if(room) room.wallet = r.wallet; }
+    if(r.owned === false && room) room.inventory = (room.inventory || []).filter(x => x.item_id !== r.item_id);   // 배치·보유 해제
+    const s = shop && shop.find(x => x.item_id === r.item_id); if(s) s.owned = false;   // 상점에서 다시 살 수 있음
+    showWallet();
+    toast(`+${r.refunded_coins}코인 환불`); setMascot('happy');
+    getRoom(seq).catch(()=>{});
+  }
+  // 다시 확인: GET room(보유·잔액) + GET shop/items(owned)로만 확인. 환불 재전송 없음
+  async function checkRefund(){
+    if(refundChecking) return;
+    const seq = roomSeq; refundChecking = true; renderTray();
+    const [a, b] = await Promise.allSettled([getRoom(seq), api('/api/shop/items')]);
+    if(seq !== roomSeq) return;
+    refundChecking = false;
+    if(b.status === 'fulfilled'){ shop = b.value.items || []; shopState = 'ok'; }
+    if(a.status === 'fulfilled' && b.status === 'fulfilled'){
+      refundUnknown = false;
+      if(refundReq && !(room && (room.inventory || []).some(x => x.item_id === refundReq.item_id))) refundReq = null;   // 이미 반영된 환불
+    } else { const e = a.status === 'rejected' ? a.reason : b.reason; errToast('환불 확인: ' + errText(e)); handleAuth(e); }
+    showWallet();
+  }
+
   if(sb){
     // 콜백 안에서 다른 Supabase 호출을 기다리지 않도록 한 박자 뒤에 처리
     sb.auth.onAuthStateChange((event, session)=>{ setTimeout(()=> setUser(session ? session.user : null), 0); });
@@ -2578,6 +2849,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     const sw = portrait ? 600 : 1440, sh = portrait ? 1000 : 900;
     const s = Math.min(w / sw, h / sh);
     [stage, stageTop].forEach(el =>{ el.classList.toggle('portrait', portrait); el.style.transform = `scale(${s}) translate(-50%,-50%)`; });
+    if(portrait && decorating) setDecorating(false);   // 세로 화면은 가구 편집 제외 (6-8)
     document.documentElement.style.setProperty('--logo-clear', portrait ? Math.ceil(document.getElementById('logoBtn').getBoundingClientRect().bottom + 8) + 'px' : '16px');   // 세로: 상점 창을 로고 아래로
   }
   window.addEventListener('resize', fit);
