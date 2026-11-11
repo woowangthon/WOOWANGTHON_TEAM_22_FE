@@ -2251,7 +2251,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       e.busy = false;
       if(notReady(er)){ toast('수정 기능 준비 중'); endEdit(); return; }   // 원래 글·그림으로
       if(er.code === 'DIARY_NOT_FOUND'){ errToast('일기 없음'); diaryGone(e.det); return; }
-      if(verConflict(er)){ errToast('일기 버전 충돌 · 최신 일기로 다시 불러옴'); reloadEdit(e); return; }
+      if(verConflict(er)){ e.req = null; conflictEdit(e); return; }   // 확정 실패(반영 안 됨): 고친 글·그림은 보존
       if(unknownResult(er)){ e.unknown = true; errToast('수정 결과 불명 · 확인 필요'); }
       else { if(!sameIdRetry(er)) e.req = null; errToast('수정 실패: ' + errText(er)); handleAuth(er); }
       renderActs();
@@ -2269,6 +2269,42 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(e !== edit) return;
     endEdit(det); putDiaryItem(det);
   }
+  // 버전 충돌·그림 미저장: 고친 글(dpEdit)·그림 Blob은 그대로 두고 최신 일기(버전) 기준으로 새 요청을 만들 수 있게 함
+  function rebaseEdit(e, det, msg){
+    e.det = det; e.req = null; e.unknown = false; e.busy = false;
+    if(!e.blob) setPicture({drawing: det.imageUrl || null, diaryId: det.diary_id});   // 그림을 안 고쳤으면 최신 그림 표시
+    renderActs(); errToast(msg);
+  }
+  // 409·412 버전 충돌 (반영 안 됨): 최신 일기 상세만 받아 버전을 갱신 (재전송 없음)
+  async function conflictEdit(e){
+    e.busy = true; renderActs();
+    try{ const det = await detailOf(e.det.diary_id); if(e === edit) rebaseEdit(e, det, '일기 버전 충돌 · 고친 내용은 그대로, 다시 저장 가능'); }
+    catch(er){
+      if(e !== edit) return;
+      if(er.code === 'DIARY_NOT_FOUND'){ errToast('일기 없음'); diaryGone(e.det); return; }
+      e.busy = false; errToast('일기 버전 충돌 · 최신 일기 확인 실패: ' + errText(er)); handleAuth(er); renderActs();
+    }
+  }
+  // 보낸 그림이 서버에 저장됐는지: 원본 그림 식별 값이 바뀌었거나, 내려받은 원본이 보낸 Blob과 같은 바이트면 저장됨
+  const drawAsset = d => (d && (d.assets || []).find(x => x.asset_kind === 'original_drawing')) || null;
+  const drawId = a => a ? JSON.stringify(['id','asset_id','drawing_id','storage_key','object_key','sha256','checksum','content_hash'].filter(k => a[k] != null).map(k => [k, a[k]])) : '[]';
+  async function pictureSaved(before, after, blob){
+    const a = drawAsset(after), id = drawId(a);
+    if(id !== '[]' && id !== drawId(drawAsset(before))) return true;
+    const url = (a && a.imageUrl) || after.imageUrl;
+    if(!url) return false;
+    const ctl = new AbortController(), t = setTimeout(()=> ctl.abort(), TMO.request);
+    try{
+      const res = await fetch(url, {mode:'cors', cache:'no-store', signal:ctl.signal});
+      if(!res.ok) return false;
+      const [x, y] = await Promise.all([res.arrayBuffer(), blob.arrayBuffer()]);
+      if(x.byteLength !== y.byteLength) return false;
+      const [hx, hy] = await Promise.all([crypto.subtle.digest('SHA-256', x), crypto.subtle.digest('SHA-256', y)]);
+      const p = new Uint8Array(hx), q = new Uint8Array(hy);
+      return p.every((b, i) => b === q[i]);
+    }catch(_){ return false; }                       // 못 받으면 저장 확인 불가 → 완료 아님
+    finally{ clearTimeout(t); }
+  }
   // 결과 불명: 상세 GET으로만 확인 (자동 재전송 없음)
   async function checkEdit(e){
     e.busy = true; renderActs();
@@ -2277,8 +2313,14 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       if(e !== edit) return;
       const v = verOf(det);
       if(v != null && v === e.req.expected_version){ e.unknown = false; toast('수정 안 됨 · 같은 내용으로 다시 저장 가능'); }
-      else if(v != null && det.confirmed_text === e.req.confirmed_text){ toast('일기를 고쳤어요'); endEdit(det); putDiaryItem(det); return; }
-      else if(v != null){ errToast('일기 버전 충돌 · 최신 일기로 다시 불러옴'); endEdit(det); return; }
+      else if(v != null && det.confirmed_text === e.req.confirmed_text){
+        // 글·버전만으로는 완료가 아님: 그림을 고쳐 보냈으면 새 그림까지 저장된 경우에만 완료
+        const picOk = !e.req.blob || await pictureSaved(e.det, det, e.req.blob);
+        if(e !== edit) return;
+        if(picOk){ toast('일기를 고쳤어요'); endEdit(det); putDiaryItem(det); return; }
+        rebaseEdit(e, det, '그림 저장 확인 안 됨 · 수정 완료를 다시 눌러 그림 저장'); return;
+      }
+      else if(v != null){ rebaseEdit(e, det, '일기 버전 충돌 · 고친 내용은 그대로, 다시 저장 가능'); return; }
       else errToast('수정 결과 확인 불가');
     }catch(er){
       if(e !== edit) return;
@@ -2638,7 +2680,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   // 창 안의 큰 화분: 방 화분(식물·화분)을 그대로 복제
   [...plantEl.children].filter(el => !el.classList.contains('hint')).forEach(el => twView.insertBefore(el.cloneNode(true), twView.lastElementChild));
   // waterReq: 확정 응답 전까지 같은 client_request_id·같은 본문으로만 다시 보냄. waterUnknown: 결과 불명 → "다시 확인"(GET room)만 가능
-  let waterReq = null, waterBusy = false, waterUnknown = false, checking = false;
+  let waterReq = null, waterDay = null, waterBusy = false, waterUnknown = false, checking = false;   // waterDay: waterReq를 만든 서울 날짜
   function renderTree(){
     const t = room && room.tree, [file, s, pad, orn = []] = treeAsset(t && t.asset_key);
     document.querySelectorAll('.tree-img').forEach(img => { img.hidden = !file; if(file) img.src = `assets/tree/${file}.svg`; img.style.setProperty('--s', s); img.style.setProperty('--pad', pad); });
@@ -2669,20 +2711,23 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     waterEl.classList.remove('show');
     setTimeout(()=>{ if(waterEl.classList.contains('show')) return; waterEl.hidden = true; if(reader.hidden && calpage.hidden) plantEl.focus({preventScroll:true}); }, reduce ? 0 : 300);
   }
-  // 다시 확인: GET /api/me/room으로 상태만 확인 (물 주기 재전송 없음). waterReq는 그대로 → 다음 물 주기도 같은 ID
+  // 다시 확인: GET /api/me/room으로 상태만 확인 (물 주기 재전송 없음). 반영 안 됐으면 waterReq 유지 → 그날 다음 물 주기도 같은 ID
   async function checkRoom(){
     const seq = roomSeq; checking = true; renderTree();
     try{
       const r = await api('/api/me/room');
       if(seq !== roomSeq) return;
       room = r; if(r.wallet) wallet = r.wallet; waterUnknown = false;
+      // 불명이던 물 주기가 이미 반영됨(오늘 물 줌·성체) → 그 요청은 끝남. 남겨 두면 다음 날 같은 ID로 지난 결과가 재생됨
+      if(waterReq && r.tree && (r.tree.watered_today || r.tree.stage >= r.tree.max_stage)) waterReq = null;
     }catch(e){ if(seq === roomSeq){ errToast('나무 확인: ' + errText(e)); handleAuth(e); } }
     finally{ checking = false; if(seq === roomSeq) showWallet(); }
   }
   async function waterTree(){
     if(twBtn.disabled) return;
     const seq = roomSeq;
-    if(!waterReq) waterReq = {client_request_id: rid('water')};
+    if(waterReq && waterDay !== seoulToday()) waterReq = null;   // 같은 ID 재전송은 그날의 물 주기에만: 날짜가 바뀌면 새 작업
+    if(!waterReq){ waterReq = {client_request_id: rid('water')}; waterDay = seoulToday(); }
     waterBusy = true; renderTree();
     let r;
     try{ r = await api('/api/me/tree/water', {method:'POST', json:waterReq}); }
