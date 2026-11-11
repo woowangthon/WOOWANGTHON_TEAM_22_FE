@@ -27,6 +27,27 @@
   --ease:.3s ease;
   color-scheme:light;
 }
+/* 적용 테마의 디자인 시스템 → 페이지 변수 (역할 기준. 기본 테마 = 위 :root = default 시스템)
+   값은 design-system/<이름>/project/tokens.json에서 옮김 (design-system/은 git 제외). 글꼴은 프로젝트 글꼴 그대로 */
+body.theme-christmas{--bg-primary:#f8f8f8; --ink:#222222; --white:#ffffff;   /* bg, ink, white */
+  --color-learn:#fff083; --color-learn-3:#fffbe2;                            /* primary, primary-tint */
+  --color-jobs-3:#b4d7f8; --color-read:#c0ab3c; --color-read-3:#dbd6c0;      /* jobs-tint, read, read-tint */
+  --color-inspire-3:#e2f4e9; --color-connect:#ff602c;                        /* inspire-tint, connect */
+  --border-gray:#ededed; --neutral:#a7a7a7;                                  /* border-gray, neutral-500 */
+  --radius-sm:8px; --radius-pill:72px; --ease:.3s ease}                      /* radius-sm(버튼·입력), radius-pill, 전환 0.3s ease */
+/* halloween: 색은 Happy Halloween 일러스트(노을·달·실루엣), 모서리·모션은 Looped 추출본. 버튼이 radius-md 8px라 --radius-pill 자리에 8px.
+   짝이 없는 jobs·read·inspire는 다시 정의하지 않음 */
+body.theme-halloween{--bg-primary:#fdf4e3; --ink:#170f0b; --white:#ffffff;   /* bg-primary, ink(실루엣), surface */
+  --color-learn:#f9cf98; --color-learn-3:#f8e9cc;                            /* primary(달빛 호박색), moon */
+  --color-connect:#ec8a57;                                                   /* pumpkin */
+  --border-gray:#efe0c6; --neutral:#a7a7a7;                                  /* border-gray, neutral */
+  --radius-sm:8px; --radius-pill:8px; --ease:.3s ease}                       /* radius-md(버튼·입력), radius-md(버튼), duration-base */
+/* seollal: 설날 일러스트(한지·색동·노리개) */
+body.theme-seollal{--bg-primary:#f3ecdc; --ink:#2e2a26; --white:#fbf8f1;     /* hanji, ink(먹), surface */
+  --color-learn:#eaa3a6; --color-learn-3:#f8e1e0;                            /* primary(분홍), primary-tint */
+  --color-connect:#8a2d2f;                                                   /* dahong(노리개 다홍) */
+  --border-gray:#d8cbb0;                                                     /* border */
+  --radius-sm:8px; --radius-pill:72px; --ease:.3s ease}                      /* radius-md(버튼·카드), radius-pill(안내 말풍선) */
 *,*::before,*::after{box-sizing:border-box}
 [hidden]{display:none!important}
 html,body{height:100%;margin:0;overflow:hidden;overflow:clip}
@@ -52,14 +73,19 @@ body{
 /* light + shadow tokens (derived from ink and color-learn) */
 :root{ --shadow:rgba(34,34,34,.18); --shadow-strong:rgba(34,34,34,.32); --sun:rgba(255,240,131,.55); --sun-soft:rgba(255,251,226,.75); --screen:rgba(180,215,248,.55) }
 
+/* 테마별 벽지·바닥 (body[data-room], background_asset_key에서). 가구는 기존 토큰 색 그대로
+   디자인 시스템 색 토큰이 default와 같아 장면 색만 따로 둠. 글자가 놓이는 곳이라 모두 밝은 색 (ink 대비 유지) */
+body[data-room="christmas"]{--wall:#e2f4e9; --floor:#e9c9c3}   /* 벽: inspire-tint(전나무 빛), 바닥: 연한 크랜베리 */
+body[data-room="halloween"]{--wall:#ec8a57; --floor:#170f0b}   /* 벽: pumpkin 노을 하늘, 바닥: ink 실루엣 땅 */
+body[data-room="seollal"]{--wall:#f8e1e0; --floor:#8e3a78}     /* 벽: primary-tint(연분홍), 바닥: jaju(자주) */
 /* wall shading: brightest around the window, darker toward the corners */
 .wall{position:absolute;left:-2000px;top:-2000px;width:5440px;height:2780px;
-  background:radial-gradient(ellipse 1500px 1100px at 3190px 2270px, var(--sun-soft) 0%, rgba(255,251,226,.35) 30%, rgba(248,248,248,0) 60%, rgba(34,34,34,.07) 100%), var(--bg-primary)}
-.portrait .wall{width:4600px;height:2905px;background:radial-gradient(ellipse 800px 900px at 2525px 2230px, var(--sun-soft) 0%, rgba(248,248,248,0) 42%, rgba(34,34,34,.09) 100%), var(--bg-primary)}
+  background:radial-gradient(ellipse 1500px 1100px at 3190px 2270px, var(--sun-soft) 0%, rgba(255,251,226,.35) 30%, rgba(248,248,248,0) 60%, rgba(34,34,34,.07) 100%), var(--wall, var(--bg-primary))}
+.portrait .wall{width:4600px;height:2905px;background:radial-gradient(ellipse 800px 900px at 2525px 2230px, var(--sun-soft) 0%, rgba(248,248,248,0) 42%, rgba(34,34,34,.09) 100%), var(--wall, var(--bg-primary))}
 
 /* floor */
 .floor{position:absolute;left:-2000px;right:-2000px;top:780px;height:2000px;border-top:3px solid var(--ink);
-  background:linear-gradient(to bottom, rgba(34,34,34,.10) 0, rgba(34,34,34,0) 14px, rgba(34,34,34,.03) 40px, rgba(34,34,34,.16) 220px), var(--color-read-3)}
+  background:linear-gradient(to bottom, rgba(34,34,34,.10) 0, rgba(34,34,34,0) 14px, rgba(34,34,34,.03) 40px, rgba(34,34,34,.16) 220px), var(--floor, var(--color-read-3))}
 .portrait .floor{top:905px}
 
 /* sunlight from the window: soft, diffused, spreading across the room */
@@ -98,6 +124,9 @@ body{
 .shop-btn img{width:24px;height:24px;display:block}
 .shop-btn:hover{opacity:.85}
 .shop-btn:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.fb-acts{display:flex;gap:10px}
+.gear-btn{padding:5px}   /* 톱니바퀴: 설정(테마) 창 */
+.gear-btn svg{width:24px;height:24px;display:block}
 .wallet .w-item,.wallet .w-msg{display:flex;align-items:center;gap:6px;padding:4px 14px 4px 6px;border:2px solid var(--ink);border-radius:var(--radius-pill);
   background:var(--white);font-size:16px;line-height:1.2;font-variant-numeric:tabular-nums;white-space:nowrap}
 .wallet .w-msg{padding:6px 14px;font-size:14px}
@@ -158,12 +187,35 @@ body:has(.reader:not([hidden])) .stage-top{z-index:34}   /* 책이 열려 있으
 .sofa{left:20px;top:329px;width:520px;height:520px}
 .plant{left:1110px;top:537px;width:260px;height:260px}
 .portrait .sofa,.portrait .plant,.portrait .picture{display:none}
+/* 테마 장식 (서버 background_asset_key로 고름): 소파 위와 창밖. 바닥은 나중에 가구 배치 자리로 비워 둠 */
+.theme-art{position:absolute;inset:0;pointer-events:none}
+.theme-art img{position:absolute;display:block}
+.ta-sofa{left:290px;top:578px;width:90px;height:90px;filter:drop-shadow(-6px 6px 8px var(--shadow))}   /* 소파 앉는 면(위 664px)에 밑면을 맞춤 */
+.ta-window{left:1185px;top:165px;width:90px;height:90px}
+.portrait .ta-sofa{display:none}   /* 세로에는 소파가 없음 */
+.portrait .ta-window{left:488px;top:186px;width:44px;height:44px}
+/* 가구(방 그림)는 테마와 관계없이 기본 색: 테마가 다시 정의한 토큰을 그림 안에서만 기본값으로 되돌림 */
+.stage .asset svg{--ink:#222222; --white:#ffffff; --color-learn:#fff083; --color-learn-3:#fffbe2; --color-connect:#ff602c}
+/* 할로윈 노을 방: 창(달) 쪽에서 moon → primary → ember로 밝고 바깥은 pumpkin, 바닥은 실루엣 ink */
+body[data-room="halloween"] .wall{background:radial-gradient(circle 420px at 3190px 2260px, #f8e9cc 0, #f9cf98 28%, #f3a873 62%, rgba(243,168,115,0) 100%), radial-gradient(ellipse 1500px 1000px at 3190px 2260px, #f3a873 0, rgba(243,168,115,0) 100%), var(--wall)}
+body[data-room="halloween"] .portrait .wall{background:radial-gradient(circle 200px at 2525px 2230px, #f8e9cc 0, #f9cf98 28%, #f3a873 62%, rgba(243,168,115,0) 100%), radial-gradient(ellipse 700px 800px at 2525px 2230px, #f3a873 0, rgba(243,168,115,0) 100%), var(--wall)}
+body[data-room="halloween"] .light,body[data-room="halloween"] .glow{display:none}   /* 햇빛 대신 벽의 달빛 */
+body[data-room="halloween"] .credit{color:#f8e9cc}                                    /* 실루엣 바닥 위 moon 글자 */
+body[data-room="halloween"] .shop-btn{background:transparent;border-color:#f8e9cc}   /* 어두운 면 위 외곽선 버튼 */
+body[data-room="halloween"] .toast{box-shadow:0 0 0 1px #4a2e1f}                      /* 바닥과 같은 ink: border-dark로 구분 */
+/* 설날 한지 방: 바닥 위 색동 띠 (살구·옥색·회색·분홍·자주) */
+body[data-room="seollal"] .credit{color:#fbf8f1}                                     /* 자주 바닥 위 surface 글자 (먹은 2.1:1) */
+body[data-room="seollal"] .shop-btn{border-color:#fbf8f1}                             /* 먹색 버튼이 자주 바닥에 묻히지 않게 */
+body[data-room="seollal"] .floor{border-top:16px solid #2e2a26;border-image:repeating-linear-gradient(to right, #f2c48f 0 48px, #a9d3b8 48px 96px, #e2dfda 96px 144px, #eaa3a6 144px 192px, #8e3a78 192px 240px) 1}
 
 /* 화분 나무: 고정 화분 SVG 뒤에 식물 그림(.tree-img, 서버 tree.asset_key로 고름)을 끼움 */
 .plant > svg,.tw-view > svg{position:absolute;inset:0}
-.tree-img[hidden]{display:none}
+.tree-img[hidden],.tree-orn[hidden]{display:none}
 /* 밑동(--pad: 그림 아래 여백, viewBox 32 기준)을 화분 테두리(위 62.5%) 뒤 65%에 맞춤. 1단위 = 칸 높이 80%/32 = 2.5% */
-.tree-img{position:absolute;left:10%;bottom:calc(35% - var(--pad,0) * var(--s,1) * 2.5%);width:80%;transform:scale(var(--s,1));transform-origin:50% 100%;pointer-events:none}
+.tree-img,.tree-orn{position:absolute;left:10%;bottom:calc(35% - var(--pad,0) * var(--s,1) * 2.5%);width:80%;transform:scale(var(--s,1));transform-origin:50% 100%;pointer-events:none}
+/* 테마 성체 나무의 작은 장식: 나무 그림과 같은 32×32 칸 위에 중심 좌표(%)로 붙임 (원본 SVG는 수정 안 함) */
+.tree-orn{aspect-ratio:1}
+.tree-orn img{position:absolute;display:block;height:auto;transform:translate(-50%,-50%);filter:drop-shadow(0 1px 1px rgba(34,34,34,.3))}
 .plant{cursor:pointer;outline:none;transition:transform var(--ease)}
 .plant:hover{transform:translateY(-6px)}
 .plant:active{transform:translateY(-2px)}
@@ -237,6 +289,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .book .cover-icon{position:absolute;right:calc(var(--bw) * .12);bottom:calc(var(--bw) * .11);width:calc(var(--bw) * .16);height:calc(var(--bw) * .16);transform:rotate(-6deg)}
 .book .cover-icon svg{width:100%;height:100%;display:block;overflow:visible}
 .book .cover-icon [stroke]:not([stroke="none"]),.book .cover-icon [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke;stroke-width:2.5px}
+.book .cover-art{position:absolute;left:calc(var(--bw) * .17);bottom:calc(var(--bw) * .11);width:calc(var(--bw) * .16);height:calc(var(--bw) * .16)}   /* 테마 표지 장식 (diary_cover_asset_key) */
 .book .cover-logo{font-size:calc(var(--bw) * .108);line-height:1.1;font-weight:600;letter-spacing:-.02em;white-space:nowrap;color:var(--ink)}
 .book .cover-logo span{font-weight:300;opacity:.6}
 /* left-hand page (inside of the cover): plain paper */
@@ -553,7 +606,10 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .log{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.5);opacity:0;transition:opacity .3s ease}
 .log.show{opacity:1}
 /* 상점 창: 대화 기록 창(.log) 카드를 넓힌 것. 틀·탭·버튼은 적용 테마의 디자인 시스템 (지금은 default 토큰 = 페이지 변수) */
-#shop{padding-top:var(--logo-clear, 16px)}   /* 세로: 로고(z 39) 아래부터 */
+#shop,#settings{padding-top:var(--logo-clear, 16px)}   /* 세로: 로고(z 39) 아래부터 */
+/* 시스템마다 다른 모서리 규칙 (그 테마 적용 중에만): christmas 카드 radius-lg 14px, 배지는 christmas radius-xs·halloween radius-sm 4px */
+.theme-christmas .log-card,.theme-christmas .shop-item,.theme-halloween .log-card,.theme-halloween .shop-item{border-radius:14px}   /* radius-lg */
+.theme-christmas .si-owned,.theme-halloween .si-owned,.theme-seollal .si-owned{border-radius:4px}
 .shop-card{width:min(900px, 100%);max-height:min(88vh, 100%)}
 .shop-card .auth-tabs{margin:0;padding:0 16px;flex:none}
 .shop-note{margin:0;padding:10px 24px 0;font-size:14px;line-height:1.5;flex:none}
@@ -581,11 +637,12 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .shop-item.theme .tc-body{align-self:stretch;display:flex;flex-direction:column;align-items:center;gap:6px;padding:10px 10px 12px;color:var(--tc-text)}
 .shop-item.theme .si-msg{color:var(--tc-text)}
 .tc-christmas{--tc-art:#e2f4e9; --tc-body:#ffffff; --tc-text:#222222; box-shadow:inset 0 -6px 0 #3ea094}   /* christmas: inspire-tint 면 + white 카드 + ink 글자, teal은 장식 선만 */
-.tc-halloween{--tc-art:#fff083; --tc-body:#101010; --tc-text:#ffffff}   /* halloween: primary 면(위 글자 없음) + ink-deep 바탕에 surface 글자 */
+.tc-halloween{--tc-art:#f3a873; --tc-body:#170f0b; --tc-text:#f8e9cc}   /* halloween: ember 하늘 면 + ink 실루엣 바탕에 moon 글자 */
+.tc-seollal{--tc-art:repeating-linear-gradient(to bottom, #f2c48f 0 19px, #a9d3b8 19px 38px, #e2dfda 38px 57px, #eaa3a6 57px 76px, #8e3a78 76px 96px); --tc-body:#f3ecdc; --tc-text:#2e2a26}   /* seollal: 색동 면 + hanji 바탕에 먹 글자 */
 .tc-default{--tc-art:#dbd6c0; --tc-body:#f8f8f8; --tc-text:#222222}     /* default: color-read-3 면 + bg-primary 바탕에 ink 글자 */
-.tc-halloween .si-buy{background:#fff083;border-color:#fff083;color:#222222}   /* ink-deep 위 버튼: primary 바탕 + ink 글자 */
-.tc-halloween .si-owned{background:#ffffff;color:#222222}
-.tc-halloween .si-buy.armed{background:#ffffff;border-color:#ffffff}
+.tc-halloween .si-buy{background:#f9cf98;border-color:#f9cf98;color:#170f0b}   /* ink 위 버튼: primary 바탕 + ink 글자 */
+.tc-halloween .si-owned{background:transparent;color:#f8e9cc;box-shadow:inset 0 0 0 1px #f8e9cc;border-radius:4px;font-size:11px}   /* halloween 외곽선 배지: moon 글자·1px moon 테두리, caption 11px */
+.tc-halloween .si-buy.armed{background:#f8e9cc;border-color:#f8e9cc}
 /* 나무 물 주기 창: 대화 기록 창(.log)과 같은 카드 */
 .tw-body{padding:20px 24px 24px;display:flex;flex-direction:column;align-items:center;gap:10px;text-align:center}
 .tw-view{position:relative;width:200px;height:200px;margin-top:40px}
@@ -662,10 +719,12 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 
     <div class="asset picture" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><g stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"><path style="fill:var(--color-read)" d="M12 12h48v48H12z"/><path style="fill:var(--color-jobs-3)" d="M18 18h36v36H18z"/><circle cx="26" cy="30" r="4" style="fill:var(--color-learn)"/><path style="fill:var(--color-inspire-3)" stroke="none" d="M50 35c-2.896-.854-6.28-7.989-8-8c-4.208-.028-6.254 5.836-11 9c-3 2-3.374 2.85-6 4c-2.282 1-3 3-3.25 3.64c-.303.777-1.475 2.522-.958 3.11c1.208 1.375 2.458 1.5 5 .718c2.147-.66 4.977-4.808 6.875-6.218c2.27-1.687 4.645-2.5 8.083-2c2.48.36 6.66 3.172 7.813 3.063c1.312-.126-1.594-2.563-.532-4.188c1.133-1.732 2.91.153 3.636-1.083C51.984 36.5 50.632 35.186 50 35"/></g><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"><path d="M12 12h48v48H12z"/><path d="M18 18h36v36H18z"/><circle cx="26" cy="30" r="4"/><path d="M22 43c.526-1.02.728-1.967 3-3c2.61-1.186 3-2 6-4c4.746-3.164 6.792-9.028 11-9c1.72.011 5 7 8 8"/></g></svg></div>
     <div class="asset sofa" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-read)" d="M6.833 55.62h5.422v7.064H6.833zm44.987 0h5.422v7.064H51.82z"/><path style="fill:var(--color-jobs-3)" d="M12.54 28.49h38.94l.243 26.82l-38.96-.208z"/><path style="fill:var(--color-read-3)" d="M12.62 46.36h39.1v8.952h-39.1z"/><path style="fill:var(--color-read-3)" d="M57.93 34.6v20.69l-6.212.015l.173-20.71zm-45.452 1.324l.14 19.39l-7.166-.015V33.94z"/><path style="fill:var(--color-read)" d="M52.74 57.65v4.81h3.43v-4.81m-48.726-.04v4.85h3.426v-4.85"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"><path d="M12.61 36.87v-8.385h38.94v8.274c2.138-2.907 3.386-2.824 6.768-2.824v21.36H5.848v-21.36c3.594-.509 4.265.614 6.768 2.935zM7.833 58.61v3.852h3.422V58.61m41.565 0v3.852h3.422V58.61M12.7 46.42h38.86m0 8.18l-.011-17.84m-38.939.11l.01 18.44"/></g></svg></div>
-    <div class="asset plant" id="plant" role="button" tabindex="0" aria-label="나무에 물 주기"><img class="tree-img" alt="" hidden><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><g fill="none"><path style="fill:var(--color-read-3)" stroke="#222222" stroke-linejoin="round" d="m9.007 23.996l.78 4.69c.13.76.78 1.31 1.54 1.31h9.35c.76 0 1.42-.55 1.54-1.31l.79-4.69l-7-1.59z"/><path style="fill:var(--white)" stroke="#222222" stroke-linejoin="round" d="M23.5 24h-15c-.28 0-.5-.22-.5-.5v-3c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5"/></g></svg><span class="hint" aria-hidden="true">나무에 물 주기</span></div>
+    <!-- 테마 장식: 소파 위에 올라앉도록 소파 다음에 둠 -->
+    <div class="theme-art" id="themeArt" aria-hidden="true"><img class="ta-sofa" alt="" hidden><img class="ta-window" alt="" hidden></div>
+    <div class="asset plant" id="plant" role="button" tabindex="0" aria-label="나무에 물 주기"><img class="tree-img" alt="" hidden><span class="tree-orn" hidden></span><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" aria-hidden="true"><g fill="none"><path style="fill:var(--color-read-3)" stroke="#222222" stroke-linejoin="round" d="m9.007 23.996l.78 4.69c.13.76.78 1.31 1.54 1.31h9.35c.76 0 1.42-.55 1.54-1.31l.79-4.69l-7-1.59z"/><path style="fill:var(--white)" stroke="#222222" stroke-linejoin="round" d="M23.5 24h-15c-.28 0-.5-.22-.5-.5v-3c0-.28.22-.5.5-.5h15c.28 0 .5.22.5.5v3c0 .28-.22.5-.5.5"/></g></svg><span class="hint" aria-hidden="true">나무에 물 주기</span></div>
     <div class="asset shelf" id="shelf" role="button" tabindex="0" aria-label="오늘의 일기 쓰기: 책장 열기"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-connect)" d="M8.174 14.391h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479"/><path style="fill:var(--white)" d="M10.087 14.391h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path style="fill:var(--color-learn)" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668"/><path style="fill:var(--ink)" d="M18.217 10.565h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478z"/><path style="fill:var(--color-inspire-3)" d="M16.304 10.565H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path style="fill:var(--color-learn-3)" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667z"/><path style="fill:var(--color-read)" d="M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/><path style="fill:var(--color-read-3)" d="M1 11.522a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957zm0 9.565a.956.956 0 0 1 .957-.957h20.087a.956.956 0 0 1 .956.957z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M6.26 14.391h.957a.48.48 0 0 1 .478.479v5.26H5.782v-5.26a.48.48 0 0 1 .478-.479m1.914 0h.956a.48.48 0 0 1 .478.479v5.26H7.695v-5.26a.48.48 0 0 1 .479-.479m1.913 0h.957a.48.48 0 0 1 .478.479v5.26H9.609v-5.26a.48.48 0 0 1 .478-.479"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.72 15.19l.777-.557a.48.48 0 0 1 .668.109l2.79 3.885a.48.48 0 0 1-.11.667l-1.165.837l-3.07-4.273a.48.48 0 0 1 .11-.668m6.497-4.625h-1.913v-5.26a.48.48 0 0 1 .479-.479h.956a.48.48 0 0 1 .478.478zm-1.913 0H14.39v-5.26a.48.48 0 0 1 .478-.479h.956a.48.48 0 0 1 .479.478z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="m11.232 10.564l-1.165-.836a.48.48 0 0 1-.11-.668l2.79-3.885a.48.48 0 0 1 .667-.109l.777.558a.48.48 0 0 1 .11.667zm-8.319.001V1.956m18.174 8.609V1.956M2.913 20.13v-7.652m18.174 7.652v-7.652M23 11.522a.957.957 0 0 1-.957.956H1.957a.957.957 0 0 1 0-1.913h20.087a.956.956 0 0 1 .956.957m0 9.565a.956.956 0 0 1-.957.957H1.957a.956.956 0 0 1 0-1.914h20.087a.956.956 0 0 1 .956.957"/></g></svg><span class="hint" aria-hidden="true">오늘의 일기 쓰기</span></div>
 
-    <div class="floor-bar"><div class="wallet" id="wallet" hidden role="status" aria-label="내 재화"><span class="w-item"><img src="assets/icon/coin.svg" alt="코인"><b id="wCoins">—</b></span><span class="w-item"><img src="assets/icon/droplet.svg" alt="물방울"><b id="wDrops">—</b></span><span class="w-msg">재화 확인 불가</span></div><button type="button" class="shop-btn" id="shopBtn"><img src="assets/icon/coin.svg" alt="">상점</button></div>
+    <div class="floor-bar"><div class="wallet" id="wallet" hidden role="status" aria-label="내 재화"><span class="w-item"><img src="assets/icon/coin.svg" alt="코인"><b id="wCoins">—</b></span><span class="w-item"><img src="assets/icon/droplet.svg" alt="물방울"><b id="wDrops">—</b></span><span class="w-msg">재화 확인 불가</span></div><span class="fb-acts"><button type="button" class="shop-btn" id="shopBtn"><img src="assets/icon/coin.svg" alt="">상점</button><button type="button" class="shop-btn gear-btn" id="setBtn" aria-label="설정" title="설정"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="4" stroke-dasharray="3.14 3.14"/><circle cx="12" cy="12" r="4.25" fill="none" stroke="currentColor" stroke-width="3.5"/></svg></button></span></div>
     <p class="credit">일러스트: OpenMoji (CC BY-SA 4.0), Streamline (CC BY 4.0), Fluent Emoji (MIT)</p>
   </div>
 </div>
@@ -693,7 +752,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
         </form>
       </div>
     </div>
-    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"><div id="dpText"></div></div><div class="dp1-turn" id="dpTurn" hidden><button type="button" id="dpPrev" aria-label="앞 여섯 줄">‹</button><span id="dpLines"></span><button type="button" id="dpNext" aria-label="다음 여섯 줄">›</button></div></section></div></div>
+    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span><img class="cover-art" id="coverArt" alt="" hidden></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"><div id="dpText"></div></div><div class="dp1-turn" id="dpTurn" hidden><button type="button" id="dpPrev" aria-label="앞 여섯 줄">‹</button><span id="dpLines"></span><button type="button" id="dpNext" aria-label="다음 여섯 줄">›</button></div></section></div></div>
   </div>
 </div>
 </div>
@@ -770,6 +829,17 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     </div>
     <p class="shop-note" id="shopNote" role="status" hidden></p>
     <div class="shop-grid" id="shopGrid" role="tabpanel" aria-labelledby="tab-furniture"></div>
+  </div>
+</div>
+
+<div class="log" id="settings" hidden>
+  <div class="log-card shop-card" role="dialog" aria-modal="true" aria-labelledby="setTitle">
+    <div class="log-head">
+      <div><span class="date">방 배경 · 일기장 표지 · 다 자란 나무</span><h2 id="setTitle">설정 · 테마</h2></div>
+      <button type="button" class="log-close" id="setClose">닫기</button>
+    </div>
+    <p class="shop-note" id="setNote" role="status" hidden></p>
+    <div class="shop-grid" id="setList" role="group" aria-labelledby="setTitle"></div>
   </div>
 </div>
 
@@ -1031,7 +1101,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     timers.forEach(clearTimeout); timers = [];
     reader.classList.remove('closing');
     bookMode = mode; bookOpener = opener; reviewing = !!review;
-    setCover(color || randomColor());
+    setCover(coverTheme && coverTheme.cover || color || randomColor());   // 테마 표지(diary_cover_asset_key)가 있으면 그 색
     book.className = 'book' + (mode === 'diary' ? ' readonly' : '');
     setupPages(mode === 'diary');
     resetEnd();
@@ -1990,6 +2060,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     else if(!logEl.hidden) closeLog();             // 대화 기록 창이 열려 있으면 그것부터
     else if(!waterEl.hidden) closeWater();         // 나무 물 주기 창
     else if(!shopEl.hidden) closeShop();           // 상점
+    else if(!setEl.hidden) closeSettings();        // 설정(테마)
     else if(!sketch.hidden) return;                // 스케치북은 "그림일기 완성"으로만 닫음 (그리던 그림이 날아가지 않게)
     else if(bookShown()) closeBook();               // 책이 열려 있으면 책부터 닫기
     else if(!calpage.hidden) closeCalendarPage();
@@ -2010,6 +2081,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     if(!calpage.hidden) closeCalendarPage();
     if(!waterEl.hidden) closeWater();
     if(!shopEl.hidden) closeShop();
+    if(!setEl.hidden) closeSettings();
   });
 
   // ---- 로그인 / 회원가입 (Supabase Auth) ----
@@ -2120,6 +2192,8 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     if(!waterEl.hidden) closeWater();
     shop = null; shopState = 'idle'; buyReq = null; buyBusy = buyUnknown = shopChecking = false; armed = null;
     if(!shopEl.hidden) closeShop();
+    themeReq = null; setChecking = false;
+    if(!setEl.hidden) closeSettings();
     showWallet();
     if(user) loadRoom();
   }
@@ -2133,8 +2207,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     walletEl.classList.toggle('err', !!failed && !wallet);
     document.getElementById('wCoins').textContent = wallet ? wallet.coins : '—';
     document.getElementById('wDrops').textContent = wallet ? wallet.water_drops : '—';
-    renderTree();
+    renderTree(); applyTheme();
     if(!shopEl.hidden) renderShop();
+    if(!setEl.hidden) renderSettings();
   }
   // 보상 동기화 (POST /api/me/rewards/sync, 본문 {}). celebrate면 새 보상을 "+30코인 +1물방울"로 알림
   async function syncRewards(seq, celebrate){
@@ -2166,7 +2241,10 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   const TREE_ASSETS = {
     tree_stage_0:[null, 0, 0], tree_stage_1:['seedling', .26, 10.39], tree_stage_2:['seedling', .38, 10.39],   // 0단계: 빈 화분
     tree_stage_3:['evergreen_tree', .56, 2], tree_stage_4:['evergreen_tree', .67, 2], tree_stage_5:['evergreen_tree', .78, 2], tree_stage_6:['evergreen_tree', .88, 2],
-    tree_adult_default:['evergreen_tree', 1, 2],   // 테마별 성체는 테마 추가 때 함께
+    tree_adult_default:['evergreen_tree', 1, 2], tree_adult_christmas:['christmas_tree', 1, 2],
+    // 성체 + 작은 장식 2개: [그림, 가운데 x%, y%, 폭%] (나무 칸 32×32 기준). 그 밖의 테마 성체 키는 기본 성체
+    tree_adult_halloween:['evergreen_tree', 1, 2, [['bat', 55, 41, 24], ['jack_o_lantern', 35, 72, 22]]],
+    tree_adult_seollal:['evergreen_tree', 1, 2, [['orn_hanji', 60, 45, 23], ['orn_taegukgi', 35, 72, 26]]],
   };
   // 모르는 키: 기본 그림 (성체 키면 기본 성체, 아니면 빈 화분)
   const treeAsset = key => TREE_ASSETS[key] || TREE_ASSETS[/^tree_adult_/.test(key || '') ? 'tree_adult_default' : 'tree_stage_0'];
@@ -2177,8 +2255,12 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   // waterReq: 확정 응답 전까지 같은 client_request_id·같은 본문으로만 다시 보냄. waterUnknown: 결과 불명 → "다시 확인"(GET room)만 가능
   let waterReq = null, waterBusy = false, waterUnknown = false, checking = false;
   function renderTree(){
-    const t = room && room.tree, [file, s, pad] = treeAsset(t && t.asset_key);
+    const t = room && room.tree, [file, s, pad, orn = []] = treeAsset(t && t.asset_key);
     document.querySelectorAll('.tree-img').forEach(img => { img.hidden = !file; if(file) img.src = `assets/tree/${file}.svg`; img.style.setProperty('--s', s); img.style.setProperty('--pad', pad); });
+    document.querySelectorAll('.tree-orn').forEach(box => {
+      box.hidden = !orn.length; box.style.setProperty('--s', s); box.style.setProperty('--pad', pad);
+      box.replaceChildren(...orn.map(([f, x, y, w]) => { const img = document.createElement('img'); img.src = `assets/tree/${f}.svg`; img.alt = ''; img.style.cssText = `left:${x}%;top:${y}%;width:${w}%`; return img; }));
+    });
     document.getElementById('twStage').textContent = t ? `${t.stage} / ${t.max_stage}단계` : '— / 7단계';
     document.getElementById('twDays').textContent = `물 준 날 ${t ? t.days_watered : '—'}일`;
     let why = '';
@@ -2252,12 +2334,21 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 
   // ---- 상점 (v0.3 제안 API GET /api/shop/items, POST /api/shop/purchases: 서버에 없을 수 있음) ----
   // 목록·가격·보유 여부·잔액은 서버 응답이 기준. 상품 그림은 asset_key와 같은 이름의 assets/item 파일 (상품 확정 목록은 7-6대로 FE가 정해 BE에 공유)
-  // 테마 미리보기: 테마 → 디자인 시스템 카드 색(.tc-*)과 장식 그림(assets/theme). 전용 시스템이 없으면 default
-  const THEME_CARDS = {
-    theme_christmas:{sys:'christmas', art:['snowman', 'wrapped_gift']},
-    theme_halloween:{sys:'halloween', art:['black_cat', 'crescent_moon']},
-    theme_seollal:{sys:'default', art:['full_moon']},
+  // 테마 이름(item_id·asset_key에서 theme_/room_/cover_ 뒤) → 디자인 시스템(.theme-*·.tc-*), 장식 그림 [소파 위, 창밖](assets/theme), 표지 색 토큰
+  // 전용 시스템이 없으면 default. 표지 색은 각 시스템 README의 대비 규칙대로 (christmas: inspire-tint 면 + ink 글자)
+  const THEMES = {
+    christmas:{sys:'christmas', art:['wrapped_gift', 'snowman'], cover:'color-inspire-3'},
+    halloween:{sys:'halloween', art:['black_cat', 'crescent_moon'], cover:'color-connect'},   // 표지: pumpkin 면 + ink 글자(7.5:1)
+    seollal:{sys:'seollal', art:[null, 'full_moon'], cover:'color-learn'},   // 표지: 분홍 면 + 먹 글자(7.0:1)
   };
+  const themeOf = key => THEMES[String(key || '').replace(/^(theme|room|cover)_/, '')] || null;
+  // 테마 미리보기 카드 틀: [카드, 글 칸]
+  function themeShell(id){
+    const tc = themeOf(id) || {sys:'default', art:[]}, card = mk('div', 'shop-item theme tc-' + tc.sys), art = mk('div', 'tc-art'), body = mk('div', 'tc-body');
+    tc.art.filter(Boolean).forEach(a => { const img = mk('img'); img.src = `assets/theme/${a}.svg`; img.alt = ''; art.append(img); });
+    card.append(art, body);
+    return [card, body];
+  }
   const safeKey = k => /^[a-z0-9_]+$/.test(k || '') ? k : null;   // 서버 값을 파일 경로에 넣기 전 확인
   const shopEl = document.getElementById('shop'), shopGrid = document.getElementById('shopGrid'), shopNote = document.getElementById('shopNote');
   const shopBtn = document.getElementById('shopBtn'), shopTabs = [...shopEl.querySelectorAll('[role="tab"]')];
@@ -2266,15 +2357,10 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   let shop = null, shopState = 'idle', shopCat = 'furniture', buyReq = null, buyBusy = false, buyUnknown = false, shopChecking = false, armed = null, armTimer;
   const mk = (tag, cls, text) => { const e = document.createElement(tag); if(cls) e.className = cls; if(text != null) e.textContent = text; return e; };
   function itemCard(it){
-    const theme = it.category === 'theme', card = mk('div', 'shop-item');
-    let body = card;
-    if(theme){
-      const tc = THEME_CARDS[it.item_id] || {sys:'default', art:[]};
-      card.classList.add('theme', 'tc-' + tc.sys);
-      const art = mk('div', 'tc-art');
-      tc.art.forEach(a => { const img = mk('img'); img.src = `assets/theme/${a}.svg`; img.alt = ''; art.append(img); });
-      body = mk('div', 'tc-body'); card.append(art, body);
-    } else if(safeKey(it.asset_key)){
+    const theme = it.category === 'theme';
+    let card = mk('div', 'shop-item'), body = card;
+    if(theme) [card, body] = themeShell(it.item_id);
+    else if(safeKey(it.asset_key)){
       const img = mk('img', 'si-art'); img.src = `assets/item/${it.asset_key}.svg`; img.alt = ''; card.append(img);
     }
     const price = mk('span', 'si-price'), coin = mk('img'); coin.src = 'assets/icon/coin.svg'; coin.alt = '코인';
@@ -2283,7 +2369,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     if(theme) body.append(mk('span', 'si-msg plain', '영구 보유 · 환불 불가'));   // 7-5
     if(it.owned){
       body.append(mk('span', 'si-owned', '보유'));
-      if(theme){ const b = mk('button', 'si-buy', '적용하기'); b.type = 'button'; b.disabled = true; b.title = '테마 적용은 아직 연결 전'; body.append(b); }   // 구매해도 자동 적용 안 함
+      if(theme) body.append(applyBtn(it.item_id, it.name));   // 구매해도 자동 적용 안 함
       return card;
     }
     const lack = wallet ? it.price_coins - wallet.coins : null, mine = buyBusy && buyReq && buyReq.item_id === it.item_id;
@@ -2386,6 +2472,78 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
       const n = shopTabs[(i + d + shopTabs.length) % shopTabs.length]; shopCat = n.dataset.cat; armed = null; renderShop(); n.focus();
     });
   });
+
+  // ---- 테마 적용 (v0.3 제안 API PUT /api/me/room/theme: 서버에 없을 수 있음). 상점 "적용하기"와 설정 창(7-5)에서 ----
+  // 방 배경·표지·나무는 응답(또는 GET room)의 theme.background_asset_key·diary_cover_asset_key·tree.asset_key로만 바꿈. 가구 좌표·저장된 일기는 그대로
+  const themeArt = [...document.querySelectorAll('#themeArt img')], coverArt = document.getElementById('coverArt');
+  let coverTheme = null;   // 다음에 여는 책의 표지
+  function applyTheme(){
+    const t = (room && room.room && room.room.theme) || {}, bg = themeOf(t.background_asset_key), sys = bg ? bg.sys : 'default';
+    document.body.dataset.room = bg ? String(t.background_asset_key).replace(/^room_/, '') : 'default';   // 벽지·바닥 색
+    ['default', 'christmas', 'halloween', 'seollal'].forEach(n => document.body.classList.toggle('theme-' + n, n === sys));   // #stage·#stageTop·책·창 모두 같은 테마 변수
+    themeArt.forEach((img, i) => { const a = bg && bg.art[i]; img.hidden = !a; if(a) img.src = `assets/theme/${a}.svg`; });
+    coverTheme = themeOf(t.diary_cover_asset_key);
+    const ca = coverTheme && coverTheme.art.filter(Boolean).pop();   // 표지에는 창밖 장식 하나
+    coverArt.hidden = !ca; if(ca) coverArt.src = `assets/theme/${ca}.svg`;
+  }
+  // themeReq: 진행 중인 적용 요청 {item_id} (null = 기본). PUT은 같은 값이면 결과가 같아 잠금 없이, 실패 시 GET으로 실제 상태만 맞춤 (자동 재전송 없음)
+  let themeReq = null, setChecking = false;
+  const curTheme = () => room && room.room && room.room.theme ? room.room.theme.item_id ?? null : undefined;
+  function applyBtn(id, name){
+    if(curTheme() === id) return mk('span', 'si-owned', '사용 중');
+    const mine = themeReq && themeReq.item_id === id, b = mk('button', 'si-buy', mine ? '바꾸는 중…' : '적용하기');
+    b.type = 'button'; b.dataset.item = id ?? 'default'; b.disabled = !!themeReq || !room;
+    b.setAttribute('aria-label', `${name} ${b.textContent}`);
+    b.addEventListener('click', ()=> setTheme(id));
+    return b;
+  }
+  async function setTheme(id){
+    if(themeReq || !room) return;
+    const seq = roomSeq; themeReq = {item_id:id}; showWallet();
+    try{
+      const r = await api('/api/me/room/theme', {method:'PUT', json:themeReq});
+      if(seq !== roomSeq) return;
+      if(r.theme) (room.room || (room.room = {})).theme = r.theme;
+      if(r.tree) room.tree = r.tree;
+      toast(id ? '테마를 적용했어요' : '기본 테마로 바꿨어요'); setMascot('happy');
+    }catch(e){
+      if(seq !== roomSeq) return;
+      errToast('테마 적용: ' + errText(e)); handleAuth(e);
+      if(!shopEl.hidden) checkShop(); else getRoom(seq).catch(()=>{});   // ITEM_NOT_OWNED·결과 불명: 서버 상태로 다시 그림
+    }finally{ if(seq === roomSeq){ themeReq = null; showWallet(); } }
+  }
+  const setEl = document.getElementById('settings'), setList = document.getElementById('setList'), setNote = document.getElementById('setNote'), setBtn = document.getElementById('setBtn');
+  function renderSettings(){
+    setNote.hidden = !!room && !setChecking; setNote.classList.toggle('err', !setChecking);
+    setNote.textContent = setChecking ? '확인 중…' : '테마 정보 확인 불가';
+    if(!room && !setChecking){ const b = mk('button', 'log-close', '다시 확인'); b.type = 'button'; b.addEventListener('click', checkSettings); setNote.append(b); }
+    const fid = document.activeElement && setList.contains(document.activeElement) ? document.activeElement.dataset.item : null;
+    const owned = room ? (room.inventory || []).filter(x => x.category === 'theme') : [];
+    setList.replaceChildren(...[{item_id:null, name:'기본'}, ...owned].map(t => { const [card, body] = themeShell(t.item_id); body.append(mk('span', 'si-name', t.name), applyBtn(t.item_id, t.name)); return card; }));
+    if(room && !owned.length) setList.append(mk('p', 'shop-empty', '구매한 테마 없음 · 상점에서 살 수 있어요'));
+    const f = fid && setList.querySelector(`[data-item="${CSS.escape(fid)}"]`);
+    if(f) f.focus({preventScroll:true});
+  }
+  async function checkSettings(){
+    if(setChecking) return;
+    const seq = roomSeq; setChecking = true; renderSettings();
+    try{ await getRoom(seq); }catch(e){ if(seq === roomSeq){ errToast('테마 확인: ' + errText(e)); handleAuth(e); } }
+    finally{ if(seq === roomSeq){ setChecking = false; showWallet(); } }
+  }
+  function openSettings(){
+    if(!user){ toast('로그인이 필요해요'); openAuth('login', setBtn); return; }
+    setEl.hidden = false; renderSettings();
+    requestAnimationFrame(()=>{ setEl.classList.add('show'); document.getElementById('setClose').focus({preventScroll:true}); });
+    if(!room) checkSettings();
+  }
+  function closeSettings(){
+    setEl.classList.remove('show');
+    setTimeout(()=>{ if(setEl.classList.contains('show')) return; setEl.hidden = true; if(reader.hidden && calpage.hidden) setBtn.focus({preventScroll:true}); }, reduce ? 0 : 300);
+  }
+  setBtn.addEventListener('click', openSettings);
+  document.getElementById('setClose').addEventListener('click', closeSettings);
+  setEl.addEventListener('click', e=>{ if(e.target === setEl) closeSettings(); });
+
   if(sb){
     // 콜백 안에서 다른 Supabase 호출을 기다리지 않도록 한 박자 뒤에 처리
     sb.auth.onAuthStateChange((event, session)=>{ setTimeout(()=> setUser(session ? session.user : null), 0); });

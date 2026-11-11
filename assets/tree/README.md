@@ -20,6 +20,14 @@
 | Jack-o-lantern | `jack_o_lantern.svg` | `assets/Jack-o-lantern/Flat/jack-o-lantern_flat.svg` |
 | Ghost | `ghost.svg` | `assets/Ghost/Flat/ghost_flat.svg` |
 | Kite | `kite.svg` | `assets/Kite/Flat/kite_flat.svg` |
+| Bat | `bat.svg` | `assets/Bat/Flat/bat_flat.svg` (2026-11-11 받음) |
+
+직접 그린 장식 (팀 자체 제작, 출처 표기 불필요. 색은 seollal 디자인 시스템):
+
+| 이름 | 파일 | 내용 |
+|---|---|---|
+| 한지 무늬 장식 | `orn_hanji.svg` | 고리 + 한지 원판에 분홍 수(壽)자 무늬(단순화) + 노리개 술 |
+| 태극기 장식 | `orn_taegukgi.svg` | 고리 + 3:2 태극기 (태극 지름 = 깃발 높이 1/2, 건·곤·감·리 4괘) |
 
 ## 나무 `asset_key` → 파일 매핑 (FE `TREE_ASSETS`)
 
@@ -35,8 +43,13 @@ FE는 서버 응답의 `tree.asset_key`만 보고 아래 파일을 고름 (단�
 | `tree_stage_5` | `evergreen_tree.svg` | 0.78 | 2 |
 | `tree_stage_6` | `evergreen_tree.svg` | 0.88 | 2 |
 | `tree_adult_default` | `evergreen_tree.svg` | 1 | 2 |
+| `tree_adult_christmas` | `christmas_tree.svg` | 1 | 2 |
+| `tree_adult_halloween` | `evergreen_tree.svg` + 장식 `bat.svg`, `jack_o_lantern.svg` | 1 | 2 |
+| `tree_adult_seollal` | `evergreen_tree.svg` + 장식 `orn_hanji.svg`, `orn_taegukgi.svg` | 1 | 2 |
+
+테마 성체의 작은 장식은 나무 그림 위 별도 층(`.tree-orn`)에 붙임: 나무 칸(32×32) 기준 가운데 x%, y%와 폭%. 할로윈: 박쥐 (55, 41, 24), 호박 (35, 72, 22). 설날: 한지 무늬 (60, 45, 23), 태극기 (35, 72, 26).
 
 - 모르는 키: `tree_adult_`로 시작하면 `tree_adult_default`, 그 밖에는 `tree_stage_0`(빈 화분)
 - 단계 그림에 쓰지 않는 파일: `tree_seed.svg`, `herb.svg`, `leafy_green.svg`, `deciduous_tree.svg`
-- 미정: 테마별 성체 키(예: `tree_adult_christmas`, `tree_adult_halloween`)와 그림. 테마 추가 때 함께 정함 (그 전에는 모르는 성체 키로 보고 기본 성체 표시)
+- 그 밖의 테마 성체 키는 모르는 키로 보고 기본 성체 표시
 - 성장 단계용으로 그린 세트가 아니라 Fluent 낱개 그림을 단계에 맞춰 배치한 것 (상업 이용 가능한 단계별 세트를 찾으면 교체)
