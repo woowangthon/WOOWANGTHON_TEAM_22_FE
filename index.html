@@ -568,6 +568,21 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
 .comic .panel img{width:100%;height:100%;object-fit:cover;display:block}
 .comic .panel.blank{background:transparent;border:2px dashed rgba(34,34,34,.35);box-shadow:none}
 .comic .panel b{position:absolute;left:8px;top:6px;font-size:12px;font-weight:600;opacity:.55}
+/* 4컷 상태: 장면 설명(.cap), 만드는 중(.loading), 못 만든 칸(.st) */
+.comic .panel .cap{position:absolute;left:6px;right:6px;bottom:6px;margin:0;padding:3px 6px;font-size:12px;line-height:1.35;background:var(--white);border:1.5px solid rgba(34,34,34,.25);border-radius:var(--radius-sm);display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.comic .panel.has-cap.blank::after{content:none}
+.comic .panel.loading::before{content:"";width:26px;height:26px;margin-bottom:30%;border:3px solid rgba(34,34,34,.15);border-top-color:var(--ink);border-radius:50%;animation:comicSpin 1s linear infinite}
+.comic .panel .st{position:absolute;right:8px;top:6px;font-size:11px;opacity:.6}
+@keyframes comicSpin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion: reduce){.comic .panel.loading::before{animation:none}}
+/* 스케치북의 4컷 장면안: 사용자가 "그림일기 완성"을 누르기 전에 보는 장면 */
+.sk-plan{padding:8px 12px;border:2px dashed rgba(34,34,34,.3);border-radius:var(--radius-sm);font-size:13px;line-height:1.45}
+.sk-plan b{font-size:14px}
+.sk-plan ol{display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:4px 14px;margin:4px 0 0;padding:0;list-style:none}
+.sk-plan ol:empty{display:none}
+.sk-plan p{margin:4px 0 0;opacity:.7}
+.sketch.has-plan .sk-canvas{width:min(100%, max(240px, calc((100vh - 540px) * 1.5)))}
+@media (max-width:700px), (max-aspect-ratio:1/1){.sk-plan ol{grid-template-columns:repeat(2, minmax(0,1fr))}.sketch.has-plan{padding-top:max(22px, var(--logo-clear, 22px))}.sketch.has-plan .sk-canvas{width:min(100%, max(200px, calc((100vh - 664px) * 1.5)))}}   /* 세로: 장면안이 로고(z 39)에 가리지 않게 */
 /* end-chat button in the chat header (Awwwards solid button: ink fill, white label, pill) */
 .end-chat{appearance:none;border:0;flex:none;background:var(--ink);color:var(--white);font:inherit;font-size:14px;font-weight:500;
   padding:9px 16px;border-radius:var(--radius-pill);cursor:pointer;transition:opacity var(--ease)}
@@ -923,6 +938,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     <div class="rings" aria-hidden="true"></div>
     <div class="sheet">
       <div class="sk-head"><h2 id="sketchTitle">오늘의 그림 그리기</h2><p>오늘 이야기한 일을 그림으로 그려 보세요. 다 그리면 날씨를 고르고 그림일기를 완성해요.</p></div>
+      <div class="sk-plan" id="skPlan" hidden aria-live="polite"><b>4컷 만화 장면</b><ol id="skPlanList"></ol><p id="skPlanNote"></p></div>
       <canvas class="sk-canvas" id="skCanvas" width="1200" height="800" aria-label="그림을 그리는 칸"></canvas>
       <div class="sk-tools">
         <div class="sk-group" id="skColors" role="group" aria-label="색"></div>
@@ -1333,7 +1349,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     leaf.classList.toggle('turned', fwd);
     spread = target; showNav();
     let done = false;
-    const finish = ()=>{ if(done) return; done = true; leaf.remove(); turning = false; showNumbers(); };
+    const finish = ()=>{ if(done) return; done = true; leaf.remove(); turning = false; showNumbers(); markComicSeen(); };
     leaf.addEventListener('transitionend', e=>{ if(e.target === leaf && e.propertyName === 'transform') finish(); });
     setTimeout(finish, reduce ? 0 : 1200);   // 전환 이벤트가 오지 않는 경우를 위한 대비
   }
@@ -1820,6 +1836,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     skDone.textContent = editing ? '고치기 완료' : '그림일기 완성';
     skDone.disabled = false;
     sketch.hidden = false;
+    paintSkPlan();
     toggleBrushMenu(false);
     requestAnimationFrame(()=>{ sketch.classList.add('show'); showThick(); skColorsEl.querySelector('[aria-pressed="true"]').focus({preventScroll:true}); });
   }
@@ -1851,6 +1868,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(f.blobUrl) URL.revokeObjectURL(f.blobUrl);
     f.blob = blob; f.blobUrl = blob ? URL.createObjectURL(blob) : null;
     f.weather = skWeather;
+    startComic(f);                       // 스케치북에서 장면을 본 뒤 "그림일기 완성" = 장면 확인 → 생성 시작
     f.phase = 'review'; updateShelf();
     closeSketch(()=> openReview(shelf));
   }
@@ -1884,6 +1902,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       const r = await api(`/api/chat-sessions/${encodeURIComponent(f.sessionId)}/diary-draft`, {method:'POST', json:req, timeout:AI_TIMEOUT});
       if(f !== flow || req !== f.draftReq || r.history_revision !== f.revision) return;   // 늦은 이전 응답은 버림
       f.draft = r.draft;
+      requestPlan(f);                     // 4컷 장면안은 초안이 오면 자동으로
     }catch(e){
       if(f !== flow || req !== f.draftReq) return;
       if(e.code === 'SESSION_NOT_FOUND') f.sessionLost = true;
@@ -1896,6 +1915,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   async function confirmDiary(f){
     if(f.saving || f.diary || !f.draft) return;
     if(hasUnknown(f.chat)){ toast(UNKNOWN_BLOCK); return; }
+    if(!f.confirmReq) startComic(f);   // 확인 화면에서 장면을 본 뒤 저장 = 장면 확인 (스케치북에서 이미 시작했으면 그대로)
     if(!f.confirmReq){
       const body = {client_request_id: rid('confirm'), history_revision: f.revision, draft_id: f.draft.draft_id};
       if(f.weather) body.weather = f.weather;
@@ -1905,7 +1925,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     try{
       const det = await api(`/api/chat-sessions/${encodeURIComponent(f.sessionId)}/diaries`, {method:'POST', json:f.confirmReq, timeout:SAVE_TIMEOUT});
       if(f !== flow) return;
-      f.diary = det; putDiaryItem(det);
+      f.diary = det; putDiaryItem(det); comicDiary(f, det);
     }catch(e){
       if(f !== flow) return;
       f.saving = false;
@@ -1917,7 +1937,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       }
       if(e.code === 'SESSION_NOT_FOUND') f.sessionLost = true;
       else if(e.code === 'HISTORY_REVISION_CONFLICT' || e.code === 'DIARY_DRAFT_NOT_FOUND'){   // 초안이 바뀜 → 다시 확인받기
-        f.draft = null; f.confirmReq = null; requestDraft(f, true);
+        f.draft = null; f.confirmReq = null; f.comic = null; requestDraft(f, true);
       }else f.saveErr = e;
       errToast('저장 실패: ' + errText(e)); handleAuth(e);
       renderReview();
@@ -1989,6 +2009,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     openBook('diary', fmtDate(today.y, today.m, today.d), opener || shelf, f.chat.color,
       f.drawState === 'exists' ? {weather:f.weather, drawing:f.serverImage, diaryId:f.diary.diary_id, diary:'', name:userName()}
                                : {weather:f.weather, drawing:f.blobUrl, diary:'', name:userName()}, true);
+    paintComicAll();
   }
   function renderReview(){
     const f = flow; if(!reviewing || !f) return;
@@ -2011,6 +2032,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     }
     else if(f.saveErr){ label = '저장 다시 시도'; }
     saveBtn.textContent = label; saveBtn.disabled = dis;
+    paintComicAll();
   }
   saveBtn.addEventListener('click', e=>{
     e.stopPropagation();
@@ -2034,6 +2056,200 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     flow.phase = 'sketch';
     closeBook(()=> openSketch());
   });
+
+  // ---- 4컷 만화 (제안 API: comic-plans · comic-previews · comic-requests · diaries/{id}/comics) ----
+  // 생성 버튼 없음. 장면안은 초안이 오면 자동으로 받아 스케치북(과 확인 화면 4칸)에 보여 주고,
+  // 장면이 화면에 보인 뒤 누른 "그림일기 완성"(못 봤으면 확인 화면의 "이대로 저장")으로만 생성 시작 → scene_confirmed
+  // 생성은 202 비동기: 요청 ID별 GET으로만 상태 확인, 생성 POST 재전송 없음. 일기 저장·달력 이동은 만화를 기다리지 않음
+  // 늦게 끝난 만화는 저장된 일기에 연결. sessionStorage에는 복구용 식별자만 (본문·그림 없음)
+  const skPlan = document.getElementById('skPlan'), skPlanList = document.getElementById('skPlanList'), skPlanNote = document.getElementById('skPlanNote');
+  const COMIC_DONE = ['ready', 'partial', 'failed'], COMIC_KEY = 'comic:', COMIC_POLL = [2000, 3000, 5000, 8000], COMIC_MAX_POLLS = 60, SEEN_MS = 1500;
+  const comicJobs = new Map();   // client_request_id → 생성 요청
+  let comicSeq = 0;              // 회원이 바뀌면 증가: 늦은 응답 무시
+  const planScenes = p => (p && p.comic4 && Array.isArray(p.comic4.scenes)) ? p.comic4.scenes : [];
+  const scenePanels = p => planScenes(p).map(x => ({position:x.order, caption:x.caption + (x.repeated ? ' (앞 장면 반복)' : '')}));
+  const panelsOf = r => (r && Array.isArray(r.panels)) ? r.panels.slice().sort((a, b) => a.position - b.position) : [];
+  const hasImage = ps => ps.some(p => p.imageUrl && p.status !== 'failed');
+  const liveJob = j => j.seq === comicSeq && !!user && user.id === j.uid;
+  const jobFor = did => [...comicJobs.values()].reverse().find(j => j.did === did);   // 같은 일기면 가장 최근 요청
+  function storeJob(j){
+    try{ sessionStorage.setItem(COMIC_KEY + j.rid, JSON.stringify({uid:j.uid, sid:j.sid, draft_id:j.draftId, rid:j.rid, pid:j.pid, did:j.did, arid:j.arid})); return true; }
+    catch(e){ return false; }
+  }
+  function dropJob(j){ try{ sessionStorage.removeItem(COMIC_KEY + j.rid); }catch(e){} }
+  // 장면안: 초안마다 한 번 자동 요청 (자동 재요청 없음)
+  async function requestPlan(f){
+    if(!f.draft || (f.comic && f.comic.draftId === f.draft.draft_id)) return;
+    const c = f.comic = {draftId:f.draft.draft_id, plan:null, state:'loading', seenAt:0};
+    paintComicAll();
+    try{
+      const r = await api(`/api/chat-sessions/${encodeURIComponent(f.sessionId)}/comic-plans`, {method:'POST', timeout:AI_TIMEOUT,
+        json:{history_revision:f.revision, draft_id:c.draftId, input_confirmed:true}});
+      if(f !== flow || f.comic !== c) return;
+      c.plan = r; c.state = planScenes(r).length === 4 ? 'ready' : 'failed';
+    }catch(e){
+      if(f !== flow || f.comic !== c) return;
+      c.state = notReady(e) || /NOT_ENABLED$/.test(e.code || '') ? 'off' : 'failed';
+      handleAuth(e);
+    }
+    paintComicAll();
+  }
+  // 스케치북 장면안 칸 (그림 고치기 스케치북에서는 숨김)
+  function paintSkPlan(){
+    const f = flow, c = f && f.comic, show = !!c && !skEdit && c.state !== 'off';
+    skPlan.hidden = !show; sketch.classList.toggle('has-plan', show);
+    if(!show) return;
+    const notes = (c.plan && c.plan.comic4 && Array.isArray(c.plan.comic4.notices)) ? c.plan.comic4.notices : [];
+    skPlanList.replaceChildren(...scenePanels(c.plan).map(p => mk('li', '', `${p.position}. ${p.caption}`)));
+    skPlanNote.textContent = c.state === 'loading' ? '4컷 장면을 준비하고 있어요…'
+      : c.state === 'failed' ? '장면을 불러오지 못했어요 · 그림일기는 그대로 완성할 수 있어요'
+      : [...notes, f.comicJob ? '이 장면으로 4컷 만화를 만들고 있어요' : '그림일기 완성을 누르면 이 장면으로 4컷 만화를 만들어요'].join(' · ');
+    if(c.state === 'ready' && !sketch.hidden && !c.seenAt) c.seenAt = Date.now();   // 화면에 보인 때부터 확인 가능
+  }
+  // 확인 화면 4칸이 실제로 보일 때만 장면을 본 것으로 기록 (휴대폰은 2쪽으로 넘겼을 때)
+  function markComicSeen(){
+    const c = flow && flow.comic;
+    if(reviewing && c && c.state === 'ready' && !c.seenAt && (!narrow.matches || spread === 1)) c.seenAt = Date.now();
+  }
+  // 생성 시작: 장면이 화면에 보이고 잠시 지난 뒤 사용자가 기존 버튼을 눌렀을 때만. 초안당 한 번
+  function startComic(f){
+    const c = f && f.comic;
+    if(!c || f.comicJob || c.state !== 'ready' || !c.seenAt || Date.now() - c.seenAt < SEEN_MS || !f.draft || f.draft.draft_id !== c.draftId || !user) return;
+    const j = {uid:user.id, seq:comicSeq, sid:f.sessionId, draftId:c.draftId, rid:rid('comic'), pid:null, did:null, arid:null, attached:false,
+               plan:c.plan, status:'queued', panels:[], state:'sending', timer:null, polls:0, attaching:false};
+    if(!storeJob(j)) return;            // 복구용 ID를 보관할 수 없으면 만들지 않음 (그림일기는 그대로)
+    f.comicJob = j; comicJobs.set(j.rid, j); paintComicAll();
+    sendComic(j, f.revision);
+  }
+  async function sendComic(j, revision){
+    try{
+      const r = await api(`/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-previews`, {method:'POST', timeout:AI_TIMEOUT,
+        json:{client_request_id:j.rid, history_revision:revision, draft_id:j.draftId, input_confirmed:true, scene_confirmed:true, confirmed_plan:j.plan}});
+      if(!liveJob(j)) return;
+      takeComic(j, r); j.state = 'waiting';
+    }catch(e){
+      if(!liveJob(j)) return;
+      if(/NOT_ENABLED$/.test(e.code || '') || notReady(e)){ j.state = 'off'; endJob(j); return; }
+      if(unknownResult(e) || ['REQUEST_IN_PROGRESS', 'IDEMPOTENCY_CONFLICT'].includes(e.code)) j.state = 'checking';   // 결과 불명: 요청 ID로 GET만
+      else { j.state = 'failed'; handleAuth(e); endJob(j); return; }
+    }
+    paintComicAll(); pollComic(j);
+  }
+  function takeComic(j, r){
+    if(!r) return;
+    if(r.preview_id && !j.pid){ j.pid = r.preview_id; storeJob(j); }
+    if(typeof r.status === 'string') j.status = r.status;
+    const ps = panelsOf(r); if(ps.length) j.panels = ps;
+  }
+  // 상태 확인: preview_id를 알면 미리보기 GET, 모르면 요청 ID GET. 미발견·503은 실패 근거가 아님 → 계속 확인 (상한 후 멈춤, ID는 보관)
+  function pollComic(j){
+    clearTimeout(j.timer);
+    if(!liveJob(j)) return;
+    if(COMIC_DONE.includes(j.status)){ endJob(j); return; }
+    if(j.polls >= COMIC_MAX_POLLS){ j.state = 'late'; paintComicAll(); return; }
+    j.timer = setTimeout(async ()=>{
+      j.polls++;
+      try{
+        const r = await api(j.pid ? `/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-previews/${encodeURIComponent(j.pid)}`
+                                  : `/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-requests/${encodeURIComponent(j.rid)}`);
+        if(!liveJob(j)) return;
+        takeComic(j, r); if(j.state === 'checking' && (j.pid || COMIC_DONE.includes(j.status))) j.state = 'waiting';
+      }catch(e){ if(!liveJob(j)) return; if(e.status === 401) handleAuth(e); }
+      paintComicAll(); pollComic(j);
+    }, COMIC_POLL[Math.min(j.polls, COMIC_POLL.length - 1)]);
+  }
+  function endJob(j){
+    clearTimeout(j.timer);
+    if(!liveJob(j)) return;
+    const done = j.state === 'off' ? 'off' : hasImage(j.panels) ? 'done' : 'failed';
+    j.state = done; paintComicAll();
+    if(done !== 'done'){
+      dropJob(j);
+      if(flow && flow.comicJob === j) toast(done === 'off' ? '4컷 만화는 준비 중이에요 · 그림일기는 저장할 수 있어요' : '4컷 만화를 만들지 못했어요 · 그림일기는 저장할 수 있어요');
+      return;
+    }
+    if(!j.did && !(flow && flow.comicJob === j)){ dropJob(j); return; }   // 저장하지 않고 끝난 흐름의 만화
+    attachComic(j);
+  }
+  // 저장된 일기에 연결: 같은 요청 ID로 한 번. 결과 불명이면 자동 재전송 없이 ID만 보관
+  async function attachComic(j){
+    if(!liveJob(j) || !j.did || !j.pid || j.attached || j.attaching || j.attachTried) return;
+    if(!j.arid){ j.arid = rid('comic-attach'); storeJob(j); }
+    j.attaching = j.attachTried = true;
+    try{
+      const r = await api(`/api/diaries/${encodeURIComponent(j.did)}/comics`, {method:'POST', json:{client_request_id:j.arid, preview_id:j.pid}});
+      if(!liveJob(j)) return;
+      j.attached = true; const ps = panelsOf(r); if(ps.length) j.panels = ps;
+      dropJob(j);
+    }catch(e){
+      if(!liveJob(j)) return;
+      if(!unknownResult(e)) dropJob(j);   // 확정 실패: 다시 연결하지 않음
+      handleAuth(e);
+    }finally{ j.attaching = false; paintComicAll(); }
+  }
+  // 일기 확정 저장 성공: 이 초안으로 만든 만화를 그 일기에 연결 (생성이 끝나 있으면 바로)
+  function comicDiary(f, det){
+    const j = f.comicJob;
+    if(!j || j.did || ['off', 'failed'].includes(j.state) || !f.confirmReq || j.draftId !== f.confirmReq.draft_id) return;   // 못 만든 요청은 연결·보관 안 함
+    j.did = det.diary_id; storeJob(j);
+    if(j.state === 'done') attachComic(j);
+  }
+  // 4컷 칸: panels [{position, caption, imageUrl, status}], loading이면 그림 없는 칸에 도는 표시
+  function paintComic(panels, loading){
+    comic.replaceChildren(...[0, 1, 2, 3].map(i => {
+      const p = panels[i] || {}, url = p.imageUrl && p.status !== 'failed' ? p.imageUrl : null;
+      const el = mk('div', 'panel' + (url ? '' : ' blank') + (p.caption ? ' has-cap' : '') + (!url && loading ? ' loading' : ''));
+      if(url){ const img = new Image(); img.src = url; img.alt = `4컷 만화 ${i + 1}컷${p.caption ? ': ' + p.caption : ''}`; el.append(img); }
+      el.append(mk('b', '', String(i + 1)));
+      if(p.caption && !url) el.append(mk('p', 'cap', p.caption));
+      if(!url && !loading && p.status === 'failed') el.append(mk('span', 'st', '못 만든 칸'));
+      return el;
+    }));
+  }
+  const jobLoading = j => !['off', 'failed', 'late', 'done'].includes(j.state);
+  function paintJob(j){ paintComic(j.panels.length ? j.panels : scenePanels(j.plan), jobLoading(j)); }
+  // 스케치북·확인 화면·열린 일기에 4컷 상태 반영
+  function paintComicAll(){
+    const f = flow;
+    if(!sketch.hidden) paintSkPlan();
+    if(!bookShown() || bookMode !== 'diary') return;
+    if(reviewing){
+      if(!f) return;
+      if(f.comicJob) paintJob(f.comicJob);
+      else if(f.comic && f.comic.state === 'ready'){ paintComic(scenePanels(f.comic.plan), false); markComicSeen(); }
+      else paintComic([], false);
+    }else if(curDet){ const j = jobFor(curDet.diary_id); if(j) paintJob(j); }
+  }
+  // 저장된 일기 열기: 진행 중인 요청이 있으면 그 상태, 아니면 연결된 만화 GET (없거나 미구현이면 빈 칸)
+  async function loadDiaryComic(det){
+    if(!det) return;
+    if(jobFor(det.diary_id)){ paintComicAll(); return; }
+    const seq = comicSeq;
+    try{
+      const r = await api(`/api/diaries/${encodeURIComponent(det.diary_id)}/comics`);
+      if(seq !== comicSeq || curDet !== det || reviewing) return;
+      const ps = panelsOf(r); if(hasImage(ps)) paintComic(ps, false);
+    }catch(e){}
+  }
+  // 회원 변경·로그아웃: 진행 중 확인을 멈추고 다른 회원의 식별자는 지움. 같은 회원이면 저장된 일기의 만화만 이어서 확인
+  function resetComics(uid){
+    comicSeq++; comicJobs.forEach(j => clearTimeout(j.timer)); comicJobs.clear();
+    let saved = [];
+    try{
+      for(let i = sessionStorage.length - 1; i >= 0; i--){
+        const k = sessionStorage.key(i); if(!k || !k.startsWith(COMIC_KEY)) continue;
+        let v = null; try{ v = JSON.parse(sessionStorage.getItem(k)); }catch(e){}
+        if(!v || !uid || v.uid !== uid || !v.did || !v.rid || !v.sid){ sessionStorage.removeItem(k); continue; }   // 저장 전 흐름은 새로 고침 뒤 이어 갈 수 없음
+        saved.push(v);
+      }
+    }catch(e){ saved = []; }
+    saved.forEach(v => {
+      const j = {uid, seq:comicSeq, sid:v.sid, draftId:v.draft_id, rid:v.rid, pid:v.pid || null, did:v.did, arid:v.arid || null, attached:false,
+                 plan:null, status:'queued', panels:[], state:'checking', timer:null, polls:0, attaching:false, attachTried:!!v.arid};
+      comicJobs.set(j.rid, j);
+      if(!j.arid) pollComic(j);          // 연결 결과가 불명이었던 요청은 다시 보내지 않음 (ID만 보관)
+    });
+  }
 
   // ---- 달력: 서울 기준 이번 달(벽), 확대 달력은 달을 넘겨 볼 수 있음 ----
   const calpage = document.getElementById('calpage'), bigcal = document.getElementById('bigcal'), bigGrid = document.getElementById('bigGrid');
@@ -2144,7 +2360,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(bookShown()) return;
     openBook('diary', fmtDate(y, m, d), opener, det ? colorOf(det.diary_id) : null, bkOf(det));
     if(!det || !delReq || delReq.id !== det.diary_id){ delReq = null; delUnknown = false; delBusy = false; }   // 다른 일기: 삭제 요청 새로
-    curDet = det; renderActs();
+    curDet = det; renderActs(); loadDiaryComic(det);
   }
   const bkOf = det => det ? {weather:det.weather, drawing:det.imageUrl || null, diary:det.confirmed_text || '', name:userName(), diaryId:det.diary_id} : null;
 
@@ -2600,6 +2816,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     document.getElementById('logoutBtn').hidden = !user;
     if((user ? user.id : null) === prev) return;     // 토큰 갱신 등 같은 회원이면 그대로
     chat = null; flow = null; diarySeq++;
+    resetComics(user ? user.id : null);   // 4컷 요청: 이전 회원 것은 정리, 이 회원 것은 이어서 확인
     edit = null; curDet = null; delReq = null; delBusy = delUnknown = delAsk = false;   // 일기 수정·삭제 요청도 새로
     Object.keys(months).forEach(k => delete months[k]);
     if(!sketch.hidden) closeSketch();
