@@ -347,7 +347,7 @@ body[data-room="seollal"] .floor{border-top:16px solid #2e2a26;border-image:repe
   background:var(--ink);color:var(--white);font-size:15px;font-weight:500;line-height:1.4;padding:10px 20px;border-radius:var(--radius-pill);
   white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;transition:opacity var(--ease),transform var(--ease);z-index:40}
 .toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
-body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0px))}   /* keep clear of the diary page nav */
+body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0px))}   /* keep clear of the diary page nav */
 
 /* ===== reader: the book opens and the chat lives on its right-hand page ===== */
 :root{ --paper:#fffdf6; --rule:rgba(180,215,248,.45); --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .4  0 0 0 .09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); --line:34px }
@@ -577,12 +577,15 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
 @media (prefers-reduced-motion: reduce){.comic .panel.loading::before{animation:none}}
 /* 스케치북의 4컷 장면안: 사용자가 "그림일기 완성"을 누르기 전에 보는 장면 */
 .sk-plan{padding:8px 12px;border:2px dashed rgba(34,34,34,.3);border-radius:var(--radius-sm);font-size:13px;line-height:1.45}
+#skOriginalText{white-space:pre-wrap;max-height:160px;overflow:auto;opacity:1}
+.comic .panel .cap{display:block;max-height:75%;overflow:auto;-webkit-line-clamp:unset;white-space:pre-wrap}
 .sk-plan b{font-size:14px}
 .sk-plan ol{display:grid;grid-template-columns:repeat(4, minmax(0,1fr));gap:4px 14px;margin:4px 0 0;padding:0;list-style:none}
 .sk-plan ol:empty{display:none}
 .sk-plan p{margin:4px 0 0;opacity:.7}
 .sketch.has-plan .sk-canvas{width:min(100%, max(240px, calc((100vh - 540px) * 1.5)))}
-@media (max-width:700px), (max-aspect-ratio:1/1){.sk-plan ol{grid-template-columns:repeat(2, minmax(0,1fr))}.sketch.has-plan{padding-top:max(22px, var(--logo-clear, 22px))}.sketch.has-plan .sk-canvas{width:min(100%, max(200px, calc((100vh - 664px) * 1.5)))}}   /* 세로: 장면안이 로고(z 39)에 가리지 않게 */
+.sketch.has-both .sk-canvas{width:min(100%, max(240px, calc((100vh - 650px) * 1.5)))}
+@media (max-width:700px), (max-aspect-ratio:1/1){.sk-plan ol{grid-template-columns:repeat(2, minmax(0,1fr))}.sketch.has-plan{padding-top:max(22px, var(--logo-clear, 22px))}.sketch.has-plan .sk-canvas{width:min(100%, max(200px, calc((100vh - 664px) * 1.5)))}.sketch.has-both .sk-canvas{width:min(100%, max(200px, calc((100vh - 720px) * 1.5)))}.sketch.has-both #skOriginal p:last-child{display:none}}   /* 세로: 장면안이 로고(z 39)에 가리지 않게 */
 /* end-chat button in the chat header (Awwwards solid button: ink fill, white label, pill) */
 .end-chat{appearance:none;border:0;flex:none;background:var(--ink);color:var(--white);font:inherit;font-size:14px;font-weight:500;
   padding:9px 16px;border-radius:var(--radius-pill);cursor:pointer;transition:opacity var(--ease)}
@@ -938,6 +941,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     <div class="rings" aria-hidden="true"></div>
     <div class="sheet">
       <div class="sk-head"><h2 id="sketchTitle">오늘의 그림 그리기</h2><p>오늘 이야기한 일을 그림으로 그려 보세요. 다 그리면 날씨를 고르고 그림일기를 완성해요.</p></div>
+      <div class="sk-plan" id="skOriginal" hidden><b>일기 원문 확인</b><p id="skOriginalText"></p><p>원문을 읽고 그림일기 완성을 누르면 이 글로 만든 4컷 장면을 먼저 보여 줘요. 장면을 확인하고 한 번 더 누르면 완성되고 4컷 만화를 만들기 시작해요.</p></div>
       <div class="sk-plan" id="skPlan" hidden aria-live="polite"><b>4컷 만화 장면</b><ol id="skPlanList"></ol><p id="skPlanNote"></p></div>
       <canvas class="sk-canvas" id="skCanvas" width="1200" height="800" aria-label="그림을 그리는 칸"></canvas>
       <div class="sk-tools">
@@ -1114,7 +1118,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   // 모든 요청에 Authorization: Bearer <access token>. 401이면 토큰을 한 번 갱신해 같은 요청(같은 요청 ID)으로 다시 보냄
   // (BE는 인증을 세션 예약보다 먼저 확인하므로 같은 ID 재전송이 안전함)
   // 제한시간은 세션 조회 → 요청 → (401이면 갱신·재요청) → 응답 본문 읽기 전체에 한 번만 적용. 자동 재시도 없음
-  async function api(path, {method = 'GET', json, form, headers = {}, timeout = TMO.request} = {}){
+  async function api(path, {method = 'GET', json, form, headers = {}, timeout = TMO.request, retryAuth = true} = {}){
     const deadline = Date.now() + timeout, ctl = new AbortController();
     const slow = setTimeout(slowNotice, TMO.slow);
     const send = tk => {
@@ -1130,7 +1134,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       const tk = await untilDeadline(accessToken(), deadline, 'AUTH_TIMEOUT');
       if(!tk) throw new ApiError(401, 'NO_SESSION', '', false);
       let res = await send(tk);
-      if(res.status === 401 && sb){
+      if(res.status === 401 && sb && retryAuth){
         const {data} = await untilDeadline(sb.auth.refreshSession(), deadline, 'AUTH_TIMEOUT');
         if(data && data.session) res = await send(data.session.access_token);
       }
@@ -1461,7 +1465,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     const urls = (bk && bk.comic) || [];
     for(let i = 0; i < 4; i++){
       const p = document.createElement('div'); p.className = 'panel' + (urls[i] ? '' : ' blank');
-      if(urls[i]){ const img = new Image(); img.src = urls[i]; img.alt = `4컷 만화 ${i+1}컷`; p.appendChild(img); }
+      if(urls[i]){ const img = new Image(); img.src = urls[i]; img.addEventListener('error', refreshComicImages, {once:true}); img.alt = `4컷 만화 ${i+1}컷`; p.appendChild(img); }
       const n = document.createElement('b'); n.textContent = i + 1; p.appendChild(n);
       comic.appendChild(p);
     }
@@ -1861,6 +1865,11 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   async function finishSketch(){
     if(skEdit) return finishEditSketch();
     const f = flow; if(!f || f.confirmReq || skDone.disabled) return;
+    // 1번째: 보인 원문 확인 → 장면안 요청 후 스케치북에 남아 장면을 보여 줌
+    const shown = !skOriginal.hidden && !sketch.hidden && skOriginalText.textContent === f.draft?.text;
+    if(shown && !f.comic && !f.comicJob){ f.comicInput = draftKey(f); requestPlan(f); return; }
+    // 2번째: 클릭 당시 보인 원문·장면 그대로일 때만 장면 확인 (Blob 처리 중 도착한 장면 제외). 장면 준비 중·실패면 만화 없이 완성
+    const approval = f.comicJob ? null : comicApproval(f);
     skDone.disabled = true;
     const blob = skDirty ? await canvasBlob() : null;
     if(skDirty && !blob){ skDone.disabled = false; errToast('그림 크기 초과'); return; }
@@ -1868,7 +1877,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(f.blobUrl) URL.revokeObjectURL(f.blobUrl);
     f.blob = blob; f.blobUrl = blob ? URL.createObjectURL(blob) : null;
     f.weather = skWeather;
-    startComic(f);                       // 스케치북에서 장면을 본 뒤 "그림일기 완성" = 장면 확인 → 생성 시작
+    if(approval) f.comicApproval = approval;   // 생성은 확인 화면에 들어가면서 자동 요청
     f.phase = 'review'; updateShelf();
     closeSketch(()=> openReview(shelf));
   }
@@ -1902,7 +1911,7 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       const r = await api(`/api/chat-sessions/${encodeURIComponent(f.sessionId)}/diary-draft`, {method:'POST', json:req, timeout:AI_TIMEOUT});
       if(f !== flow || req !== f.draftReq || r.history_revision !== f.revision) return;   // 늦은 이전 응답은 버림
       f.draft = r.draft;
-      requestPlan(f);                     // 4컷 장면안은 초안이 오면 자동으로
+      paintComicAll();                    // 원문 표시만: 확인 클릭 전에는 plan 요청 금지
     }catch(e){
       if(f !== flow || req !== f.draftReq) return;
       if(e.code === 'SESSION_NOT_FOUND') f.sessionLost = true;
@@ -1915,7 +1924,6 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   async function confirmDiary(f){
     if(f.saving || f.diary || !f.draft) return;
     if(hasUnknown(f.chat)){ toast(UNKNOWN_BLOCK); return; }
-    if(!f.confirmReq) startComic(f);   // 확인 화면에서 장면을 본 뒤 저장 = 장면 확인 (스케치북에서 이미 시작했으면 그대로)
     if(!f.confirmReq){
       const body = {client_request_id: rid('confirm'), history_revision: f.revision, draft_id: f.draft.draft_id};
       if(f.weather) body.weather = f.weather;
@@ -2010,10 +2018,14 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       f.drawState === 'exists' ? {weather:f.weather, drawing:f.serverImage, diaryId:f.diary.diary_id, diary:'', name:userName()}
                                : {weather:f.weather, drawing:f.blobUrl, diary:'', name:userName()}, true);
     paintComicAll();
+    if(f.comicApproval && !f.comicJob){   // 스케치북에서 확인한 장면: 확인 화면 진입과 함께 생성 자동 요청 (초안당 한 번)
+      startComic(f, f.comicApproval);
+      if(f.comicJob) toast('4컷 만화를 만들고 있어요 · 완성되면 일기와 함께 저장돼요');
+    }
   }
   function renderReview(){
     const f = flow; if(!reviewing || !f) return;
-    if(f.draft) setDiaryText(f.draft.text, false);
+    if(f.draft){ setDiaryText(f.draft.text, false); f.comicTextShown = draftKey(f); }
     else if(outcomeUnknown(f.draftErr)) setDiaryText('초안 결과 불명 · 새 요청 불가', true);
     else if(f.draftErr) setDiaryText('초안 실패: ' + errText(f.draftErr, 'AI 응답 실패'), true);
     else setDiaryText('AI가 일기 초안을 쓰고 있어요…', true);
@@ -2058,12 +2070,21 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   });
 
   // ---- 4컷 만화 (제안 API: comic-plans · comic-previews · comic-requests · diaries/{id}/comics) ----
-  // 생성 버튼 없음. 장면안은 초안이 오면 자동으로 받아 스케치북(과 확인 화면 4칸)에 보여 주고,
-  // 장면이 화면에 보인 뒤 누른 "그림일기 완성"(못 봤으면 확인 화면의 "이대로 저장")으로만 생성 시작 → scene_confirmed
+  // 생성 버튼 없음. 스케치북에 원문 표시 → "그림일기 완성" 1번째 = 원문 확인 → 장면안 요청·표시,
+  // 2번째("장면 확인하고 완성") = 장면 확인 → 확인 화면에 들어가면서 생성 자동 요청 (scene_confirmed). "이대로 저장"은 생성을 시작하지 않음
   // 생성은 202 비동기: 요청 ID별 GET으로만 상태 확인, 생성 POST 재전송 없음. 일기 저장·달력 이동은 만화를 기다리지 않음
   // 늦게 끝난 만화는 저장된 일기에 연결. sessionStorage에는 복구용 식별자만 (본문·그림 없음)
   const skPlan = document.getElementById('skPlan'), skPlanList = document.getElementById('skPlanList'), skPlanNote = document.getElementById('skPlanNote');
-  const COMIC_DONE = ['ready', 'partial', 'failed'], COMIC_KEY = 'comic:', COMIC_POLL = [2000, 3000, 5000, 8000], COMIC_MAX_POLLS = 60, SEEN_MS = 1500;
+  const COMIC_DONE = ['ready', 'partial', 'failed'], COMIC_KEY = 'comic:', COMIC_POLL = [2000, 3000, 5000, 8000], COMIC_MAX_POLLS = 60;
+  const skOriginal = document.getElementById('skOriginal'), skOriginalText = document.getElementById('skOriginalText');
+  const draftKey = f => f?.draft && JSON.stringify([user?.id, f.sessionId, f.revision, f.draft.draft_id, f.draft.text]);
+  const planKey = c => c?.plan && JSON.stringify(c.plan);
+  function comicApproval(f){
+    const c = f?.comic, key = draftKey(f);
+    return c?.state === 'ready' && c.key === key && f.comicInput === key &&
+      c.shown === planKey(c) && (f.comicTextShown === key || (!sketch.hidden && skOriginalText.textContent === f.draft.text))
+      ? {key, plan:planKey(c)} : null;
+  }
   const comicJobs = new Map();   // client_request_id → 생성 요청
   let comicSeq = 0;              // 회원이 바뀌면 증가: 늦은 응답 무시
   const planScenes = p => (p && p.comic4 && Array.isArray(p.comic4.scenes)) ? p.comic4.scenes : [];
@@ -2079,16 +2100,17 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   function dropJob(j){ try{ sessionStorage.removeItem(COMIC_KEY + j.rid); }catch(e){} }
   // 장면안: 초안마다 한 번 자동 요청 (자동 재요청 없음)
   async function requestPlan(f){
-    if(!f.draft || (f.comic && f.comic.draftId === f.draft.draft_id)) return;
-    const c = f.comic = {draftId:f.draft.draft_id, plan:null, state:'loading', seenAt:0};
+    const key = draftKey(f);
+    if(!key || f.comicInput !== key || f.confirmReq || f.comic?.key === key) return;
+    const c = f.comic = {draftId:f.draft.draft_id, key, plan:null, state:'loading', shown:null};
     paintComicAll();
     try{
       const r = await api(`/api/chat-sessions/${encodeURIComponent(f.sessionId)}/comic-plans`, {method:'POST', timeout:AI_TIMEOUT,
         json:{history_revision:f.revision, draft_id:c.draftId, input_confirmed:true}});
-      if(f !== flow || f.comic !== c) return;
+      if(f !== flow || f.comic !== c || draftKey(f) !== c.key) return;
       c.plan = r; c.state = planScenes(r).length === 4 ? 'ready' : 'failed';
     }catch(e){
-      if(f !== flow || f.comic !== c) return;
+      if(f !== flow || f.comic !== c || draftKey(f) !== c.key) return;
       c.state = notReady(e) || /NOT_ENABLED$/.test(e.code || '') ? 'off' : 'failed';
       handleAuth(e);
     }
@@ -2096,34 +2118,38 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
   }
   // 스케치북 장면안 칸 (그림 고치기 스케치북에서는 숨김)
   function paintSkPlan(){
-    const f = flow, c = f && f.comic, show = !!c && !skEdit && c.state !== 'off';
-    skPlan.hidden = !show; sketch.classList.toggle('has-plan', show);
+    const f = flow, c = f && f.comic, show = !!c && c.key === draftKey(f) && !skEdit && c.state !== 'off';
+    skOriginal.hidden = !f?.draft || !!skEdit;
+    skOriginalText.textContent = f?.draft?.text || '';
+    if(f && !skEdit && !skDone.disabled) skDone.textContent = c && c.key === draftKey(f) && !f.comicJob
+      ? (c.state === 'loading' ? '장면 없이 완성' : c.state === 'ready' ? '장면 확인하고 완성' : '그림일기 완성') : '그림일기 완성';
+    skPlan.hidden = !show; sketch.classList.toggle('has-plan', show || !skOriginal.hidden); sketch.classList.toggle('has-both', show && !skOriginal.hidden);
     if(!show) return;
     const notes = (c.plan && c.plan.comic4 && Array.isArray(c.plan.comic4.notices)) ? c.plan.comic4.notices : [];
     skPlanList.replaceChildren(...scenePanels(c.plan).map(p => mk('li', '', `${p.position}. ${p.caption}`)));
-    skPlanNote.textContent = c.state === 'loading' ? '4컷 장면을 준비하고 있어요…'
+    skPlanNote.textContent = c.state === 'loading' ? '4컷 장면을 준비하고 있어요… · 기다리지 않고 완성하면 그림일기만 저장해요'
       : c.state === 'failed' ? '장면을 불러오지 못했어요 · 그림일기는 그대로 완성할 수 있어요'
-      : [...notes, f.comicJob ? '이 장면으로 4컷 만화를 만들고 있어요' : '그림일기 완성을 누르면 이 장면으로 4컷 만화를 만들어요'].join(' · ');
-    if(c.state === 'ready' && !sketch.hidden && !c.seenAt) c.seenAt = Date.now();   // 화면에 보인 때부터 확인 가능
+      : [...notes, f.comicJob ? '이 장면으로 4컷 만화를 만들고 있어요' : '장면을 확인했으면 "장면 확인하고 완성"을 눌러 주세요'].join(' · ');
+    if(c.state === 'ready' && !sketch.hidden) c.shown = planKey(c); // 표시 기록은 확인 자체가 아님
   }
   // 확인 화면 4칸이 실제로 보일 때만 장면을 본 것으로 기록 (휴대폰은 2쪽으로 넘겼을 때)
   function markComicSeen(){
     const c = flow && flow.comic;
-    if(reviewing && c && c.state === 'ready' && !c.seenAt && (!narrow.matches || spread === 1)) c.seenAt = Date.now();
+    if(reviewing && c?.state === 'ready' && c.key === draftKey(flow) && (!narrow.matches || spread === 1)) c.shown = planKey(c);
   }
-  // 생성 시작: 장면이 화면에 보이고 잠시 지난 뒤 사용자가 기존 버튼을 눌렀을 때만. 초안당 한 번
-  function startComic(f){
+  // 생성 시작: 표시한 원문·장면 버전과 기존 완료/저장 클릭의 snapshot이 같을 때만. 초안당 한 번
+  function startComic(f, approval){
     const c = f && f.comic;
-    if(!c || f.comicJob || c.state !== 'ready' || !c.seenAt || Date.now() - c.seenAt < SEEN_MS || !f.draft || f.draft.draft_id !== c.draftId || !user) return;
+    if(!c || f.comicJob || !approval || approval.key !== draftKey(f) || c.key !== approval.key || approval.plan !== planKey(c) || !user) return;
     const j = {uid:user.id, seq:comicSeq, sid:f.sessionId, draftId:c.draftId, rid:rid('comic'), pid:null, did:null, arid:null, attached:false,
-               plan:c.plan, status:'queued', panels:[], state:'sending', timer:null, polls:0, attaching:false};
+               plan:JSON.parse(approval.plan), status:'queued', panels:[], state:'sending', timer:null, polls:0, attaching:false};
     if(!storeJob(j)) return;            // 복구용 ID를 보관할 수 없으면 만들지 않음 (그림일기는 그대로)
     f.comicJob = j; comicJobs.set(j.rid, j); paintComicAll();
     sendComic(j, f.revision);
   }
   async function sendComic(j, revision){
     try{
-      const r = await api(`/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-previews`, {method:'POST', timeout:AI_TIMEOUT,
+      const r = await api(`/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-previews`, {method:'POST', retryAuth:false, timeout:AI_TIMEOUT,
         json:{client_request_id:j.rid, history_revision:revision, draft_id:j.draftId, input_confirmed:true, scene_confirmed:true, confirmed_plan:j.plan}});
       if(!liveJob(j)) return;
       takeComic(j, r); j.state = 'waiting';
@@ -2139,19 +2165,22 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(!r) return;
     if(r.preview_id && !j.pid){ j.pid = r.preview_id; storeJob(j); }
     if(typeof r.status === 'string') j.status = r.status;
+    j.jobState = r.job_state; j.recovery = r.recovery_required;
+    j.unknown = r.job_state === 'unknown' || r.receipt_found === false || r.error_code === 'COMIC_RESULT_UNKNOWN';
+    j.workerUnavailable = r.worker_available === false;
     const ps = panelsOf(r); if(ps.length) j.panels = ps;
   }
-  // 상태 확인: preview_id를 알면 미리보기 GET, 모르면 요청 ID GET. 미발견·503은 실패 근거가 아님 → 계속 확인 (상한 후 멈춤, ID는 보관)
+  // 생성 중/응답 유실은 원래 요청 ID GET. unknown·미발견은 중단하고 ID 보관, GET 오류도 새 POST 금지
   function pollComic(j){
     clearTimeout(j.timer);
     if(!liveJob(j)) return;
-    if(COMIC_DONE.includes(j.status)){ endJob(j); return; }
+    if(j.unknown){ j.state = 'unknown'; paintComicAll(); return; }
+    if(j.jobState === 'completed' || (!j.jobState && COMIC_DONE.includes(j.status))){ endJob(j); return; }
     if(j.polls >= COMIC_MAX_POLLS){ j.state = 'late'; paintComicAll(); return; }
     j.timer = setTimeout(async ()=>{
       j.polls++;
       try{
-        const r = await api(j.pid ? `/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-previews/${encodeURIComponent(j.pid)}`
-                                  : `/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-requests/${encodeURIComponent(j.rid)}`);
+        const r = await api(`/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-requests/${encodeURIComponent(j.rid)}`);
         if(!liveJob(j)) return;
         takeComic(j, r); if(j.state === 'checking' && (j.pid || COMIC_DONE.includes(j.status))) j.state = 'waiting';
       }catch(e){ if(!liveJob(j)) return; if(e.status === 401) handleAuth(e); }
@@ -2169,15 +2198,17 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
       return;
     }
     if(!j.did && !(flow && flow.comicJob === j)){ dropJob(j); return; }   // 저장하지 않고 끝난 흐름의 만화
+    if(!j.did) toast('4컷 만화가 완성됐어요 · 이대로 저장하면 함께 저장돼요');
     attachComic(j);
   }
   // 저장된 일기에 연결: 같은 요청 ID로 한 번. 결과 불명이면 자동 재전송 없이 ID만 보관
   async function attachComic(j){
     if(!liveJob(j) || !j.did || !j.pid || j.attached || j.attaching || j.attachTried) return;
-    if(!j.arid){ j.arid = rid('comic-attach'); storeJob(j); }
+    if(j.unknown || j.recovery || j.panels.some(p => p.status === 'pending') || !hasImage(j.panels)) return;
+    if(!j.arid){ j.arid = rid('comic-attach'); if(!storeJob(j)) return; }
     j.attaching = j.attachTried = true;
     try{
-      const r = await api(`/api/diaries/${encodeURIComponent(j.did)}/comics`, {method:'POST', json:{client_request_id:j.arid, preview_id:j.pid}});
+      const r = await api(`/api/diaries/${encodeURIComponent(j.did)}/comics`, {method:'POST', retryAuth:false, json:{client_request_id:j.arid, preview_id:j.pid}});
       if(!liveJob(j)) return;
       j.attached = true; const ps = panelsOf(r); if(ps.length) j.panels = ps;
       dropJob(j);
@@ -2199,15 +2230,26 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     comic.replaceChildren(...[0, 1, 2, 3].map(i => {
       const p = panels[i] || {}, url = p.imageUrl && p.status !== 'failed' ? p.imageUrl : null;
       const el = mk('div', 'panel' + (url ? '' : ' blank') + (p.caption ? ' has-cap' : '') + (!url && loading ? ' loading' : ''));
-      if(url){ const img = new Image(); img.src = url; img.alt = `4컷 만화 ${i + 1}컷${p.caption ? ': ' + p.caption : ''}`; el.append(img); }
+      if(url){ const img = new Image(); img.src = url; img.addEventListener('error', refreshComicImages, {once:true}); img.alt = `4컷 만화 ${i + 1}컷${p.caption ? ': ' + p.caption : ''}`; el.append(img); }
       el.append(mk('b', '', String(i + 1)));
       if(p.caption && !url) el.append(mk('p', 'cap', p.caption));
       if(!url && !loading && p.status === 'failed') el.append(mk('span', 'st', '못 만든 칸'));
       return el;
     }));
   }
-  const jobLoading = j => !['off', 'failed', 'late', 'done'].includes(j.state);
-  function paintJob(j){ paintComic(j.panels.length ? j.panels : scenePanels(j.plan), jobLoading(j)); }
+  let comicImageRefresh = 0;
+  function refreshComicImages(){
+    if(Date.now() - comicImageRefresh < 10000) return;
+    comicImageRefresh = Date.now();
+    if(curDet && !reviewing){ loadDiaryComic(curDet); return; }
+    const j = flow?.comicJob;
+    if(j && liveJob(j)) api(`/api/chat-sessions/${encodeURIComponent(j.sid)}/comic-requests/${encodeURIComponent(j.rid)}`)
+      .then(r => { if(liveJob(j)){ takeComic(j,r); paintComicAll(); } }).catch(()=>{});
+  }
+  const jobLoading = j => !j.workerUnavailable && !['off', 'failed', 'late', 'done', 'unknown'].includes(j.state);
+  function paintJob(j){ paintComic(j.panels.length ? j.panels : scenePanels(j.plan), jobLoading(j));
+    if(j.state === 'unknown' || j.state === 'late' || j.workerUnavailable) comic.querySelectorAll('.panel').forEach(el => el.append(mk('span', 'st', '상태 확인 필요')));
+  }
   // 스케치북·확인 화면·열린 일기에 4컷 상태 반영
   function paintComicAll(){
     const f = flow;
@@ -2216,19 +2258,21 @@ body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(saf
     if(reviewing){
       if(!f) return;
       if(f.comicJob) paintJob(f.comicJob);
-      else if(f.comic && f.comic.state === 'ready'){ paintComic(scenePanels(f.comic.plan), false); markComicSeen(); }
       else paintComic([], false);
     }else if(curDet){ const j = jobFor(curDet.diary_id); if(j) paintJob(j); }
   }
   // 저장된 일기 열기: 진행 중인 요청이 있으면 그 상태, 아니면 연결된 만화 GET (없거나 미구현이면 빈 칸)
   async function loadDiaryComic(det){
     if(!det) return;
-    if(jobFor(det.diary_id)){ paintComicAll(); return; }
+    const j = jobFor(det.diary_id);
+    if(j && !j.attached && !j.arid){ paintComicAll(); return; }
     const seq = comicSeq;
     try{
       const r = await api(`/api/diaries/${encodeURIComponent(det.diary_id)}/comics`);
       if(seq !== comicSeq || curDet !== det || reviewing) return;
-      const ps = panelsOf(r); if(hasImage(ps)) paintComic(ps, false);
+      const ps = panelsOf(r);
+      if(j && r.preview_id === j.pid && hasImage(ps)){ j.panels = ps; j.attached = true; j.state = 'done'; dropJob(j); }
+      if(hasImage(ps)) paintComic(ps, false);
     }catch(e){}
   }
   // 회원 변경·로그아웃: 진행 중 확인을 멈추고 다른 회원의 식별자는 지움. 같은 회원이면 저장된 일기의 만화만 이어서 확인
