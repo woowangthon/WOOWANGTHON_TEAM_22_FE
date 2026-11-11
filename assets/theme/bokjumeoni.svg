@@ -1,0 +1,9 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- 복주머니: 노란 주름 입구 + 자주 끈 매듭 + 색동 줄무늬 몸통 (팀 자체 제작) -->
+<defs><clipPath id="bj"><path d="M11 11C5.5 14.5 5 27.5 16 28C27 27.5 26.5 14.5 21 11Z"/></clipPath></defs>
+<path d="M10.5 10.5C9 8 10.5 5 12.5 6.5C13.5 4.5 15 4.5 16 6C17 4.5 18.5 4.5 19.5 6.5C21.5 5 23 8 21.5 10.5Z" fill="#f6c45a" stroke="#2E2A26" stroke-width="0.8" stroke-linejoin="round"/>
+<g clip-path="url(#bj)"><rect x="4" y="10" width="24" height="20" fill="#f6c45a"/><rect x="4" y="15" width="24" height="3.2" fill="#fbf8f1"/><rect x="4" y="18.2" width="24" height="3.2" fill="#f08a4b"/><rect x="4" y="21.4" width="24" height="3.2" fill="#fbf8f1"/><rect x="4" y="24.6" width="24" height="4" fill="#7fa6e0"/><rect x="14" y="10" width="4" height="20" fill="#e2545c"/></g>
+<path d="M11 11C5.5 14.5 5 27.5 16 28C27 27.5 26.5 14.5 21 11Z" stroke="#2E2A26" stroke-width="0.8" stroke-linejoin="round"/>
+<rect x="10.2" y="9.8" width="11.6" height="2.2" rx="1.1" fill="#8E3A78" stroke="#2E2A26" stroke-width="0.6"/>
+<path d="M16 12C14 14 12 14 11 13M16 12C18 14 20 14 21 13M16 12V17M14.5 17L16 19L17.5 17" stroke="#8E3A78" stroke-width="1" stroke-linecap="round"/>
+</svg>

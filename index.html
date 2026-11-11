@@ -75,18 +75,33 @@ body{
 
 /* 테마별 벽지·바닥 (body[data-room], background_asset_key에서). 가구는 기존 토큰 색 그대로
    디자인 시스템 색 토큰이 default와 같아 장면 색만 따로 둠. 글자가 놓이는 곳이라 모두 밝은 색 (ink 대비 유지) */
-body[data-room="christmas"]{--wall:#e2f4e9; --floor:#e9c9c3}   /* 벽: inspire-tint(전나무 빛), 바닥: 연한 크랜베리 */
-body[data-room="halloween"]{--wall:#ec8a57; --floor:#170f0b}   /* 벽: pumpkin 노을 하늘, 바닥: ink 실루엣 땅 */
-body[data-room="seollal"]{--wall:#f8e1e0; --floor:#8e3a78}     /* 벽: primary-tint(연분홍), 바닥: jaju(자주) */
+body[data-room="christmas"]{--wall:#f3f2ef; --floor:#e9c9c3}   /* 벽: 흰 눈빛 (전나무 무늬가 보이게), 바닥: 연한 크랜베리 */
+body[data-room="halloween"]{--wall:#4a2d78; --floor:#170f0b}   /* 벽: 보라 밤하늘, 바닥: ink */
+body[data-room="seollal"]{--wall:#f8d6d4; --floor:#8e3a78}     /* 벽: 연분홍 (한지 창살 무늬), 바닥: jaju(자주) */
+/* 테마 바닥 = 나무 마루 (assets/theme/floor_*.svg, 팀 자체 제작). 원래 비율로 깔고 .floor 원근이 눕힘 (카펫 .rug도 바닥 안이라 같은 원근), 위에 기존 바닥 음영 */
+body[data-room="christmas"]{--floor-pat:url("assets/theme/floor_oak.svg") 0 0/600px 240px}   /* 밝은 오크 판자 */
+body[data-room="halloween"]{--floor-pat:linear-gradient(rgba(35,18,50,.55), rgba(35,18,50,.55)), url("assets/theme/floor_oak.svg") 0 0/600px 240px}   /* 밤: 오크 판자에 보랏빛 어둠 */
+body[data-room="seollal"]{--floor-pat:url("assets/theme/floor_herringbone.svg") 0 0/1280px 384px}                       /* 꿀색 헤링본 */
+body[data-room="christmas"] .credit,body[data-room="halloween"] .credit,body[data-room="seollal"] .credit{background:#fbf8f1;opacity:.9;padding:2px 10px;border-radius:999px}   /* 무늬 바닥 위 출처 글자 */
+/* 벽지 무늬 (기본: 옅은 세로 줄). 테마는 팀 자체 제작 타일 assets/theme/wall_*.svg */
+body[data-room="christmas"]{--wallpaper:url("assets/theme/wall_christmas.svg") 0 0/1400px 1400px}   /* 솔가지·열매·오너먼트·사탕·별 플랫레이 (1.25배) */
+body[data-room="halloween"]{--wallpaper:url("assets/theme/wall_halloween.svg") 0 0/1200px 1200px}   /* 밤하늘 별·박쥐 */
+body[data-room="seollal"]{--wallpaper:url("assets/theme/wall_seollal.svg") 0 0/1200px 1200px}       /* 한지 창살 원·주황 꽃·구름 */
 /* wall shading: brightest around the window, darker toward the corners */
 .wall{position:absolute;left:-2000px;top:-2000px;width:5440px;height:2780px;
   background:radial-gradient(ellipse 1500px 1100px at 3190px 2270px, var(--sun-soft) 0%, rgba(255,251,226,.35) 30%, rgba(248,248,248,0) 60%, rgba(34,34,34,.07) 100%), var(--wall, var(--bg-primary))}
 .portrait .wall{width:4600px;height:2905px;background:radial-gradient(ellipse 800px 900px at 2525px 2230px, var(--sun-soft) 0%, rgba(248,248,248,0) 42%, rgba(34,34,34,.09) 100%), var(--wall, var(--bg-primary))}
 
+/* 벽지 무늬: 벽 위 별도 층. 옅게, 로고 "오늘, 그리고" 뒤는 비움 (로고 중심 = 벽 좌표 2000 + 무대 좌표) */
+.wall::after{content:"";position:absolute;inset:0;opacity:.55;background:var(--wallpaper, repeating-linear-gradient(to right, rgba(34,34,34,.035) 0 2px, transparent 2px 44px));
+  -webkit-mask-image:radial-gradient(ellipse 240px 110px at 2145px 2066px, transparent 55%, #000 100%);mask-image:radial-gradient(ellipse 240px 110px at 2145px 2066px, transparent 55%, #000 100%)}
+.portrait .wall::after{-webkit-mask-image:radial-gradient(ellipse 210px 95px at 2134px 2050px, transparent 55%, #000 100%);mask-image:radial-gradient(ellipse 210px 95px at 2134px 2050px, transparent 55%, #000 100%)}
+
 /* floor */
-.floor{position:absolute;left:-2000px;right:-2000px;top:780px;height:2000px;border-top:3px solid var(--ink);
-  background:linear-gradient(to bottom, rgba(34,34,34,.10) 0, rgba(34,34,34,0) 14px, rgba(34,34,34,.03) 40px, rgba(34,34,34,.16) 220px), var(--floor, var(--color-read-3))}
-.portrait .floor{top:905px}
+/* 바닥 원근: 벽과 만나는 선(위 가장자리)을 축으로 rotateX, 소실점은 방 가운데(x 720, 세로 300). 높이는 시점 뒤로 넘어가지 않게 700 */
+.floor{position:absolute;left:-2000px;right:-2000px;top:780px;height:700px;border-top:3px solid var(--ink);transform-origin:2720px 0;transform:perspective(1100px) rotateX(60deg);
+  background:linear-gradient(to bottom, rgba(34,34,34,.10) 0, rgba(34,34,34,0) 14px, rgba(34,34,34,.03) 40px, rgba(34,34,34,.16) 220px), var(--floor-pat, none), var(--floor, var(--color-read-3))}
+.portrait .floor{top:905px;transform-origin:2300px 0}
 
 /* sunlight from the window: soft, diffused, spreading across the room */
 .light{position:absolute;inset:0;pointer-events:none;filter:blur(36px);animation:breathe 8s ease-in-out infinite alternate}
@@ -225,18 +240,69 @@ body:has(.reader:not([hidden])) .stage-top{z-index:34}   /* 책이 열려 있으
 .ta-window{left:1185px;top:165px;width:90px;height:90px}
 .portrait .ta-sofa{display:none}   /* 세로에는 소파가 없음 */
 .portrait .ta-window{left:488px;top:186px;width:44px;height:44px}
+/* 테마 장식 (assets/theme/deco_*.svg, 팀 자체 제작): 천장에서 내려옴. 가로 화면만 (세로는 배치가 달라 숨김), 동작 줄이기면 멈춤 */
+.theme-deco{position:absolute;inset:0;pointer-events:none}
+.theme-deco img{position:absolute;display:none}
+body[data-room="halloween"] .td-bunting,body[data-room="halloween"] .td-spider,body[data-room="halloween"] .td-moon,body[data-room="halloween"] .td-skyline,body[data-room="halloween"] .td-web,
+body[data-room="seollal"] .td-lantern,body[data-room="seollal"] .td-hills,body[data-room="seollal"] .td-pine,body[data-room="christmas"] .td-garland{display:block}
+.td-moon{left:420px;top:80px;width:600px;height:600px}            /* 달력·책장 뒤 큰 달 (가운데 720, 380) */
+.td-skyline{left:0;top:612px;width:1440px;height:170px}          /* 벽 아래 실루엣, 가구 뒤 */
+.td-web{left:1220px;top:0;width:220px;height:220px}               /* 오른쪽 위 모서리 (로그인 버튼 z 3 아래) */
+.td-hills{left:0;top:632px;width:1440px;height:150px}            /* 벽 아래 산·물결, 가구 뒤 */
+.td-pine.r{left:1000px;top:0;width:440px;height:200px}           /* 오른쪽 위에서 뻗은 소나무 (창 위·로그인 버튼 뒤) */
+.td-pine.l{left:0;top:104px;width:240px;height:109px;transform:scaleX(-1)}   /* 왼쪽: 로고 아래·시계 위 */
+.td-garland{left:262px;top:0;width:918px;height:100px}             /* 크리스마스 가랜드 한 줄: 달력 위 구간은 얕게(고리 58px 위), 오너먼트는 양쪽 구간만 */
+body[data-room="christmas"] .sofa svg{--color-jobs-3:#2f6b3a;--color-read-3:#b8312f}   /* 크리스마스 소파: 초록 등받이, 빨강 좌석·팔걸이 */
+/* 크리스마스 징두리 판벽: 벽 아래 짙은 초록 판(세로 판 이음) + 빨강 몰딩·금색 선. 화면이 넓어도 끊기지 않게 벽처럼 좌우로 넓게 */
+.td-wainscot{position:absolute;left:-2000px;right:-2000px;top:596px;height:184px;display:none;
+  background:linear-gradient(to bottom, #b8312f 0 12px, #e6b84a 12px 15px, rgba(0,0,0,.18) 15px 19px, transparent 19px), repeating-linear-gradient(to right, transparent 0 117px, rgba(0,0,0,.16) 117px 120px), linear-gradient(to bottom, #2f6b3a, #24552e)}
+body[data-room="christmas"] .td-wainscot{display:block}
+.portrait .theme-deco{display:none}
+.td-bunting{left:280px;top:0;width:900px;height:60px}   /* 로고와 로그인 버튼 사이 천장 */
+.td-spider{left:458px;top:-20px;width:30px;height:150px;animation:spider 7s ease-in-out infinite}   /* 액자와 달력 사이 */
+@keyframes spider{0%,100%{transform:translateY(0)}45%{transform:translateY(40px)}60%{transform:translateY(34px)}}
+.td-lantern{width:58px;height:151px;transform-origin:50% 0;animation:sway 5s ease-in-out infinite alternate}
+.td-lantern.l1{left:438px;top:0}                              /* 액자와 달력 사이 */
+.td-lantern.l2{left:914px;top:0;width:62px;height:162px;animation-delay:-2.5s}   /* 달력과 창 사이 */
+@keyframes sway{from{transform:rotate(-3deg)}to{transform:rotate(3deg)}}
+/* 핼러윈 밤: 창 유리를 보랏빛 밤하늘로 (곱하기라 창살·박쥐는 비침), 벽 가장자리는 보랏빛으로 어둡게 */
+body[data-room="halloween"] .win-fx{background:radial-gradient(circle at 50% 40%, #8a6bb8 0, #4a2d78 55%, #2a1748 100%);mix-blend-mode:multiply}
+body[data-room="halloween"] .wall{background:radial-gradient(ellipse 1100px 800px at 2720px 2380px, #6a44a8 0, #4a2d78 55%, #2e1b52 100%)}
+body[data-room="halloween"] .portrait .wall{background:radial-gradient(ellipse 600px 800px at 2300px 2450px, #6a44a8 0, #4a2d78 55%, #2e1b52 100%)}
+body[data-room="halloween"] .wall::after{opacity:.95}             /* 별·박쥐 무늬를 또렷하게 */
+body[data-room="christmas"] .wall::after{opacity:1}               /* 플랫레이 장식을 또렷하게 */
+body[data-room="halloween"] .logo{color:#f8e9cc}                   /* 밤하늘 위 로고 */
+body[data-room="halloween"] .shop-btn{border-color:#f8e9cc}        /* 어두운 바닥 위 버튼 테두리 */
+body[data-room="halloween"] .wall::before{content:"";position:absolute;inset:0;background:radial-gradient(ellipse 1300px 760px at 2720px 2400px, rgba(60,20,70,0) 45%, rgba(60,20,70,.38) 100%)}
+/* 창밖 연출: 유리 칸(창 viewBox 14.5~57.3 → 무대 좌표) 안에서만 보임. 동작 줄이기 설정이면 애니메이션이 꺼져 모두 화면 밖에 머묾 */
+.win-fx{position:absolute;left:1083px;top:153px;width:214px;height:214px;overflow:hidden;pointer-events:none}
+.portrait .win-fx{left:477px;top:183px;width:95px;height:95px}
+.win-fx > span{display:none}
+body[data-room="christmas"] .fx-snow,body[data-room="halloween"] .fx-bat,body[data-room="seollal"] .fx-bird{display:block}
+.fx-snow{position:absolute;inset:0}
+.fx-snow i{position:absolute;left:var(--x);top:-8%;width:6px;height:6px;border-radius:50%;background:#fff;box-shadow:0 0 2px rgba(34,34,34,.3);animation:snow var(--d) linear var(--t) infinite}
+.portrait .fx-snow i{width:3px;height:3px}
+@keyframes snow{50%{transform:translateX(-9px)}100%{top:104%;transform:translateX(9px)}}
+.fx-fly{position:absolute;left:-40%;top:50%;width:28%;animation:fly 120s linear 3s infinite}   /* 120초 주기 중 앞 5초만 창을 가로지름 */
+.fx-fly img,.fx-fly svg{display:block;width:100%;height:auto}
+@keyframes fly{0%{left:-40%;top:58%}2%{top:30%}4.2%{left:112%;top:40%}100%{left:112%;top:40%}}
+.fx-bat img{animation:flap .18s ease-in-out infinite alternate}
+.fx-bird .wing{transform-box:fill-box;transform-origin:30% 100%;animation:flap .25s ease-in-out infinite alternate}
+@keyframes flap{to{transform:scaleY(-.55)}}
+/* 테마 카펫 (assets/theme/rug_*.svg): .floor 안에 있어 바닥과 같은 원근. 좌표는 바닥 좌표 (x = 무대 x + 2000, y = 벽에서 앞으로 깊이)
+   깊이 28~178 = 화면 약 794~883px (책장 다리 772px 아래). 소파·화분·바닥 버튼·출처 글자와 안 겹침. 세로 화면에서는 숨김
+   입체감: 그림 안 음영 + drop-shadow 두 겹 = 카펫 두께(--rug-edge) + 바닥 그림자, 카펫 모양(핼러윈 타원)을 따름 */
+.rug{position:absolute;display:none;pointer-events:none;top:28px;height:150px;background:var(--rug) center/100% 100% no-repeat;filter:drop-shadow(0 6px 0 var(--rug-edge)) drop-shadow(0 12px 9px rgba(0,0,0,.32))}
+body[data-room="christmas"] .rug{display:block;--rug:url("assets/theme/rug_christmas.svg");--rug-edge:#7a1f1c;left:2500px;width:440px}
+body[data-room="seollal"] .rug{display:block;--rug:url("assets/theme/rug_seollal.svg");--rug-edge:#6e5230;left:2510px;width:420px}
+body[data-room="halloween"] .rug{display:block;--rug:url("assets/theme/rug_halloween.svg");--rug-edge:#9c3a15;left:2520px;width:400px}
+.portrait .rug{display:none!important}
 /* 가구(방 그림)는 테마와 관계없이 기본 색: 테마가 다시 정의한 토큰을 그림 안에서만 기본값으로 되돌림 */
 .stage .asset svg{--ink:#222222; --white:#ffffff; --color-learn:#fff083; --color-learn-3:#fffbe2; --color-connect:#ff602c}
 /* 할로윈 노을 방: 창(달) 쪽에서 moon → primary → ember로 밝고 바깥은 pumpkin, 바닥은 실루엣 ink */
-body[data-room="halloween"] .wall{background:radial-gradient(circle 420px at 3190px 2260px, #f8e9cc 0, #f9cf98 28%, #f3a873 62%, rgba(243,168,115,0) 100%), radial-gradient(ellipse 1500px 1000px at 3190px 2260px, #f3a873 0, rgba(243,168,115,0) 100%), var(--wall)}
-body[data-room="halloween"] .portrait .wall{background:radial-gradient(circle 200px at 2525px 2230px, #f8e9cc 0, #f9cf98 28%, #f3a873 62%, rgba(243,168,115,0) 100%), radial-gradient(ellipse 700px 800px at 2525px 2230px, #f3a873 0, rgba(243,168,115,0) 100%), var(--wall)}
-body[data-room="halloween"] .light,body[data-room="halloween"] .glow{display:none}   /* 햇빛 대신 벽의 달빛 */
-body[data-room="halloween"] .credit{color:#f8e9cc}                                    /* 실루엣 바닥 위 moon 글자 */
-body[data-room="halloween"] .shop-btn{background:transparent;border-color:#f8e9cc}   /* 어두운 면 위 외곽선 버튼 */
+body[data-room="halloween"] .light,body[data-room="halloween"] .glow{display:none}   /* 햇빛 없음 (밤) */
 body[data-room="halloween"] .toast{box-shadow:0 0 0 1px #4a2e1f}                      /* 바닥과 같은 ink: border-dark로 구분 */
 /* 설날 한지 방: 바닥 위 색동 띠 (살구·옥색·회색·분홍·자주) */
-body[data-room="seollal"] .credit{color:#fbf8f1}                                     /* 자주 바닥 위 surface 글자 (먹은 2.1:1) */
-body[data-room="seollal"] .shop-btn{border-color:#fbf8f1}                             /* 먹색 버튼이 자주 바닥에 묻히지 않게 */
 body[data-room="seollal"] .floor{border-top:16px solid #2e2a26;border-image:repeating-linear-gradient(to right, #f2c48f 0 48px, #a9d3b8 48px 96px, #e2dfda 96px 144px, #eaa3a6 144px 192px, #8e3a78 192px 240px) 1}
 
 /* 화분 나무: 고정 화분 SVG 뒤에 식물 그림(.tree-img, 서버 tree.asset_key로 고름)을 끼움 */
@@ -321,6 +387,17 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .book .cover-icon svg{width:100%;height:100%;display:block;overflow:visible}
 .book .cover-icon [stroke]:not([stroke="none"]),.book .cover-icon [stroke]:not([stroke="none"]) *{vector-effect:non-scaling-stroke;stroke-width:2.5px}
 .book .cover-art{position:absolute;left:calc(var(--bw) * .17);bottom:calc(var(--bw) * .11);width:calc(var(--bw) * .16);height:calc(var(--bw) * .16)}   /* 테마 표지 장식 (diary_cover_asset_key) */
+/* 테마 표지 (diary_cover_asset_key → book[data-cover]): 방과 같은 무늬. 글자·테두리 색은 --cover-ink */
+.book[data-cover="christmas"] .face{--cover-ink:#fffaf0}   /* setCover()의 인라인 --cover-ink보다 우선 */
+.book[data-cover="christmas"] .face,.book[data-cover="christmas"] .back-cover{background:url("assets/theme/deco_garland_christmas.svg") 50% 2%/96% auto no-repeat,
+  repeating-linear-gradient(90deg, transparent 0 calc(var(--bw) * .07), rgba(230,184,74,.5) calc(var(--bw) * .07) calc(var(--bw) * .075), transparent calc(var(--bw) * .075) calc(var(--bw) * .12)),
+  repeating-linear-gradient(0deg, transparent 0 calc(var(--bw) * .07), rgba(47,107,58,.6) calc(var(--bw) * .07) calc(var(--bw) * .1), transparent calc(var(--bw) * .1) calc(var(--bw) * .12)),
+  repeating-linear-gradient(90deg, transparent 0 calc(var(--bw) * .08), rgba(47,107,58,.6) calc(var(--bw) * .08) calc(var(--bw) * .11), transparent calc(var(--bw) * .11) calc(var(--bw) * .12)), #b8312f}   /* 빨강·초록 체크 + 금색 선 + 가랜드 */
+.book[data-cover="halloween"] .face{--cover-ink:#f8e9cc}
+.book[data-cover="halloween"] .face,.book[data-cover="halloween"] .back-cover{background:url("assets/theme/deco_moon_halloween.svg") 108% -8%/58% auto no-repeat, url("assets/theme/wall_halloween.svg") 0 0/calc(var(--bw) * 1.2) auto,
+  radial-gradient(circle at 70% 25%, #6a44a8 0, #4a2d78 55%, #2e1b52 100%)}   /* 보라 밤하늘 + 별·박쥐 + 큰 달 */
+.book[data-cover="seollal"] .face,.book[data-cover="seollal"] .back-cover{background:url("assets/theme/deco_pine_seollal.svg") 108% -4%/62% auto no-repeat, url("assets/theme/deco_hills_seollal.svg") 50% 100%/240% auto no-repeat,
+  url("assets/theme/wall_seollal.svg") 0 0/calc(var(--bw) * 1.3) auto, #f8d6d4}   /* 분홍 한지 무늬 + 소나무 + 산·물결 */
 .book .cover-logo{font-size:calc(var(--bw) * .108);line-height:1.1;font-weight:600;letter-spacing:-.02em;white-space:nowrap;color:var(--ink)}
 .book .cover-logo span{font-weight:300;opacity:.6}
 /* left-hand page (inside of the cover): plain paper */
@@ -435,9 +512,16 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .log-tab:hover .bm-label,.log-tab:focus-visible .bm-label{opacity:1;transform:translate(-50%,0)}
 .log-tab:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px;border-radius:50%}
 .book:not(.ready) .log-tab{opacity:0;pointer-events:none}
-.book .pno{position:absolute;bottom:18px;font-size:12px;font-weight:500;opacity:.45;font-variant-numeric:tabular-nums;z-index:1}
-.book .page .pno{right:28px}
-.book .inside .pno{left:28px;bottom:25px}   /* the cover box reaches 7px past the page, so lift the number to line up with the right page's */
+/* 저장된 일기 수정·삭제: 오른쪽 쪽 아래 여백 (내용 칸 bottom 50px 안) */
+.pg-acts{position:absolute;left:28px;right:28px;bottom:9px;z-index:1;display:flex;justify-content:flex-end;align-items:center;gap:8px}
+.pg-acts .act{appearance:none;font:inherit;font-size:13px;height:32px;padding:0 14px;border:2px solid var(--ink);border-radius:var(--radius-pill);background:var(--white);color:var(--ink);cursor:pointer;white-space:nowrap}
+.pg-acts .act:hover:not(:disabled){background:var(--color-learn)}
+.pg-acts .act.solid{background:var(--ink);color:var(--white)}
+.pg-acts .act.solid:hover:not(:disabled){background:var(--ink);opacity:.85}
+.pg-acts .act:disabled{opacity:.4;cursor:default}
+.pg-acts .act:focus-visible{outline:3px solid var(--color-connect);outline-offset:1px}
+.pg-acts .ask{font-size:13px;white-space:nowrap;color:var(--ink)}
+.pg-acts [hidden]{display:none}
 .leaf{position:absolute;inset:0;z-index:2;transform-origin:left center;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.4,0,.2,1), opacity .8s ease;cursor:pointer}
 .leaf.turned{transform:rotateY(-180deg)}   /* lands flat, exactly on the left page */
 .leaf .lf,.leaf .lb{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:2px 8px 8px 2px;
@@ -446,7 +530,6 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
    so it looks identical at the start, keeps that spacing all the way over, and lands without a jump */
 .leaf .lf{box-shadow:3px 0 0 #f1ede0, 6px 0 0 #e9e4d4}
 .leaf .lb{left:3px;transform:rotateY(180deg);border-radius:8px 2px 2px 8px;   /* stops 3px short of the spine, like the left page it lands on */box-shadow:-3px 0 0 #f1ede0, -6px 0 0 #e9e4d4}
-.leaf .lf .pno{right:28px}.leaf .lb .pno{left:28px}
 /* page 1 is the picture page: no ruled lines, just the picture (or the dashed spot where it goes) */
 .book.readonly.plain-left .inside::before,.book.readonly.plain-right .page,.leaf .plain{background:var(--noise), var(--paper)}
 .leaf .plain{display:flex;align-items:center;justify-content:center}
@@ -508,7 +591,6 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .page-nav .act.solid{background:var(--ink);color:var(--white)}
 .page-nav .act.solid:hover:not(:disabled){background:var(--ink);opacity:.85}
 .page-nav .act[hidden],.page-nav span[hidden]{display:none}
-.page-nav .ask{min-width:0;padding:0 4px;white-space:nowrap}
 /* 저장된 일기 고치기: 글 칸은 전체 글을 편집(밑줄이 글과 함께 스크롤), 그림 칸은 눌러 스케치북 열기 */
 .book.editing .dp1-grid{background:none;overflow:visible;padding:0}
 .book.editing #dpText,.book.editing .dp1-turn{display:none}
@@ -648,7 +730,6 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   background:var(--noise), var(--paper);box-shadow:0 30px 60px rgba(0,0,0,.3);transform:translateY(12px);transition:transform .3s ease}
 .auth.show .auth-card{transform:none}
 /* chat log of a diary (opened from the diary book's page nav): same card as the login dialog */
-.page-nav .del{white-space:nowrap}   /* keep each label on one line on narrow screens */
 .log{position:fixed;inset:0;z-index:38;display:grid;place-items:center;padding:16px;background:rgba(34,34,34,.5);opacity:0;transition:opacity .3s ease}
 .log.show{opacity:1}
 /* 상점 창: 대화 기록 창(.log) 카드를 넓힌 것. 틀·탭·버튼은 적용 테마의 디자인 시스템 (지금은 default 토큰 = 페이지 변수) */
@@ -745,7 +826,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   </div>
   <div class="stage" id="stage">
     <div class="wall" aria-hidden="true"></div>
-    <div class="floor" aria-hidden="true"></div>
+    <div class="floor" aria-hidden="true"><div class="rug"></div></div>   <!-- 테마 카펫: 바닥 평면 안 -->
     <div class="glow" aria-hidden="true"></div>
     <div class="light" aria-hidden="true"><div class="beam"></div><div class="floor-light"></div></div>
     <div class="cshadow cs-plant" aria-hidden="true"></div>
@@ -754,6 +835,10 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     <div class="auth-btns"><span class="auth-name" id="authName" hidden></span><button type="button" class="auth-btn" id="openLogin">로그인</button><button type="button" class="auth-btn solid" id="openSignup">회원가입</button><button type="button" class="auth-btn" id="logoutBtn" hidden>로그아웃</button></div>
 
     <div class="asset window" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.713v42.455m-21.179-21.21h42.562"/><rect width="42.775" height="42.775" x="14.513" y="14.613" style="fill:var(--color-jobs-3)" rx=".784"/><path fill="#fff" opacity=".85" d="m14.535 26.666l12.053-12.053H55.23L14.514 55.477z"/><path style="fill:var(--color-read)" d="M60.94 62H11.018a1.06 1.06 0 0 1-1.06-1.06V11.018a1.06 1.06 0 0 1 1.06-1.06H60.94a1.06 1.06 0 0 1 1.06 1.06V60.94A1.06 1.06 0 0 1 60.94 62m-44.367-5.612h38.655a1.06 1.06 0 0 0 1.06-1.06V16.672a1.06 1.06 0 0 0-1.06-1.06H16.573a1.06 1.06 0 0 0-1.06 1.06v38.656a1.06 1.06 0 0 0 1.06 1.06"/><path fill="none" stroke="#c0ab3c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.613v42.774M14.513 35.958h42.775"/><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M61 61H10.958m0-3.832v-46.21H61v46.21"/></svg></div>
+    <!-- 테마 장식 (테마별, 벽 위·달력 아래): 핼러윈 가랜드·거미, 설날 청사초롱 -->
+    <div class="theme-deco" aria-hidden="true"><img class="td-moon" src="assets/theme/deco_moon_halloween.svg" alt=""><img class="td-skyline" src="assets/theme/deco_skyline_halloween.svg" alt=""><img class="td-hills" src="assets/theme/deco_hills_seollal.svg" alt=""><img class="td-pine r" src="assets/theme/deco_pine_seollal.svg" alt=""><img class="td-pine l" src="assets/theme/deco_pine_seollal.svg" alt=""><img class="td-web" src="assets/theme/deco_web_corner.svg" alt=""><div class="td-wainscot"></div><img class="td-garland" src="assets/theme/deco_garland_christmas.svg" alt=""><img class="td-bunting" src="assets/theme/deco_bunting_halloween.svg" alt=""><img class="td-spider" src="assets/theme/deco_spider.svg" alt=""><img class="td-lantern l1" src="assets/theme/deco_lantern.svg" alt=""><img class="td-lantern l2" src="assets/theme/deco_lantern.svg" alt=""></div>
+    <!-- 창밖 연출 (테마별): 크리스마스 눈, 핼러윈 박쥐·설날 까치 (2분마다 한 번) -->
+    <div class="win-fx" aria-hidden="true"><span class="fx-snow"><i style="--x:6%;--d:7s;--t:-1s"></i><i style="--x:17%;--d:9s;--t:-5s"></i><i style="--x:28%;--d:6.5s;--t:-3s"></i><i style="--x:39%;--d:8s;--t:-7s"></i><i style="--x:50%;--d:7.5s;--t:-2s"></i><i style="--x:61%;--d:9.5s;--t:-6s"></i><i style="--x:72%;--d:6s;--t:-4s"></i><i style="--x:83%;--d:8.5s;--t:-0.5s"></i><i style="--x:93%;--d:7s;--t:-5.5s"></i><i style="--x:12%;--d:10s;--t:-8s"></i><i style="--x:45%;--d:11s;--t:-9s"></i><i style="--x:78%;--d:10s;--t:-3.5s"></i></span><span class="fx-fly fx-bat"><img src="assets/tree/bat.svg" alt=""></span><span class="fx-fly fx-bird"><svg viewBox="0 0 64 32" aria-hidden="true"><path d="M1 21L23 15L25 20Z" fill="#1d2430"/><ellipse cx="34" cy="18" rx="12" ry="7" fill="#1d2430"/><path d="M27 21Q36 28 45 20Q38 23 27 21Z" fill="#fff"/><circle cx="47" cy="14" r="5.5" fill="#1d2430"/><circle cx="49" cy="12.8" r="1" fill="#fff"/><path d="M52 12.5L58.5 14.5L52 16.2Z" fill="#1d2430"/><g class="wing"><path d="M29 16Q35 1 47 3Q40 10 39 17Z" fill="#2c4c8c"/><path d="M33 11Q38 5.5 43 5.5" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/></g></svg></span></div>
     <div class="asset clock" role="img" aria-label="벽시계" id="clock"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true"><g fill="none"><path style="fill:var(--color-jobs-3)" d="M12 22.543c5.821 0 10.54-4.72 10.54-10.542S17.822 1.459 12 1.459c-5.823 0-10.542 4.72-10.542 10.542s4.72 10.542 10.541 10.542"/><path style="fill:var(--white)" d="M4.545 19.455A10.542 10.542 0 0 1 19.453 4.547z"/><path stroke="#222222" stroke-linecap="round" stroke-linejoin="round" d="M12 22.543c5.821 0 10.54-4.72 10.54-10.542S17.822 1.459 12 1.459c-5.823 0-10.542 4.72-10.542 10.542s4.72 10.542 10.541 10.542"/><path id="minHand" stroke="#222222" stroke-linecap="round" d="M12 12V4.6"/><path id="secHand" stroke="#222222" stroke-linecap="round" d="M12 13.6V3.6"/><path id="hourHand" stroke="#222222" stroke-linecap="round" d="M12 12V7.4"/><circle cx="12" cy="12" r=".9" style="fill:var(--ink)"/></g></svg></div>
 
     <section class="asset calendar" id="homeCal" role="button" tabindex="0" aria-label="일기 확인: 달력 열기">
@@ -778,12 +863,12 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 </div>
 
 <div class="reader" id="reader" hidden>
-  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button><span class="ask" id="delQ" hidden role="alert">정말로 삭제하시겠습니까?</span><button type="button" class="act solid" id="delYes" hidden>예</button><button type="button" class="act" id="delNo" hidden>아니오</button><button type="button" class="act" id="editCancel" hidden>취소</button><button type="button" class="act" id="delBtn" hidden>일기 삭제</button><button type="button" class="act" id="editBtn" hidden>일기 수정</button></nav>
+  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button></nav>
   <div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
     <div class="back-cover" aria-hidden="true"></div>
     <button type="button" class="log-tab" id="logBtn" hidden><span class="bm-label">대화 기록</span><span class="mascot" aria-hidden="true"><img class="mascot-face" src="assets/mascot/mascot_default.svg" alt=""></span></button>
     <div class="page">
-      <span class="pno" id="pnoRight"></span>
+      <div class="pg-acts" id="pgActs"><span class="ask" id="delQ" hidden role="alert">정말로 삭제하시겠습니까?</span><button type="button" class="act solid" id="delYes" hidden>예</button><button type="button" class="act" id="delNo" hidden>아니오</button><button type="button" class="act" id="editCancel" hidden>취소</button><button type="button" class="act" id="delBtn" hidden>일기 삭제</button><button type="button" class="act" id="editBtn" hidden>일기 수정</button></div>
       <div class="comic" id="comic" hidden role="img" aria-label="4컷 만화"></div>
       <div class="chat">
         <div class="chat-head">
@@ -800,7 +885,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
         </form>
       </div>
     </div>
-    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span><img class="cover-art" id="coverArt" alt="" hidden></div><div class="inside"><span class="pno" id="pnoLeft"></span><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"><div id="dpText"></div><textarea class="dp-edit" id="dpEdit" hidden aria-label="일기 글 고치기"></textarea></div><div class="dp1-turn" id="dpTurn" hidden><button type="button" id="dpPrev" aria-label="앞 여섯 줄">‹</button><span id="dpLines"></span><button type="button" id="dpNext" aria-label="다음 여섯 줄">›</button></div></section></div></div>
+    <div class="cover"><div class="face" aria-hidden="true"><span class="cover-frame"></span><span class="cover-eyebrow">그림일기</span><span class="cover-plate"><span class="cover-logo">오늘, <span>그리고</span></span></span><span class="cover-date" id="coverDate"></span><span class="cover-icon"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path style="fill:var(--color-learn)" d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837z"/><path style="fill:var(--color-learn)" d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path style="fill:var(--color-read)" d="m28.435 51.708l-7.644-7.643l-.847-.848l29.78-29.779l8.491 8.491z"/><g fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2.217"><path d="m24.517 55.627l-7.644-7.644l-.847-.847L53.25 9.911l8.491 8.491z"/><path d="m15.847 59.495l7.836-4.702l-6.824-6.824l-4.702 7.837zm4.147-16.228l8.409 8.409m21.37-38.189l8.409 8.409"/></g></svg></span><img class="cover-art" id="coverArt" alt="" hidden></div><div class="inside"><section class="dp1" id="dp1" hidden aria-label="그림일기"><div class="dp1-date"><span><b id="dpY"></b>년</span><span><b id="dpM"></b>월</span><span><b id="dpD"></b>일</span><span><b id="dpW"></b>요일</span></div><div class="dp1-meta"><div class="dp1-weather" id="dpWeather" role="img"><span class="lbl">날씨</span></div><div class="dp1-name"><span>이름 :</span><b id="dpName"></b></div></div><div class="dp1-pic" id="dpPic"></div><div class="dp1-grid" id="dpGrid" role="img"><div id="dpText"></div><textarea class="dp-edit" id="dpEdit" hidden aria-label="일기 글 고치기"></textarea></div><div class="dp1-turn" id="dpTurn" hidden><button type="button" id="dpPrev" aria-label="앞 여섯 줄">‹</button><span id="dpLines"></span><button type="button" id="dpNext" aria-label="다음 여섯 줄">›</button></div></section></div></div>
   </div>
 </div>
 </div>
@@ -1152,6 +1237,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     reader.classList.remove('closing');
     bookMode = mode; bookOpener = opener; reviewing = !!review;
     setCover(coverTheme && coverTheme.cover || color || randomColor());   // 테마 표지(diary_cover_asset_key)가 있으면 그 색
+    if(coverTheme) book.dataset.cover = coverTheme.sys; else delete book.dataset.cover;   // 테마 표지 무늬 (CSS book[data-cover])
     book.className = 'book' + (mode === 'diary' ? ' readonly' : '');
     setupPages(mode === 'diary');
     resetEnd();
@@ -1189,7 +1275,6 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   const TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 2쪽: 4컷 만화
   const pageNav = document.getElementById('pageNav'), pageInfo = document.getElementById('pageInfo');
   const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
-  const pnoLeft = document.getElementById('pnoLeft'), pnoRight = document.getElementById('pnoRight');
   let spread = 0, turning = false, diaryOn = false;
   // 저장된 일기 수정·삭제 상태 (아래 "일기 수정·삭제" 참고)
   let curDet = null, edit = null, delReq = null, delBusy = false, delUnknown = false, delAsk = false, skEdit = null;
@@ -1201,7 +1286,6 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   const PAGE_CONTENT = {1: document.getElementById('dp1'), 2: comic};
   // 지금 보이는 왼쪽/오른쪽 쪽을 그림. 내용이 있는 쪽이면 그 내용을 해당 쪽에 놓는다
   function showPages(l, r){
-    pnoLeft.textContent = diaryOn && l ? l : ''; pnoRight.textContent = diaryOn && r ? r : '';
     book.classList.toggle('plain-left', diaryOn && l in PAGE_CONTENT);
     book.classList.toggle('plain-right', diaryOn && r in PAGE_CONTENT);
     if(!diaryOn) return;
@@ -1228,7 +1312,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   }
   function makeLeaf(front, back, turned){
     const leaf = document.createElement('div'); leaf.className = 'leaf' + (turned ? ' turned' : '');
-    leaf.innerHTML = `<div class="lf"><span class="pno">${front ?? ''}</span></div><div class="lb"><span class="pno">${back ?? ''}</span></div>`;
+    leaf.innerHTML = `<div class="lf"></div><div class="lb"></div>`;
     // 넘어가는 종이가 1쪽·2쪽이면 그 종이에도 같은 내용을 그려 둔다 (내려앉은 뒤 바뀌어 보이지 않도록)
     [[leaf.querySelector('.lf'), front], [leaf.querySelector('.lb'), back]].forEach(([face, n]) => {
       const src = PAGE_CONTENT[n]; if(!src) return;
@@ -2304,6 +2388,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     delAsk = true; renderActs(); delNo.focus({preventScroll:true});
   });
   delNo.addEventListener('click', e=>{ e.stopPropagation(); delAsk = false; renderActs(); delBtn.focus({preventScroll:true}); });
+  document.getElementById('pgActs').addEventListener('click', e=> e.stopPropagation());   // 확인 문구 클릭이 쪽 넘김으로 가지 않게
   delYes.addEventListener('click', e=>{ e.stopPropagation(); delAsk = false; renderActs(); deleteDiary(); });
   dpPic.addEventListener('click', e=>{ if(!edit) return; e.stopPropagation(); openEditSketch(); });
   dpPic.addEventListener('keydown', e=>{ if(edit && (e.key === 'Enter' || e.key === ' ')){ e.preventDefault(); openEditSketch(); } });
@@ -2641,7 +2726,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   const THEMES = {
     christmas:{sys:'christmas', art:['wrapped_gift', 'snowman'], cover:'color-inspire-3'},
     halloween:{sys:'halloween', art:['black_cat', 'crescent_moon'], cover:'color-connect'},   // 표지: pumpkin 면 + ink 글자(7.5:1)
-    seollal:{sys:'seollal', art:[null, 'full_moon'], cover:'color-learn'},   // 표지: 분홍 면 + 먹 글자(7.0:1)
+    seollal:{sys:'seollal', art:['bokjumeoni', 'full_moon'], cover:'color-learn'},   // 표지: 분홍 면 + 먹 글자(7.0:1)
   };
   const themeOf = key => THEMES[String(key || '').replace(/^(theme|room|cover)_/, '')] || null;
   // 테마 미리보기 카드 틀: [카드, 글 칸]
