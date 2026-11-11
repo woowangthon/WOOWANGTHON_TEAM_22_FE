@@ -347,7 +347,7 @@ body[data-room="seollal"] .floor{border-top:16px solid #2e2a26;border-image:repe
   background:var(--ink);color:var(--white);font-size:15px;font-weight:500;line-height:1.4;padding:10px 20px;border-radius:var(--radius-pill);
   white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis;transition:opacity var(--ease),transform var(--ease);z-index:40}
 .toast.hide{opacity:0;transform:translate(-50%,10px);pointer-events:none}
-body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0px))}   /* keep clear of the diary page nav */
+body:has(.page-nav.show:has(> :not([hidden]))) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0px))}   /* keep clear of the diary page nav */
 
 /* ===== reader: the book opens and the chat lives on its right-hand page ===== */
 :root{ --paper:#fffdf6; --rule:rgba(180,215,248,.45); --noise:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .55  0 0 0 0 .5  0 0 0 0 .4  0 0 0 .09 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); --line:34px }
@@ -577,6 +577,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 .page-nav{position:fixed;left:50%;bottom:max(14px, env(safe-area-inset-bottom, 0px));transform:translateX(-50%);z-index:36;display:flex;align-items:center;gap:12px;
   padding:6px 8px;border-radius:var(--radius-pill);background:var(--white);border:2px solid var(--ink);opacity:0;transition:opacity .3s ease}
 .page-nav.show{opacity:1}
+.page-nav:not(:has(> :not([hidden]))){display:none}   /* 보이는 버튼이 없으면 (PC 저장된 일기) 막대도 숨김 */
 .page-nav button{appearance:none;border:0;background:transparent;color:var(--ink);font:inherit;font-size:18px;width:34px;height:34px;border-radius:50%;cursor:pointer}
 .page-nav button:hover:not(:disabled){background:var(--color-learn)}
 .page-nav button:disabled{opacity:.25;cursor:default}
@@ -863,7 +864,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
 </div>
 
 <div class="reader" id="reader" hidden>
-  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><span id="pageInfo"></span><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button></nav>
+  <nav class="page-nav" id="pageNav" hidden aria-label="쪽 넘기기"><button type="button" id="prevPage" aria-label="앞 쪽">‹</button><button type="button" id="nextPage" aria-label="다음 쪽">›</button><button type="button" class="act" id="redrawBtn" hidden>그림 고치기</button><button type="button" class="act solid" id="saveBtn" hidden>이대로 저장</button></nav>
   <div class="book" id="book" role="dialog" aria-modal="true" aria-labelledby="chatTitle">
     <div class="back-cover" aria-hidden="true"></div>
     <button type="button" class="log-tab" id="logBtn" hidden><span class="bm-label">대화 기록</span><span class="mascot" aria-hidden="true"><img class="mascot-face" src="assets/mascot/mascot_default.svg" alt=""></span></button>
@@ -1273,7 +1274,7 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
   // ---- 그림일기: 넘길 수 있는 책 ----
   // PC: 두 쪽씩 펼침 / 휴대폰: 한 쪽씩
   const TOTAL = 2;   // 1쪽: 날짜·그림·일기 글 / 2쪽: 4컷 만화
-  const pageNav = document.getElementById('pageNav'), pageInfo = document.getElementById('pageInfo');
+  const pageNav = document.getElementById('pageNav');
   const prevBtn = document.getElementById('prevPage'), nextBtn = document.getElementById('nextPage');
   let spread = 0, turning = false, diaryOn = false;
   // 저장된 일기 수정·삭제 상태 (아래 "일기 수정·삭제" 참고)
@@ -1296,12 +1297,9 @@ body:has(.page-nav.show) .toast{bottom:calc(76px + env(safe-area-inset-bottom, 0
     updateLines();                                    // 1쪽이 다시 보일 때 글 칸 줄 수 확인
   }
   function showNav(){
-    const [l, r] = pagesOf(spread);
-    pageInfo.textContent = narrow.matches ? `${spread+1} / ${TOTAL}` : `${l}–${r} / ${TOTAL}`;
     prevBtn.disabled = spread === 0; nextBtn.disabled = spread === spreads() - 1;
     const hold = !!edit || delAsk;                     // 고치는 중·삭제 확인 중에는 쪽 넘기기 숨김
     prevBtn.hidden = nextBtn.hidden = spreads() === 1 || hold;   // PC는 두 쪽이 한 번에 다 보여서 넘길 쪽이 없음
-    pageInfo.hidden = hold;
   }
   function showNumbers(){ const [l, r] = pagesOf(spread); showPages(l, r); showNav(); }
   function clearLeaves(){ book.querySelectorAll('.leaf').forEach(l => l.remove()); turning = false; }
