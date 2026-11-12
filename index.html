@@ -343,6 +343,15 @@ body[data-room="halloween"] .tree-img,body[data-room="halloween"] .tree-orn img{
 .plant:focus-visible > svg:last-of-type{outline:3px solid var(--color-connect);outline-offset:4px;border-radius:var(--radius-sm)}
 .plant .hint{right:calc(100% - 30px);top:110px}   /* 화분 왼쪽, 화살표는 오른쪽(화분)을 가리킴 */
 .plant .hint::before{right:auto;left:100%;border-right-color:transparent;border-left-color:var(--ink)}
+/* 창문 = 고민 상담 버튼 (라벨은 창문 왼쪽, 화살표는 창문을 가리킴) */
+.window{cursor:pointer;outline:none;transition:transform var(--ease)}
+.window:hover{transform:translateY(-4px)}
+.window:focus-visible > svg{outline:3px solid var(--color-connect);outline-offset:4px;border-radius:var(--radius-sm)}
+.window .hint{right:calc(100% - 8px);top:196px}   /* 달력 라벨과 책장 라벨 사이 */
+.window .hint::before{right:auto;left:100%;border-right-color:transparent;border-left-color:var(--ink)}
+.portrait .window .hint{right:auto;left:50%;top:calc(100% + 6px);transform:translateX(-50%);font-size:16px;padding:6px 14px}
+.portrait .window .hint::before{left:50%;top:auto;bottom:100%;margin:0 0 0 -7px;border-left-color:transparent;border-bottom-color:var(--ink)}
+.decorating .window .hint{display:none}
 
 /* bookshelf (one button) */
 .shelf{left:480px;top:339px;width:480px;height:480px;cursor:pointer;outline:none;transition:transform var(--ease)}
@@ -856,6 +865,51 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
 .log-close:hover{background:var(--color-learn)}
 .log-close:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
 .log-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:20px 24px 24px;display:flex;flex-direction:column;gap:12px}
+/* 우냥이 고민 상담: 왼쪽 지난 대화, 오른쪽 현재(또는 고른) 대화. 좁은 화면은 "지난 기록"으로 목록을 열고 닫음 */
+#worry{padding-top:var(--logo-clear, 16px)}
+.log-card.wr-card{width:min(960px, 100%);height:min(88vh, 100%);max-height:none}
+.wr-who{display:flex;align-items:center;gap:10px}
+.wr-who .mascot{width:52px;height:52px;flex:none}
+.wr-who .mascot img{width:100%;height:100%;display:block}
+.wr-head-acts{display:flex;gap:8px}
+.wr-hist-btn{display:none}
+.wr-body{flex:1;min-height:0;display:grid;grid-template-columns:240px minmax(0,1fr)}
+.wr-side{display:flex;flex-direction:column;min-height:0;border-right:2px solid rgba(34,34,34,.12)}
+.wr-side-head{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:14px 16px 8px}
+.wr-side-head h3{margin:0;font-size:17px;font-weight:600}
+.wr-side-msg{margin:0;padding:0 16px;font-size:13px;line-height:1.5}
+.wr-side-msg:empty{display:none}
+.wr-items{list-style:none;margin:0;padding:6px 10px 14px;overflow-y:auto;flex:1;min-height:0;display:flex;flex-direction:column;gap:6px}
+.wr-items button{appearance:none;width:100%;text-align:left;border:2px solid transparent;background:transparent;color:var(--ink);font:inherit;font-size:14px;line-height:1.35;padding:8px 10px;border-radius:var(--radius-sm);cursor:pointer}
+.wr-items button:hover{background:var(--color-learn-3)}
+.wr-items button[aria-current="true"]{border-color:var(--ink);background:var(--white)}
+.wr-items button:focus-visible{outline:3px solid var(--color-connect);outline-offset:1px}
+.wr-items small{display:block;font-size:12px;opacity:.65}
+.wr-main{display:flex;flex-direction:column;min-height:0}
+.wr-bar{display:flex;align-items:center;gap:8px;padding:10px 20px;min-height:52px;border-bottom:2px solid rgba(34,34,34,.12);font-size:14px}
+.wr-bar > span{flex:1;min-width:0}
+.wr-bar button[hidden],.wr-head-acts button[hidden]{display:none}
+.wr-msgs{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:16px 20px;display:flex;flex-direction:column;gap:12px}
+.wr-msgs .ai-row{align-items:flex-start}
+.wr-msgs .ai-row .avatar{width:40px;height:40px}
+.wr-name{display:block;font-size:12px;opacity:.7;margin:0 0 3px 2px}
+.wr-bub{display:flex;flex-direction:column;align-items:flex-start;max-width:78%;min-width:0}
+.wr-bub .msg{max-width:100%}
+.wr-notice{flex:none;margin:0;padding:10px 14px;border:2px dashed rgba(34,34,34,.35);border-radius:var(--radius-sm);font-size:14px;line-height:1.55;background:rgba(255,255,255,.6)}
+.wr-adult{flex:none;padding:14px 16px;border:3px solid var(--error);border-radius:var(--radius-sm);background:var(--white);font-size:16px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere}
+.wr-adult b{display:block;font-size:17px;margin-bottom:4px;color:var(--error)}
+.wr-status{flex:none;align-self:center;text-align:center;font-size:14px;line-height:1.5;max-width:90%}
+.wr-composer{padding:10px 20px 16px}
+.wr-composer[hidden]{display:none}
+.wr-composer textarea[readonly]{opacity:.7}
+@media (max-width:700px), (max-aspect-ratio:1/1){
+  .wr-hist-btn{display:inline-block}
+  .wr-body{grid-template-columns:minmax(0,1fr);position:relative}
+  .wr-side{display:none;position:absolute;inset:0;z-index:2;border-right:0;background:var(--noise), var(--paper)}
+  .wr-card.side-open .wr-side{display:flex}
+  .wr-who .mascot{width:40px;height:40px}
+  .wr-msgs,.wr-bar,.wr-composer{padding-left:14px;padding-right:14px}
+}
 .auth-tabs{display:flex;gap:4px;border-bottom:2px solid rgba(34,34,34,.12);margin:0 -8px 20px}
 .auth-tabs button{appearance:none;border:0;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--ink);opacity:.5;padding:14px 12px 12px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
 .auth-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-bottom-color:var(--ink)}
@@ -905,7 +959,7 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     <div class="cshadow cs-shelf" aria-hidden="true"></div>
     <div class="auth-btns"><span class="auth-name" id="authName" hidden></span><button type="button" class="auth-btn" id="openLogin">로그인</button><button type="button" class="auth-btn solid" id="openSignup">회원가입</button><button type="button" class="auth-btn" id="logoutBtn" hidden>로그아웃</button></div>
 
-    <div class="asset window" aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.713v42.455m-21.179-21.21h42.562"/><rect width="42.775" height="42.775" x="14.513" y="14.613" style="fill:var(--color-jobs-3)" rx=".784"/><path fill="#fff" opacity=".85" d="m14.535 26.666l12.053-12.053H55.23L14.514 55.477z"/><path style="fill:var(--color-read)" d="M60.94 62H11.018a1.06 1.06 0 0 1-1.06-1.06V11.018a1.06 1.06 0 0 1 1.06-1.06H60.94a1.06 1.06 0 0 1 1.06 1.06V60.94A1.06 1.06 0 0 1 60.94 62m-44.367-5.612h38.655a1.06 1.06 0 0 0 1.06-1.06V16.672a1.06 1.06 0 0 0-1.06-1.06H16.573a1.06 1.06 0 0 0-1.06 1.06v38.656a1.06 1.06 0 0 0 1.06 1.06"/><path style="fill:var(--color-read)" d="M15.6 15.6h40.8l-2 1.8H17.4zm40.8 0v40.8l-2-1.8V17.4z"/><path fill="#000" opacity=".3" d="M15.6 15.6h40.8l-2 1.8H17.4z"/><path fill="#000" opacity=".18" d="M56.4 15.6v40.8l-2-1.8V17.4z"/><path fill="none" stroke="#222222" stroke-width=".8" opacity=".5" d="M17.4 17.4h37v37.2"/><path fill="none" stroke="#c0ab3c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.613v42.774M14.513 35.958h42.775"/><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M61 61H10.958m0-3.832v-46.21H61v46.21"/><g stroke="#222222" stroke-linejoin="round" stroke-width="1.6"><path style="fill:var(--color-read)" d="M7.6 60.4h56.8l1.2 1.6H6.4z"/><path style="fill:var(--color-read)" d="M6.4 62h59.2v2.2H6.4z"/></g><path fill="#fff" opacity=".3" d="M8 60.9h56l.6.8H7.4z"/><path fill="#000" opacity=".16" d="M7.2 62.8h57.6v.8H7.2z"/></svg></div>
+    <div class="asset window" id="winBtn" role="button" tabindex="0" aria-label="고민 상담하기: 우냥이와 이야기하기"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" aria-hidden="true"><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.713v42.455m-21.179-21.21h42.562"/><rect width="42.775" height="42.775" x="14.513" y="14.613" style="fill:var(--color-jobs-3)" rx=".784"/><path fill="#fff" opacity=".85" d="m14.535 26.666l12.053-12.053H55.23L14.514 55.477z"/><path style="fill:var(--color-read)" d="M60.94 62H11.018a1.06 1.06 0 0 1-1.06-1.06V11.018a1.06 1.06 0 0 1 1.06-1.06H60.94a1.06 1.06 0 0 1 1.06 1.06V60.94A1.06 1.06 0 0 1 60.94 62m-44.367-5.612h38.655a1.06 1.06 0 0 0 1.06-1.06V16.672a1.06 1.06 0 0 0-1.06-1.06H16.573a1.06 1.06 0 0 0-1.06 1.06v38.656a1.06 1.06 0 0 0 1.06 1.06"/><path style="fill:var(--color-read)" d="M15.6 15.6h40.8l-2 1.8H17.4zm40.8 0v40.8l-2-1.8V17.4z"/><path fill="#000" opacity=".3" d="M15.6 15.6h40.8l-2 1.8H17.4z"/><path fill="#000" opacity=".18" d="M56.4 15.6v40.8l-2-1.8V17.4z"/><path fill="none" stroke="#222222" stroke-width=".8" opacity=".5" d="M17.4 17.4h37v37.2"/><path fill="none" stroke="#c0ab3c" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.025" d="M35.9 14.613v42.774M14.513 35.958h42.775"/><path fill="none" stroke="#222222" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M61 61H10.958m0-3.832v-46.21H61v46.21"/><g stroke="#222222" stroke-linejoin="round" stroke-width="1.6"><path style="fill:var(--color-read)" d="M7.6 60.4h56.8l1.2 1.6H6.4z"/><path style="fill:var(--color-read)" d="M6.4 62h59.2v2.2H6.4z"/></g><path fill="#fff" opacity=".3" d="M8 60.9h56l.6.8H7.4z"/><path fill="#000" opacity=".16" d="M7.2 62.8h57.6v.8H7.2z"/></svg><span class="hint" aria-hidden="true">고민 상담하기</span></div>
     <!-- 테마 장식 (테마별, 벽 위·달력 아래): 핼러윈 가랜드·거미, 설날 청사초롱 -->
     <div class="theme-deco" aria-hidden="true"><img class="td-moon" src="assets/theme/deco_moon_halloween.svg" alt=""><img class="td-skyline" src="assets/theme/deco_skyline_halloween.svg" alt=""><img class="td-hills" src="assets/theme/deco_hills_seollal.svg" alt=""><img class="td-pine r" src="assets/theme/deco_pine_seollal.svg" alt=""><img class="td-pine l" src="assets/theme/deco_pine_seollal.svg" alt=""><img class="td-web" src="assets/theme/deco_web_corner.svg" alt=""><div class="td-wainscot"></div><img class="td-garland" src="assets/theme/deco_garland_christmas.svg" alt=""><img class="td-bunting" src="assets/theme/deco_bunting_halloween.svg" alt=""><img class="td-spider" src="assets/theme/deco_spider.svg" alt=""><img class="td-lantern l1" src="assets/theme/deco_lantern.svg" alt=""><img class="td-lantern l2" src="assets/theme/deco_lantern.svg" alt=""></div>
     <!-- 창밖 연출 (테마별): 크리스마스 눈, 핼러윈 박쥐·설날 까치 (2분마다 한 번) -->
@@ -1080,6 +1134,30 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
       <p class="tw-info"><span id="twStage">— / 7단계</span> · <span id="twDays">물 준 날 —일</span></p>
       <p class="tw-msg" id="twMsg" role="status"></p>
       <div class="tw-acts"><button type="button" class="log-close" id="twCheck" hidden>다시 확인</button><button type="button" class="auth-submit" id="twBtn">물 주기</button></div>
+    </div>
+  </div>
+</div>
+<div class="log" id="worry" hidden>
+  <div class="log-card shop-card wr-card" role="dialog" aria-modal="true" aria-labelledby="wrTitle">
+    <div class="log-head">
+      <div class="wr-who"><span class="mascot" aria-hidden="true"><img class="mascot-face" src="assets/mascot/mascot_default.svg" alt=""></span><div><span class="date">고민 상담</span><h2 id="wrTitle">우냥이</h2></div></div>
+      <span class="wr-head-acts"><button type="button" class="log-close wr-hist-btn" id="wrHistBtn" aria-expanded="false" aria-controls="wrSide">지난 기록</button><button type="button" class="log-close" id="wrClose">닫기</button></span>
+    </div>
+    <div class="wr-body">
+      <aside class="wr-side" id="wrSide" aria-labelledby="wrSideTitle">
+        <div class="wr-side-head"><h3 id="wrSideTitle">지난 대화</h3><button type="button" class="log-close" id="wrNew">새 대화</button></div>
+        <p class="wr-side-msg" id="wrListMsg" role="status"></p>
+        <ul class="wr-items" id="wrItems"></ul>
+      </aside>
+      <section class="wr-main" aria-label="대화">
+        <div class="wr-bar"><span id="wrState" role="status"></span><button type="button" class="log-close" id="wrBack" hidden>현재 대화로</button><button type="button" class="log-close" id="wrFinish" hidden>그만하기</button></div>
+        <div class="wr-msgs" id="wrMsgs" aria-live="polite"></div>
+        <div class="composer wr-composer" id="wrComposer">
+          <label class="sr-only" for="wrInput">우냥이에게 보낼 말</label>
+          <textarea id="wrInput" rows="2" maxlength="2000" placeholder="하고 싶은 말을 적어 봐"></textarea>
+          <button type="button" class="send" id="wrSend">보내기</button>
+        </div>
+      </section>
     </div>
   </div>
 </div>
@@ -2887,6 +2965,7 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     else if(!waterEl.hidden) closeWater();         // 나무 물 주기 창
     else if(!shopEl.hidden) closeShop();           // 상점
     else if(!setEl.hidden) closeSettings();        // 설정(테마)
+    else if(!worryEl.hidden) closeWorry();         // 고민 상담 (좁은 화면은 기록 목록부터)
     else if(!sketch.hidden){ if(skEdit) closeSketch(); return; }   // flow 스케치북은 "그림일기 완성"으로만 닫음 (그리던 그림이 날아가지 않게). 그림 고치기는 취소
     else if(delAsk){ delAsk = false; renderActs(); delBtn.focus({preventScroll:true}); }   // 삭제 확인 → 아니오
     else if(edit){ cancelEdit(); }                 // 일기 고치기 취소
@@ -2911,6 +2990,7 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     if(!waterEl.hidden) closeWater();
     if(!shopEl.hidden) closeShop();
     if(!setEl.hidden) closeSettings();
+    if(!worryEl.hidden){ wrCard.classList.remove('side-open'); closeWorry(); }
     if(decorating) setDecorating(false);
   });
 
@@ -3079,6 +3159,7 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     drag = null; furnBusy.clear(); refundReq = null; refundBusy = refundUnknown = refundChecking = false;
     setDecorating(false);
     if(!setEl.hidden) closeSettings();
+    resetWorry();                         // 고민 상담: 이전 회원 대화는 메모리에서도 지움
     showWallet();
     if(user) loadRoom();
   }
@@ -3710,6 +3791,275 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     setTimeout(tick, 1000 - new Date().getMilliseconds());   // 매 초 정각에 맞춰 째깍
   }
   tick();
+
+  // ---- 우냥이 고민 상담 (제안 계약: BE feat/be-next docs/WORRY_API_PROPOSAL_20261112.txt) ----
+  // GET /api/worry/policy → 안내문(notice)·notice_version·enabled. 안내를 보여 주고 확인한 버전으로만 시작
+  // POST /api/worry/sessions (Idempotency-Key, {notice_version}) · POST …/{id}/messages {text, client_message_id}
+  // POST …/{id}/finish · GET …/{id} · GET /api/worry/sessions?limit=50&offset=0. 응답은 세션 전체 snapshot
+  // AI 결과는 HTTP 성공 여부가 아니라 requests[].status·last_ai_status로 판단. unavailable·rejected·unknown은 재전송·새 키 우회 금지
+  // 응답 유실만 같은 키·같은 글로 다시 보내거나 GET으로 확인. 대화 원문은 메모리에만 (브라우저 저장소 안 씀)
+  const worryEl = document.getElementById('worry'), winBtn = document.getElementById('winBtn'), wrCard = worryEl.querySelector('.wr-card');
+  const wrMsgs = document.getElementById('wrMsgs'), wrInput = document.getElementById('wrInput'), wrSend = document.getElementById('wrSend');
+  const wrItems = document.getElementById('wrItems'), wrListMsg = document.getElementById('wrListMsg'), wrNew = document.getElementById('wrNew');
+  const wrFinish = document.getElementById('wrFinish'), wrBack = document.getElementById('wrBack'), wrStateEl = document.getElementById('wrState');
+  const wrHistBtn = document.getElementById('wrHistBtn'), wrComposer = document.getElementById('wrComposer');
+  const WR_ERR = {
+    WORRY_ACCESS_REQUIRED:'이용 권한이 없어요', WORRY_NOT_FOUND:'없거나 보관 기간이 지난 대화예요', WORRY_NOTICE_REQUIRED:'안내가 바뀌었어요 · 다시 확인해 줘',
+    WORRY_FINISHED:'이미 끝난 대화예요', WORRY_HISTORY_LIMIT:'대화가 너무 길어졌어요 · 그만하기나 새 대화를 눌러 줘', WORRY_RECOVERY_REQUIRED:'상태 확인 필요',
+    WORRY_NOT_ENABLED:'우냥이 상담은 아직 준비 중이에요', WORRY_STORE_UNAVAILABLE:'기록 저장소 연결 실패', WORRY_STORE_INVALID:'응답 형식 오류', VALIDATION_ERROR:'입력 형식 오류',
+  };
+  const wrErr = e => WR_ERR[e && e.code] || errText(e);
+  const WR_DONE = {needs_adult:'도움 요청 안내', finished:'끝난 대화', reply:'끝난 대화', opening:'끝난 대화', unavailable:'끝난 대화'};
+  const newWr = () => ({policy:null, policyErr:null, noticeOk:null, snap:null, gone:false, startKey:null, starting:false, startErr:null,
+                        req:null, sending:false, sendErr:null, checking:false, lock:false, view:null, list:null, listErr:null, seq:(wr ? wr.seq : 0) + 1});
+  let wr = null; wr = newWr();
+  const wrLive = (seq, uid) => wr.seq === seq && !!user && user.id === uid;
+  const msgsOf = s => (s && Array.isArray(s.messages) ? s.messages.slice() : []).sort((a, b) => a.position - b.position);
+  const lastReq = s => (s && Array.isArray(s.requests) ? s.requests.slice() : []).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).pop() || null;
+  // 새 글을 받을 수 있는 세션: 진행 중 + 마지막 AI 요청이 완료됨
+  const canType = s => !!s && s.state === 'active' && (!lastReq(s) || lastReq(s).status === 'completed');
+  const seoulTime = s => { const d = new Date(s); return isNaN(d) ? '' : new Intl.DateTimeFormat('ko-KR', {timeZone:'Asia/Seoul', month:'long', day:'numeric', hour:'numeric', minute:'2-digit'}).format(d); };
+  const seoulDay = s => { const d = new Date(s); return isNaN(d) ? '' : new Intl.DateTimeFormat('ko-KR', {timeZone:'Asia/Seoul', month:'long', day:'numeric'}).format(d); };
+  const keep = s => s && s.expires_at ? seoulDay(s.expires_at) + '까지 보관' : '';
+  const wrState = s => s.state === 'active' ? '이야기 중' : WR_DONE[s.last_ai_status] || '끝난 대화';
+
+  function wrBubble(text, who, opts = {}){
+    if(who === 'child'){ wrMsgs.append(mk('div', 'msg user' + (opts.sending ? ' sending' : ''), text)); return; }
+    const row = mk('div', 'ai-row'), av = new Image(); av.className = 'avatar'; av.alt = ''; av.setAttribute('aria-hidden', 'true');
+    av.src = `assets/mascot/mascot_${opts.typing ? 'thinking' : 'default'}.svg`;
+    const bub = mk('div', 'wr-bub'); bub.append(mk('span', 'wr-name', '우냥이'));
+    const m = mk('div', 'msg ai' + (opts.typing ? ' typing' : ''), opts.typing ? null : text);
+    if(opts.typing) m.append(mk('i'), mk('i'), mk('i'));
+    bub.append(m); row.append(av, bub); wrMsgs.append(row);
+  }
+  function wrNote(text, btns = []){
+    const p = mk('p', 'wr-status', text);
+    btns.forEach(([label, fn, dis]) => { const b = mk('button', 'log-close', label); b.type = 'button'; b.disabled = !!dis; b.addEventListener('click', fn); p.append(' ', b); });
+    wrMsgs.append(p);
+  }
+  // 대화 그리기: needs_adult면 마지막 우냥이 말(서버 안내)을 강조 상자로
+  function renderSnap(s){
+    const ms = msgsOf(s), adultAt = s.last_ai_status === 'needs_adult' ? ms.map(m => m.role).lastIndexOf('assistant') : -1;
+    ms.forEach((m, i) => {
+      if(m.role !== 'assistant') wrBubble(m.text, 'child');
+      else if(i === adultAt){ const box = mk('div', 'wr-adult'); box.setAttribute('role', 'alert'); box.append(mk('b', '', '믿을 수 있는 어른에게 도움을 구해 줘'), document.createTextNode(m.text)); wrMsgs.append(box); }
+      else wrBubble(m.text, 'unyang');
+    });
+  }
+  function renderWorry(){
+    const v = wr.view, s = wr.snap, cur = !v, P = wr.policy, on = !!(P && P.enabled);
+    // 목록
+    wrNew.disabled = wr.lock || wr.starting || !on || wr.noticeOk !== P.notice_version;
+    wrListMsg.textContent = !on ? '' : wr.listErr ? '지난 대화를 불러오지 못했어요' : !wr.list ? '불러오는 중…' : wr.list.length ? '' : '아직 지난 대화가 없어요';
+    wrItems.replaceChildren(...(wr.list || []).map(x => {
+      const b = mk('button'); b.type = 'button'; b.dataset.id = x.id;
+      b.setAttribute('aria-current', String(v ? v.id === x.id : !!s && x.id === s.id));
+      b.append(document.createTextNode(seoulTime(x.created_at) || '대화'), mk('small', '', [s && x.id === s.id ? '지금 대화' : wrState(x), keep(x)].filter(Boolean).join(' · ')));
+      return mk('li').appendChild(b).parentNode;
+    }));
+    // 대화
+    wrMsgs.replaceChildren();
+    wrBack.hidden = cur; wrFinish.hidden = !cur || !s || s.state !== 'active' || wr.gone;
+    wrFinish.disabled = wr.lock || wr.sending;
+    wrComposer.hidden = true;
+    if(!cur){
+      wrStateEl.textContent = v.data ? `${seoulTime(v.data.created_at)} · 읽기만 가능 · ${keep(v.data)}` : '지난 대화';
+      if(v.state === 'loading') wrNote('불러오는 중…');
+      else if(v.state === 'ok') renderSnap(v.data);
+      else wrNote(v.state === 'gone' ? '없거나 보관 기간이 지난 대화예요. 목록을 새로 불러왔어요.' : v.state === 'denied' ? '이용 권한이 없어 볼 수 없어요.' : '대화를 불러오지 못했어요. 다시 골라 줘.');
+      return;
+    }
+    wrStateEl.textContent = s ? [wr.gone ? '끝난 대화' : wrState(s), keep(s)].filter(Boolean).join(' · ') : '';
+    if(wr.policyErr){ wrNote('안내를 불러오지 못했어요.', [['다시 불러오기', loadPolicy]]); return; }
+    if(!P){ wrNote('불러오는 중…'); return; }
+    if(!on){ wrNote('우냥이 상담은 아직 준비 중이에요.'); return; }
+    wrMsgs.append(mk('p', 'wr-notice', P.notice));            // 서버 안내문 그대로 (보관 기간·열람 범위·AI 전달)
+    if(!s){
+      if(wr.noticeOk !== P.notice_version) wrNote('안내를 읽었으면 눌러 줘.', [['확인하고 시작하기', ()=>{ wr.noticeOk = P.notice_version; startWorry(); }]]);
+      else if(wr.starting) wrNote('우냥이를 부르는 중…');
+      else if(wr.startErr) wrNote(unknownResult(wr.startErr) ? '우냥이를 불렀는지 확인하지 못했어요.' : wrErr(wr.startErr) + '.',
+        unknownResult(wr.startErr) ? [['다시 부르기', startWorry]] : []);   // 결과 불명만 같은 키로 다시
+      return;
+    }
+    renderSnap(s);
+    const q = lastReq(s), mine = wr.req && !(s.requests || []).some(x => x.client_message_id === wr.req.body.client_message_id);
+    if(mine && (wr.sending || wr.sendErr)) wrBubble(wr.req.body.text, 'child', {sending:true});
+    if(wr.sending || (q && ['accepted', 'dispatched'].includes(q.status))) wrBubble('', 'unyang', {typing:true});
+    const check = ['상태 확인', checkWorry, wr.checking];
+    if(wr.gone) wrNote('없거나 보관 기간이 지난 대화예요. "새 대화"로 다시 시작할 수 있어요.');
+    else if(wr.sendErr && unknownResult(wr.sendErr)) wrNote('보냈는지 확인하지 못했어요. 쓴 글은 그대로 있어요. 같은 글로 다시 보내거나 상태를 확인해 줘.', [check]);
+    else if(wr.sendErr) wrNote(wrErr(wr.sendErr) + '.');
+    else if(!wr.sending && q && ['accepted', 'dispatched'].includes(q.status)) wrNote('우냥이가 답을 준비하고 있어요.', [check]);
+    else if(q && q.status === 'unavailable') wrNote('우냥이가 지금은 대답하기 어려워요. 쓴 말은 저장돼 있어요. "그만하기"나 "새 대화"를 눌러 줘.');
+    else if(q && q.status === 'rejected') wrNote('이 말에는 우냥이가 대답하지 못했어요. "그만하기"나 "새 대화"를 눌러 줘.');
+    else if(q && q.status === 'unknown') wrNote('우냥이 답을 확인하지 못했어요. "그만하기"나 "새 대화"를 눌러 줘.');
+    if(s.state === 'finished' && !wr.gone) wrNote(s.last_ai_status === 'needs_adult' ? '이 대화는 여기서 멈췄어요. "새 대화"로 다시 시작할 수 있어요.' : '대화가 끝났어요. 이야기해 줘서 고마워. "새 대화"로 다시 시작할 수 있어요.');
+    const open = !wr.gone && canType(s) && !(wr.sendErr && !unknownResult(wr.sendErr) && wr.sendErr.code === 'WORRY_HISTORY_LIMIT');
+    wrComposer.hidden = !open;
+    wrInput.readOnly = !!wr.req;                 // 결과를 모르는 글은 같은 글 그대로만 다시 보냄
+    wrSend.textContent = wr.req && wr.sendErr ? '다시 보내기' : '보내기';
+    wrSend.disabled = wr.sending || wr.lock || wr.checking || (!wr.req && !wrInput.value.trim());
+    wrMsgs.scrollTop = wrMsgs.scrollHeight;
+  }
+  // snapshot 반영: 내 글의 요청이 서버에 있으면(결과와 무관) 접수된 것 → 입력칸 비움
+  function takeSnap(r){
+    if(!r || !r.id) throw new ApiError(200, 'INVALID_RESPONSE', '', true);
+    if(wr.snap && wr.snap.id !== r.id) return;
+    wr.snap = r; wr.gone = false;
+    if(wr.req && (r.requests || []).some(x => x.client_message_id === wr.req.body.client_message_id)){ wr.req = null; wr.sendErr = null; wrInput.value = ''; }
+  }
+  async function loadPolicy(){
+    if(!user) return;
+    const seq = wr.seq, uid = user.id;
+    wr.policyErr = null; renderWorry();
+    try{
+      const r = await api('/api/worry/policy');
+      if(!wrLive(seq, uid)) return;
+      if(typeof r.notice !== 'string' || !r.notice_version) throw new ApiError(200, 'INVALID_RESPONSE', '', true);
+      if(wr.policy && wr.policy.notice_version !== r.notice_version) wr.noticeOk = null;   // 안내가 바뀌면 다시 확인
+      wr.policy = r;
+      if(r.enabled) loadWorryList();
+    }catch(e){ if(!wrLive(seq, uid)) return; wr.policyErr = e; if(e.status === 401) handleAuth(e); }
+    renderWorry();
+  }
+  // 시작: 같은 시작의 재시도는 같은 Idempotency-Key. 새 대화마다 새 키 (BE가 이전 진행 중 세션을 닫음)
+  async function startWorry(){
+    const P = wr.policy;
+    if(!user || wr.snap || wr.starting || !P || !P.enabled || wr.noticeOk !== P.notice_version) return;
+    const seq = wr.seq, uid = user.id;
+    if(!wr.startKey) wr.startKey = rid('worry');
+    wr.starting = true; wr.startErr = null; renderWorry();
+    try{
+      const r = await api('/api/worry/sessions', {method:'POST', headers:{'Idempotency-Key':wr.startKey}, json:{notice_version:wr.noticeOk}, timeout:AI_TIMEOUT});
+      if(!wrLive(seq, uid)) return;
+      takeSnap(r); wr.startKey = null; loadWorryList();
+    }catch(e){
+      if(!wrLive(seq, uid)) return;
+      wr.startErr = e;
+      if(e.code === 'WORRY_NOTICE_REQUIRED'){ wr.noticeOk = null; wr.startKey = null; loadPolicy(); }
+      else if(!unknownResult(e)) wr.startKey = null;   // 확정 실패: 다음 시작은 새 요청
+      if(e.status === 401) handleAuth(e);
+    }finally{ if(wrLive(seq, uid)){ wr.starting = false; renderWorry(); if(!wrComposer.hidden) wrInput.focus({preventScroll:true}); } }
+  }
+  async function sendWorry(){
+    const s = wr.snap;
+    if(wr.view || wr.sending || wr.lock || wr.checking || wr.gone || !canType(s)) return;
+    if(!wr.req){
+      const text = wrInput.value.trim(); if(!text) return;
+      if(text.length > 2000){ toast('2,000자까지 보낼 수 있어요'); return; }
+      wr.req = {sid:s.id, body:{text, client_message_id:rid('worry-msg')}};
+    }
+    const req = wr.req, seq = wr.seq, uid = user.id;
+    wr.sending = true; wr.sendErr = null; renderWorry();
+    try{
+      const r = await api(`/api/worry/sessions/${encodeURIComponent(req.sid)}/messages`, {method:'POST', json:req.body, timeout:AI_TIMEOUT});
+      if(!wrLive(seq, uid) || wr.req !== req) return;
+      takeSnap(r); loadWorryList();
+    }catch(e){
+      if(!wrLive(seq, uid) || wr.req !== req) return;
+      wr.sendErr = e;
+      if(!unknownResult(e)){                       // 접수 안 된 확정 오류: 글은 입력칸에 두고 고칠 수 있게
+        wr.req = null;
+        if(e.code === 'WORRY_NOT_FOUND'){ wr.gone = true; loadWorryList(); }
+        else if(['WORRY_FINISHED', 'WORRY_RECOVERY_REQUIRED', 'IDEMPOTENCY_CONFLICT'].includes(e.code)) checkWorry();
+        if(e.status === 401) handleAuth(e);
+      }
+    }finally{ if(wrLive(seq, uid)){ wr.sending = false; renderWorry(); } }
+  }
+  // 상태 확인: 세션 GET만 (AI 호출·쓰기 없음)
+  async function checkWorry(){
+    const s = wr.snap; if(!s || wr.checking) return;
+    const seq = wr.seq, uid = user.id;
+    wr.checking = true; renderWorry();
+    try{
+      const r = await api('/api/worry/sessions/' + encodeURIComponent(s.id));
+      if(!wrLive(seq, uid)) return;
+      takeSnap(r);
+      if(!wr.req && wr.sendErr && unknownResult(wr.sendErr)) wr.sendErr = null;
+    }catch(e){
+      if(!wrLive(seq, uid)) return;
+      if(e.code === 'WORRY_NOT_FOUND'){ wr.gone = true; wr.req = null; loadWorryList(); }
+      else errToast('상태 확인: ' + wrErr(e));
+      if(e.status === 401) handleAuth(e);
+    }finally{ if(wrLive(seq, uid)){ wr.checking = false; renderWorry(); } }
+  }
+  // 그만하기: 반복 호출 안전, AI 호출 없음
+  async function finishWorry(){
+    const s = wr.snap; if(!s || s.state !== 'active') return;
+    const seq = wr.seq, uid = user.id;
+    try{
+      const r = await api(`/api/worry/sessions/${encodeURIComponent(s.id)}/finish`, {method:'POST'});
+      if(!wrLive(seq, uid)) return;
+      takeSnap(r); wr.sendErr = null; loadWorryList();
+    }catch(e){
+      if(!wrLive(seq, uid)) return;
+      if(e.code === 'WORRY_NOT_FOUND'){ wr.gone = true; loadWorryList(); }
+      else errToast('대화 끝내기 실패: ' + wrErr(e));
+      if(e.status === 401) handleAuth(e);
+    }
+  }
+  async function lockWorry(fn){
+    if(wr.lock || wr.sending || wr.starting) return;
+    const seq = wr.seq; wr.lock = true; renderWorry();
+    try{ await fn(); }finally{ if(wr.seq === seq){ wr.lock = false; renderWorry(); } }
+  }
+  wrFinish.addEventListener('click', ()=> lockWorry(finishWorry));
+  // 새 대화: 새 시작 키로 시작 (BE가 이전 진행 중 세션을 원자적으로 종료). 요청 중에는 잠금 → 연타해도 세션 하나
+  wrNew.addEventListener('click', ()=> lockWorry(async ()=>{
+    Object.assign(wr, {snap:null, gone:false, startKey:null, startErr:null, req:null, sendErr:null, view:null});
+    wrInput.value = ''; wrCard.classList.remove('side-open'); wrHistBtn.setAttribute('aria-expanded', 'false');
+    await startWorry();
+  }));
+  async function loadWorryList(){
+    if(!user) return;
+    const seq = wr.seq, uid = user.id;
+    try{
+      const r = await api('/api/worry/sessions?limit=50&offset=0');
+      if(!wrLive(seq, uid)) return;
+      wr.list = [...new Map((Array.isArray(r.sessions) ? r.sessions : []).map(x => [x.id, x])).values()]; wr.listErr = null;   // id로 중복 제거
+    }catch(e){ if(!wrLive(seq, uid)) return; wr.listErr = e; if(e.status === 401) handleAuth(e); }
+    renderWorry();
+  }
+  // 지난 기록: 읽기 전용. 404(없음·만료·타회원)·403(권한)은 내용 대신 상태 안내
+  async function openPastWorry(id){
+    wrCard.classList.remove('side-open'); wrHistBtn.setAttribute('aria-expanded', 'false');
+    if(wr.snap && id === wr.snap.id){ wr.view = null; renderWorry(); return; }
+    const seq = wr.seq, uid = user.id, v = wr.view = {id, state:'loading', data:null};
+    renderWorry();
+    try{
+      const r = await api('/api/worry/sessions/' + encodeURIComponent(id));
+      if(!wrLive(seq, uid) || wr.view !== v) return;
+      v.state = 'ok'; v.data = r;
+    }catch(e){
+      if(!wrLive(seq, uid) || wr.view !== v) return;
+      v.state = e.code === 'WORRY_NOT_FOUND' || e.status === 404 ? 'gone' : e.status === 403 ? 'denied' : 'error';
+      if(v.state === 'gone') loadWorryList();
+      if(e.status === 401) handleAuth(e);
+    }
+    renderWorry();
+  }
+  wrItems.addEventListener('click', e=>{ const b = e.target.closest('button[data-id]'); if(b) openPastWorry(b.dataset.id); });
+  wrBack.addEventListener('click', ()=>{ wr.view = null; renderWorry(); if(!wrComposer.hidden) wrInput.focus({preventScroll:true}); });   // 쓰던 글은 textarea에 그대로
+  wrSend.addEventListener('click', sendWorry);
+  wrInput.addEventListener('input', ()=>{ if(!wr.req) wrSend.disabled = wr.sending || wr.lock || wr.checking || !wrInput.value.trim(); });
+  wrInput.addEventListener('keydown', e=>{ if(e.key === 'Enter' && !e.shiftKey && !e.isComposing){ e.preventDefault(); sendWorry(); } });
+  wrHistBtn.addEventListener('click', ()=>{ const o = wrCard.classList.toggle('side-open'); wrHistBtn.setAttribute('aria-expanded', String(o)); });
+  function openWorry(){
+    if(!user){ toast('로그인이 필요해요'); openAuth('login', winBtn); return; }
+    worryEl.hidden = false; renderWorry();
+    requestAnimationFrame(()=>{ worryEl.classList.add('show'); (wrComposer.hidden ? document.getElementById('wrClose') : wrInput).focus({preventScroll:true}); });
+    if(!wr.policy) loadPolicy(); else if(wr.policy.enabled) loadWorryList();
+  }
+  function closeWorry(){
+    if(wrCard.classList.contains('side-open') && narrow.matches){ wrCard.classList.remove('side-open'); wrHistBtn.setAttribute('aria-expanded', 'false'); return; }
+    worryEl.classList.remove('show');
+    setTimeout(()=>{ if(worryEl.classList.contains('show')) return; worryEl.hidden = true; if(reader.hidden && calpage.hidden) winBtn.focus({preventScroll:true}); }, reduce ? 0 : 300);
+  }
+  function resetWorry(){ wr = newWr(); wrInput.value = ''; wrCard.classList.remove('side-open'); if(!worryEl.hidden){ worryEl.classList.remove('show'); worryEl.hidden = true; } }
+  winBtn.addEventListener('click', openWorry);
+  winBtn.addEventListener('keydown', e=>{ if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); openWorry(); } });
+  document.getElementById('wrClose').addEventListener('click', ()=>{ wrCard.classList.remove('side-open'); closeWorry(); });
+  worryEl.addEventListener('click', e=>{ if(e.target === worryEl) closeWorry(); });
 
   // ---- 알림 ----
   const toastEl = document.getElementById('toast'); let tt;
