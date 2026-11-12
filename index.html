@@ -910,6 +910,67 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
   .wr-who .mascot{width:40px;height:40px}
   .wr-msgs,.wr-bar,.wr-composer{padding-left:14px;padding-right:14px}
 }
+/* 고민 상담 창의 테마: 창 안 색은 --wr-* 변수로만 정하고, 테마마다 그 디자인 시스템·방 장식과 같은 재료로 바꿈 (새 그림 없음)
+   기본 = default 시스템 (위 페이지 변수 그대로) */
+.wr-card{--wr-fg:var(--ink); --wr-body:var(--noise), var(--paper); --wr-head:transparent; --wr-head-fg:var(--ink);
+  --wr-side:transparent; --wr-side-solid:var(--noise), var(--paper); --wr-line:rgba(34,34,34,.12);
+  --wr-surface:var(--white); --wr-ai-line:var(--ink); --wr-user:var(--ink); --wr-user-fg:var(--white);
+  --wr-pick:var(--color-learn-3); --wr-accent:var(--ink); --wr-note:rgba(255,255,255,.6); --wr-note-line:rgba(34,34,34,.35);
+  --wr-send:var(--ink); --wr-send-fg:var(--white); --wr-alert:var(--error);
+  color:var(--wr-fg)}
+.log-card.wr-card{background:var(--wr-body)}
+.wr-card > .log-head{background:var(--wr-head);color:var(--wr-head-fg);border-bottom-color:var(--wr-line)}
+.wr-card > .log-head .log-close{color:var(--wr-head-fg);border-color:var(--wr-head-fg);background:var(--wr-head-btn, transparent)}   /* 무늬 위에서도 읽히게 */
+.wr-side{background:var(--wr-side);border-right-color:var(--wr-line)}
+.wr-bar,.wr-composer{border-color:var(--wr-line)}
+.wr-main .log-close,.wr-side .log-close{color:var(--wr-fg);border-color:var(--wr-fg)}
+.wr-items button{color:var(--wr-fg)}
+.wr-items button:hover{background:var(--wr-pick)}
+.wr-items button[aria-current="true"]{border-color:var(--wr-accent);background:var(--wr-surface)}
+.wr-msgs .msg.user{background:var(--wr-user);color:var(--wr-user-fg)}
+.wr-msgs .msg.ai{background:var(--wr-surface);border-color:var(--wr-ai-line);color:var(--wr-fg)}
+.wr-msgs .msg.typing i{background:var(--wr-fg)}
+.wr-notice{background:var(--wr-note);border-color:var(--wr-note-line)}
+.wr-adult{background:var(--wr-surface);border-color:var(--wr-alert)}
+.wr-adult b{color:var(--wr-alert)}
+.wr-composer textarea{background:var(--wr-surface);color:var(--wr-fg);border-color:var(--wr-fg)}
+.wr-composer textarea::placeholder{color:var(--wr-fg)}
+.wr-composer .send{background:var(--wr-send);color:var(--wr-send-fg)}
+@media (max-width:700px), (max-aspect-ratio:1/1){ .wr-side{background:var(--wr-side-solid)} }   /* 좁은 화면: 대화 위에 덮는 목록 */
+/* christmas: 표지와 같은 빨강·초록 체크 머리, inspire-tint 목록 + teal 선(상점 테마 카드와 같은 짝), 눈빛 벽 무늬를 옅게 */
+body.theme-christmas .wr-card{
+  --wr-head:linear-gradient(to bottom, transparent calc(100% - 10px), rgba(0,0,0,.2) calc(100% - 10px)),   /* 뚜껑 테두리 */
+    linear-gradient(to right, transparent calc(58% - 19px), #c99a2e calc(58% - 19px) calc(58% - 16px), #e6b84a calc(58% - 16px) calc(58% + 16px), #c99a2e calc(58% + 16px) calc(58% + 19px), transparent calc(58% + 19px)),   /* 세로 리본 */
+    radial-gradient(circle, rgba(255,250,240,.28) 2px, transparent 2.6px) 0 0/22px 22px, #b8312f;   /* 포장지 점무늬 */
+  --wr-head-fg:#fffaf0; --wr-head-btn:#b8312f; --wr-body:linear-gradient(rgba(255,253,246,.9), rgba(255,253,246,.9)), url("assets/theme/wall_christmas.svg") 0 0/900px auto, #fffdf6;
+  --wr-side:#e2f4e9; --wr-side-solid:#e2f4e9; --wr-line:rgba(62,160,148,.45); --wr-accent:#3ea094; --wr-pick:rgba(62,160,148,.16);
+  --wr-user:#2f6b3a; --wr-user-fg:#ffffff; --wr-note:rgba(255,255,255,.85); --wr-note-line:#3ea094; --wr-send:#b8312f; --wr-send-fg:#fffaf0}
+body.theme-christmas .wr-card > .log-head{position:relative}
+body.theme-christmas .wr-card > .log-head::after{content:"";position:absolute;left:calc(58% - 34px);top:-2px;width:68px;height:34px;pointer-events:none;   /* 리본 매듭 */
+  background:radial-gradient(circle 8px at 34px 16px, #c99a2e 0 7px, transparent 8px),
+    radial-gradient(ellipse 17px 12px at 16px 15px, #e6b84a 0 88%, #c99a2e 89% 100%, transparent 101%),
+    radial-gradient(ellipse 17px 12px at 52px 15px, #e6b84a 0 88%, #c99a2e 89% 100%, transparent 101%);
+  filter:drop-shadow(0 2px 1.5px rgba(0,0,0,.25))}
+/* halloween: 밤하늘 보라 + 별·박쥐 무늬, 머리에 달. 글자는 moon, 내 말풍선은 pumpkin, 보내기는 primary(달빛 호박색) */
+body.theme-halloween .wr-card{color-scheme:dark;
+  --wr-head:url("assets/theme/deco_moon_halloween.svg") right 150px top -80px/190px auto no-repeat, var(--wr-face-clear), url("assets/theme/wall_halloween.svg") 0 0/900px auto, #4a2d78;
+  --wr-face-clear:linear-gradient(to right, #4a2d78 0 96px, rgba(74,45,120,0) 140px);   /* 우냥이 얼굴 둘레는 별·박쥐 없이 */
+  --wr-head-fg:#f8e9cc; --wr-head-btn:#2a1d3e; --wr-fg:#f8e9cc;
+  --wr-body:linear-gradient(rgba(30,21,48,.88), rgba(30,21,48,.88)), url("assets/theme/wall_halloween.svg") 0 0/1100px auto, #2e1b52;
+  --wr-side:rgba(23,15,11,.5); --wr-side-solid:#1e1530; --wr-line:rgba(248,233,204,.18);
+  --wr-surface:#2a1d3e; --wr-ai-line:#f8e9cc; --wr-user:#ec8a57; --wr-user-fg:#170f0b;
+  --wr-pick:rgba(249,207,152,.14); --wr-accent:#f9cf98; --wr-note:rgba(42,29,62,.85); --wr-note-line:rgba(248,233,204,.45);
+  --wr-send:#f9cf98; --wr-send-fg:#170f0b; --wr-alert:#f3a873}
+body.theme-halloween .wr-msgs .msg.ai{box-shadow:3px 3px 0 rgba(0,0,0,.35)}
+@media (max-width:700px), (max-aspect-ratio:1/1){ body.theme-halloween .wr-card{--wr-head:var(--wr-face-clear), url("assets/theme/wall_halloween.svg") 0 0/900px auto, #4a2d78} }   /* 좁은 머리에는 달 없이 (제목·버튼을 가리지 않게) */
+/* seollal: 한지 분홍 머리 + 창살 무늬, 아래 색동 띠. 목록은 한지, 강조는 노리개 다홍 */
+body.theme-seollal .wr-card{
+  --wr-head:linear-gradient(to right, #f2c48f 0 20%, #a9d3b8 20% 40%, #e2dfda 40% 60%, #eaa3a6 60% 80%, #8e3a78 80% 100%) left bottom/100% 8px no-repeat,
+    linear-gradient(rgba(248,214,212,.45), rgba(248,214,212,.45)), url("assets/theme/wall_seollal.svg") 0 0/700px auto, #f8d6d4;
+  --wr-head-fg:#2e2a26; --wr-head-btn:#fbf8f1; --wr-body:var(--noise), #fbf8f1; --wr-side:#f3ecdc; --wr-side-solid:#f3ecdc; --wr-line:#d8cbb0;
+  --wr-surface:#fffdf8; --wr-ai-line:#2e2a26; --wr-user:#8a2d2f; --wr-user-fg:#fbf8f1;
+  --wr-pick:#f8e1e0; --wr-accent:#8a2d2f; --wr-note:rgba(248,225,224,.55); --wr-note-line:#d8a6a8; --wr-send:#8a2d2f; --wr-send-fg:#fbf8f1; --wr-alert:#8a2d2f}
+body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자리 */
 .auth-tabs{display:flex;gap:4px;border-bottom:2px solid rgba(34,34,34,.12);margin:0 -8px 20px}
 .auth-tabs button{appearance:none;border:0;background:none;font:inherit;font-size:15px;font-weight:500;color:var(--ink);opacity:.5;padding:14px 12px 12px;cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px}
 .auth-tabs button[aria-selected="true"]{opacity:1;font-weight:600;border-bottom-color:var(--ink)}
