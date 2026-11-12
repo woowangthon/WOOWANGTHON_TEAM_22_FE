@@ -3902,7 +3902,8 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
   function renderSnap(s){
     const ms = msgsOf(s), adultAt = s.last_ai_status === 'needs_adult' ? ms.map(m => m.role).lastIndexOf('assistant') : -1;
     ms.forEach((m, i) => {
-      if(m.role !== 'assistant') wrBubble(m.text, 'child');
+      if(m.role === 'child') wrBubble(m.text, 'child');
+      else if(m.role !== 'assistant') return;      // BE 역할은 child·assistant 두 가지뿐: 그 밖의 값은 그리지 않음
       else if(i === adultAt){ const box = mk('div', 'wr-adult'); box.setAttribute('role', 'alert'); box.append(mk('b', '', '믿을 수 있는 어른에게 도움을 구해 줘'), document.createTextNode(m.text)); wrMsgs.append(box); }
       else wrBubble(m.text, 'unyang');
     });
