@@ -1,0 +1,9 @@
+<svg width="50" height="130" viewBox="0 0 50 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- 청사초롱: 위 홍색·아래 청색 비단, 나무 살과 뚜껑, 붉은 술 (팀 자체 제작) -->
+<path d="M25 0V30" stroke="#3a2a1c" stroke-width="1.6"/><rect x="11" y="30" width="28" height="7" rx="2" fill="#5a3a22"/>
+<path d="M9 37H41L43 68H7Z" fill="#c8312f"/><path d="M7 68H43L41 98H9Z" fill="#2c4c9c"/>
+<path d="M9 37H41L43 68L41 98H9L7 68Z" stroke="#3a2a1c" stroke-width="1.6"/><path d="M17 37V98M25 37V98M33 37V98M7 68H43" stroke="#3a2a1c" stroke-width="1" opacity=".55"/>
+<path d="M14 39Q25 45 36 39" stroke="#f2c48f" stroke-width="1" opacity=".7"/>
+<rect x="11" y="98" width="28" height="6" rx="2" fill="#5a3a22"/><path d="M25 104V110" stroke="#3a2a1c" stroke-width="1.6"/>
+<path d="M21 110H29L31 128H19Z" fill="#d23a33"/><path d="M22 112V127M25 112V128M28 112V127" stroke="#a5221c" stroke-width=".8"/>
+</svg>

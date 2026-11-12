@@ -1,0 +1,11 @@
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- 윷놀이 세트: 멍석 위 윷가락 네 개(앞면 셋·뒷면 하나)와 말 두 개 (팀 자체 제작) -->
+<ellipse cx="16" cy="22" rx="14" ry="7" fill="#CFA86C"/>
+<path d="M4 22H28M6 19.5H26M6 24.5H26" stroke="#A9834A" stroke-width="0.8"/>
+<g transform="rotate(-28 9 15)"><rect x="3" y="13.4" width="12" height="3.2" rx="1.6" fill="#F3DCAE" stroke="#7A5631" stroke-width="0.8"/><path d="M6 14.3L7 15.7M9 14.3L10 15.7M12 14.3L13 15.7" stroke="#7A5631" stroke-width="0.7" stroke-linecap="round"/></g>
+<g transform="rotate(-8 14 13)"><rect x="8" y="11.4" width="12" height="3.2" rx="1.6" fill="#F3DCAE" stroke="#7A5631" stroke-width="0.8"/><path d="M11 12.3L12 13.7M14 12.3L15 13.7M17 12.3L18 13.7" stroke="#7A5631" stroke-width="0.7" stroke-linecap="round"/></g>
+<g transform="rotate(12 19 13)"><rect x="13" y="11.4" width="12" height="3.2" rx="1.6" fill="#C58B4E" stroke="#7A5631" stroke-width="0.8"/></g>
+<g transform="rotate(32 23 16)"><rect x="17" y="14.4" width="12" height="3.2" rx="1.6" fill="#F3DCAE" stroke="#7A5631" stroke-width="0.8"/><path d="M20 15.3L21 16.7M23 15.3L24 16.7M26 15.3L27 16.7" stroke="#7A5631" stroke-width="0.7" stroke-linecap="round"/></g>
+<circle cx="11" cy="23" r="2.4" fill="#FBF8F1" stroke="#5A4A3A" stroke-width="0.8"/>
+<circle cx="21" cy="24" r="2.4" fill="#6B4A2E" stroke="#3A2A1C" stroke-width="0.8"/>
+</svg>

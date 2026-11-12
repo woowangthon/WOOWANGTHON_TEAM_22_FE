@@ -34,7 +34,7 @@
 | `deco_lantern.svg` | 설날 청사초롱: 위 홍색·아래 청색 비단, 나무 살·뚜껑, 붉은 술 |
 | `bokjumeoni.svg` | 설날 소파 위 복주머니: 노란 입구·자주 끈·색동 줄무늬 몸통 (테마 장식 `art[0]`) |
 | `deco_moon_halloween.svg` | 핼러윈: 달력·책장 뒤 큰 노란 달과 박쥐 |
-| `deco_skyline_halloween.svg` | 핼러윈: 벽 아래 실루엣 (언덕·귀신의 집·묘비·십자가·마른 나무) |
+| `deco_skyline_halloween.svg` | 핼러윈: 벽 아래 실루엣 (언덕·귀신의 집·묘비·십자가·마른 나무). 폭 5440 = 무대 좌우 2000씩 더 넓게, 건물 밑동은 땅까지 |
 | `deco_web_corner.svg` | 핼러윈: 오른쪽 위 모서리 거미줄 |
 | `deco_pine_seollal.svg` | 설날: 청록 솔잎 소나무 가지와 주황 꽃 (왼쪽은 CSS로 뒤집어 씀) |
 | `deco_hills_seollal.svg` | 설날: 벽 아래 분홍 산 두 겹 + 청록 물결(청해파) |

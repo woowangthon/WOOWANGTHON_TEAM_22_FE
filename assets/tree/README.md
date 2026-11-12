@@ -43,11 +43,13 @@ FE는 서버 응답의 `tree.asset_key`만 보고 아래 파일을 고름 (단�
 | `tree_stage_5` | `evergreen_tree.svg` | 0.78 | 2 |
 | `tree_stage_6` | `evergreen_tree.svg` | 0.88 | 2 |
 | `tree_adult_default` | `evergreen_tree.svg` | 1 | 2 |
-| `tree_adult_christmas` | `christmas_tree.svg` | 1 | 2 |
-| `tree_adult_halloween` | `evergreen_tree.svg` + 장식 `bat.svg`, `jack_o_lantern.svg` | 1 | 2 |
+| `tree_adult_christmas` | `christmas_tree.svg` + 장식 `sparkles.svg` | 1 | 2 |
+| `tree_adult_halloween` | `evergreen_tree.svg` + 장식 `ghost.svg`, `jack_o_lantern.svg` | 1 | 2 |
 | `tree_adult_seollal` | `evergreen_tree.svg` + 장식 `orn_hanji.svg`, `orn_taegukgi.svg` | 1 | 2 |
 
-테마 성체의 작은 장식은 나무 그림 위 별도 층(`.tree-orn`)에 붙임: 나무 칸(32×32) 기준 가운데 x%, y%와 폭%. 할로윈: 박쥐 (55, 41, 24), 호박 (35, 72, 22). 설날: 한지 무늬 (60, 45, 23), 태극기 (35, 72, 26).
+테마 성체의 작은 장식은 나무 그림 위 별도 층(`.tree-orn`)에 붙임: 나무 칸(32×32) 기준 가운데 x%, y%와 폭%. 크리스마스: 반짝임 (72, 20, 20). 할로윈: 유령 (55, 41, 24), 호박 (35, 72, 22). 설날: 한지 무늬 (60, 45, 23), 태극기 (35, 72, 26).
+
+입체감: 나무와 장식 그림은 원본 그대로 두고, FE가 그림 모양(CSS mask) 안에 오른쪽 위 반사광과 왼쪽·아래 그늘을 덧칠함 (`.tree-shade`, 장식은 `.lit`). 할로윈 방에서는 조금 어둡게 표시.
 
 - 모르는 키: `tree_adult_`로 시작하면 `tree_adult_default`, 그 밖에는 `tree_stage_0`(빈 화분)
 - 단계 그림에 쓰지 않는 파일: `tree_seed.svg`, `herb.svg`, `leafy_green.svg`, `deciduous_tree.svg`
