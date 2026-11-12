@@ -1,0 +1,12 @@
+<svg width="32" height="40" viewBox="0 0 32 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+<!-- 한지 무늬 장식: 고리 + 한지 원판에 분홍 수(壽)자 무늬(단순화) + 노리개 술(다홍·미색·송록). 색은 seollal 디자인 시스템 -->
+<circle cx="16" cy="2.6" r="1.8" stroke="#C0AB3C" stroke-width="1.2"/>
+<path d="M16 4.4V5" stroke="#C0AB3C" stroke-width="1.2"/>
+<circle cx="16" cy="15" r="10" fill="#F3ECDC" stroke="#2E2A26"/>
+<circle cx="16" cy="15" r="8" stroke="#EAA3A6" stroke-width="1.4"/>
+<path d="M11 11H21M11 19H21M13 11V16.5H19V13.5H15.5V15" stroke="#EAA3A6" stroke-width="1.6" stroke-linecap="square"/>
+<rect x="12.6" y="25" width="2" height="12" rx="1" fill="#8A2D2F"/>
+<rect x="15" y="25" width="2" height="13" rx="1" fill="#E8DCC0" stroke="#2E2A26" stroke-width="0.5"/>
+<rect x="17.4" y="25" width="2" height="12" rx="1" fill="#3F5A45"/>
+<rect x="12" y="24" width="8" height="2.2" rx="1.1" fill="#8E3A78"/>
+</svg>

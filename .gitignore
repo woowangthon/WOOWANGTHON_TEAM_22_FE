@@ -1,0 +1,8 @@
+# Local copy of the Awwwards design system (reference only, not shared)
+design-system/
+
+# Claude Code 작업 메모 (개인용, 공유하지 않음)
+CLAUDE.md
+
+# 환경별 설정 (config.example.js를 복사해 만듦)
+config.js
