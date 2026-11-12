@@ -3876,9 +3876,14 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
   let wr = null; wr = newWr();
   const wrLive = (seq, uid) => wr.seq === seq && !!user && user.id === uid;
   const msgsOf = s => (s && Array.isArray(s.messages) ? s.messages.slice() : []).sort((a, b) => a.position - b.position);
-  const lastReq = s => (s && Array.isArray(s.requests) ? s.requests.slice() : []).sort((a, b) => String(a.created_at).localeCompare(String(b.created_at))).pop() || null;
-  // 새 글을 받을 수 있는 세션: 진행 중 + 마지막 AI 요청이 완료됨
-  const canType = s => !!s && s.state === 'active' && (!lastReq(s) || lastReq(s).status === 'completed');
+  // requests[] 순서는 가정하지 않음 → 순서 대신 상태로 판단 (진행 중 > 결과 불명 > 거부 > 응답 불가). 모르는 상태 값은 결과 불명
+  const REQ_RANK = ['accepted', 'dispatched', 'unknown', 'rejected', 'unavailable'];
+  const reqState = s => {
+    const st = (s && Array.isArray(s.requests) ? s.requests : []).map(x => x.status);
+    return REQ_RANK.find(x => st.includes(x)) || (st.some(x => x !== 'completed') ? 'unknown' : null);
+  };
+  // 새 글을 받을 수 있는 세션: 진행 중 + 모든 AI 요청이 완료됨
+  const canType = s => !!s && s.state === 'active' && !reqState(s);
   const seoulTime = s => { const d = new Date(s); return isNaN(d) ? '' : new Intl.DateTimeFormat('ko-KR', {timeZone:'Asia/Seoul', month:'long', day:'numeric', hour:'numeric', minute:'2-digit'}).format(d); };
   const seoulDay = s => { const d = new Date(s); return isNaN(d) ? '' : new Intl.DateTimeFormat('ko-KR', {timeZone:'Asia/Seoul', month:'long', day:'numeric'}).format(d); };
   const keep = s => s && s.expires_at ? seoulDay(s.expires_at) + '까지 보관' : '';
@@ -3944,17 +3949,17 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
       return;
     }
     renderSnap(s);
-    const q = lastReq(s), mine = wr.req && !(s.requests || []).some(x => x.client_message_id === wr.req.body.client_message_id);
+    const q = reqState(s), busy = q === 'accepted' || q === 'dispatched', mine = wr.req && !(s.requests || []).some(x => x.client_message_id === wr.req.body.client_message_id);
     if(mine && (wr.sending || wr.sendErr)) wrBubble(wr.req.body.text, 'child', {sending:true});
-    if(wr.sending || (q && ['accepted', 'dispatched'].includes(q.status))) wrBubble('', 'unyang', {typing:true});
+    if(wr.sending || busy) wrBubble('', 'unyang', {typing:true});
     const check = ['상태 확인', checkWorry, wr.checking];
     if(wr.gone) wrNote('없거나 보관 기간이 지난 대화예요. "새 대화"로 다시 시작할 수 있어요.');
     else if(wr.sendErr && unknownResult(wr.sendErr)) wrNote('보냈는지 확인하지 못했어요. 쓴 글은 그대로 있어요. 같은 글로 다시 보내거나 상태를 확인해 줘.', [check]);
     else if(wr.sendErr) wrNote(wrErr(wr.sendErr) + '.');
-    else if(!wr.sending && q && ['accepted', 'dispatched'].includes(q.status)) wrNote('우냥이가 답을 준비하고 있어요.', [check]);
-    else if(q && q.status === 'unavailable') wrNote('우냥이가 지금은 대답하기 어려워요. 쓴 말은 저장돼 있어요. "그만하기"나 "새 대화"를 눌러 줘.');
-    else if(q && q.status === 'rejected') wrNote('이 말에는 우냥이가 대답하지 못했어요. "그만하기"나 "새 대화"를 눌러 줘.');
-    else if(q && q.status === 'unknown') wrNote('우냥이 답을 확인하지 못했어요. "그만하기"나 "새 대화"를 눌러 줘.');
+    else if(!wr.sending && busy) wrNote('우냥이가 답을 준비하고 있어요.', [check]);
+    else if(q === 'unavailable') wrNote('우냥이가 지금은 대답하기 어려워요. 쓴 말은 저장돼 있어요. "그만하기"나 "새 대화"를 눌러 줘.');
+    else if(q === 'rejected') wrNote('이 말에는 우냥이가 대답하지 못했어요. "그만하기"나 "새 대화"를 눌러 줘.');
+    else if(q === 'unknown') wrNote('우냥이 답을 확인하지 못했어요. "그만하기"나 "새 대화"를 눌러 줘.');
     if(s.state === 'finished' && !wr.gone) wrNote(s.last_ai_status === 'needs_adult' ? '이 대화는 여기서 멈췄어요. "새 대화"로 다시 시작할 수 있어요.' : '대화가 끝났어요. 이야기해 줘서 고마워. "새 대화"로 다시 시작할 수 있어요.');
     const open = !wr.gone && canType(s) && !(wr.sendErr && !unknownResult(wr.sendErr) && wr.sendErr.code === 'WORRY_HISTORY_LIMIT');
     wrComposer.hidden = !open;
