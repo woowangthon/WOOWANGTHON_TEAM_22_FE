@@ -825,6 +825,17 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
 .field input{border:2px solid var(--ink);border-radius:var(--radius-sm);padding:11px 12px;font:inherit;font-size:15px;color:var(--ink);background:rgba(255,255,255,.8);outline:none}
 .field input:focus{box-shadow:0 0 0 3px var(--color-learn)}
 .field input[aria-invalid="true"]{border-color:var(--color-connect)}
+.vrow{display:flex;gap:8px}                                /* 이메일 인증: 입력칸 + 오른쪽 버튼 (네이버 가입 화면 구성) */
+.vrow input{flex:1;min-width:0}
+.vbtn{appearance:none;flex:none;border:2px solid var(--ink);background:var(--white);color:var(--ink);font:inherit;font-size:14px;padding:0 14px;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap}
+.vbtn:hover:not(:disabled){background:var(--color-learn-3)}
+.vbtn:disabled{opacity:.35;cursor:default}
+.vbtn:focus-visible{outline:3px solid var(--color-connect);outline-offset:2px}
+.code-wrap{position:relative;flex:1;display:flex;min-width:0}
+.code-wrap input{padding-right:62px;letter-spacing:.15em}
+.field .timer{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:14px;font-weight:400;color:var(--color-connect);pointer-events:none}
+.vhint{margin:0;font-size:12px;line-height:1.5;opacity:.75}
+.vhint.err{color:var(--error);opacity:1}
 .check{display:flex;gap:8px;align-items:flex-start;font-size:13px;line-height:1.5;cursor:pointer}
 .check input{width:18px;height:18px;margin:1px 0 0;accent-color:var(--ink)}
 .auth-msg{margin:0;min-height:20px;font-size:13px;line-height:1.5;font-weight:500;color:var(--error)}
@@ -926,7 +937,11 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     <form class="auth-form" id="signupForm" novalidate hidden>
       <h2 class="auth-title">오늘부터 함께 기록해요</h2>
       <label class="field"><span>이름</span><input type="text" id="suName" autocomplete="nickname" placeholder="불릴 이름"></label>
-      <label class="field"><span>이메일</span><input type="email" id="suEmail" autocomplete="email" placeholder="name@example.com"></label>
+      <label class="field"><span>이메일</span><div class="vrow"><input type="email" id="suEmail" autocomplete="email" placeholder="name@example.com"><button type="button" class="vbtn" id="suSend">인증요청</button></div></label>
+      <div class="field" id="suCodeBox" hidden>
+        <div class="vrow"><div class="code-wrap"><input type="text" id="suCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="인증번호 6자리" aria-label="인증번호"><b class="timer" id="suTimer" aria-live="off">03:00</b></div><button type="button" class="vbtn" id="suVerify" disabled>확인</button></div>
+        <p class="vhint" id="suHint" aria-live="polite"></p>
+      </div>
       <label class="field"><span>비밀번호</span><input type="password" id="suPw" autocomplete="new-password" placeholder="8자 이상"></label>
       <label class="field"><span>비밀번호 확인</span><input type="password" id="suPw2" autocomplete="new-password" placeholder="한 번 더 입력"></label>
       <label class="check"><input type="checkbox" id="suAgree"><span>이용약관과 개인정보 처리방침에 동의해요</span></label>
@@ -2771,6 +2786,8 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     if(/invalid login credentials/i.test(m)) return '이메일 또는 비밀번호가 맞지 않아요.';
     if(/email not confirmed/i.test(m)) return '이메일 인증 후 로그인해 주세요.';
     if(/already (registered|been registered|exists)/i.test(m)) return '이미 가입한 이메일이에요.';
+    if(/security purposes|rate limit/i.test(m)) return '인증번호는 1분에 한 번만 받을 수 있어요. 잠시 후 다시 요청해 주세요.';
+    if(/expired|invalid/i.test(m) && /token|otp/i.test(m)) return '인증번호를 다시 확인해 주세요.';
     if(e && e.status === 429) return '요청이 많아요. 잠시 후 다시 시도해 주세요.';
     if(/password/i.test(m)) return '비밀번호 조건을 확인해 주세요.';
     if(/fetch|network/i.test(m)) return '서버 연결 실패';
@@ -2782,12 +2799,11 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     const {error} = await authCall(sb.auth.signInWithPassword({email, password}));
     return error ? {ok:false, message:authErrMsg(error)} : {ok:true};
   }
-  async function signup(name, email, password){
-    if(!sb) return {ok:false, message:NO_AUTH_MSG};
-    const {data, error} = await authCall(sb.auth.signUp({email, password, options:{data:{name}}}));
-    if(error) return {ok:false, message:authErrMsg(error)};
-    // 이메일 인증을 켠 프로젝트는 세션 없이 가입만 됨
-    return data && data.session ? {ok:true, message:'가입이 완료됐어요.', session:true} : {ok:true, message:'가입 완료. 이메일 인증 후 로그인해 주세요.'};
+  // 이메일 인증번호 확인으로 계정·세션이 이미 생김 → 이름·비밀번호만 설정
+  async function signup(name, password){
+    if(!sb) return {ok:false, message:'지금은 가입할 수 없어요. 잠시 후 다시 시도해 주세요.'};
+    const {error} = await authCall(sb.auth.updateUser({password, data:{name}}));
+    return error ? {ok:false, message:authErrMsg(error)} : {ok:true, message:'가입이 완료됐어요.'};
   }
   const auth = document.getElementById('auth'), loginForm = document.getElementById('loginForm'), signupForm = document.getElementById('signupForm');
   const tabLogin = document.getElementById('tabLogin'), tabSignup = document.getElementById('tabSignup');
@@ -2803,6 +2819,7 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
     requestAnimationFrame(()=> auth.classList.add('show'));
   }
   function closeAuth(){
+    dropVerify();
     auth.classList.remove('show');
     setTimeout(()=>{ auth.hidden = true; authOpener && authOpener.focus({preventScroll:true}); }, reduce ? 0 : 300);
   }
@@ -2843,11 +2860,60 @@ body:has(.page-nav.show > :not([hidden])) .toast{bottom:calc(76px + env(safe-are
   signupForm.addEventListener('submit', async e=>{
     e.preventDefault();
     const nm = document.getElementById('suName'), em = document.getElementById('suEmail'), pw = document.getElementById('suPw'), pw2 = document.getElementById('suPw2'), ag = document.getElementById('suAgree'), msg = document.getElementById('signupMsg');
-    if(!check(msg, [[nm, nm.value.trim(), '이름을 입력해 주세요.'], [em, emailOk(em.value.trim()), '이메일 형식을 확인해 주세요.'], [pw, pw.value.length >= 8, '비밀번호는 8자 이상이어야 해요.'], [pw2, pw.value === pw2.value, '비밀번호 확인이 일치하지 않아요.'], [ag, ag.checked, '약관에 동의해 주세요.']])) return;
-    const r = await submitOnce(signupForm, ()=> signup(nm.value.trim(), em.value.trim(), pw.value)); if(!r) return;
+    if(!check(msg, [[nm, nm.value.trim(), '이름을 입력해 주세요.'], [em, emailOk(em.value.trim()), '이메일 형식을 확인해 주세요.'], [em, vEmail === em.value.trim(), '이메일 인증을 완료해 주세요.'], [pw, pw.value.length >= 8, '비밀번호는 8자 이상이어야 해요.'], [pw2, pw.value === pw2.value, '비밀번호 확인이 일치하지 않아요.'], [ag, ag.checked, '약관에 동의해 주세요.']])) return;
+    const r = await submitOnce(signupForm, ()=> signup(nm.value.trim(), pw.value)); if(!r) return;
     msg.textContent = r.message; msg.classList.toggle('ok', !!r.ok);
-    if(r.ok){ pw.value = pw2.value = ''; setTimeout(()=> r.session ? closeAuth() : showTab('login'), 900); }
+    if(r.ok){ vEmail = null; pw.value = pw2.value = ''; setTimeout(closeAuth, 900); }
   });
+
+  // 이메일 인증 (Supabase 메일 인증번호): 확인되면 계정·세션 생성, 가입하기에서 이름·비밀번호 설정
+  const suEmail = document.getElementById('suEmail'), suSend = document.getElementById('suSend'), suCodeBox = document.getElementById('suCodeBox'),
+        suCode = document.getElementById('suCode'), suVerify = document.getElementById('suVerify'), suTimer = document.getElementById('suTimer'), suHint = document.getElementById('suHint');
+  let vTimer = null, vEmail = null, vBusy = false;   // vEmail: 인증을 마친 주소 (가입 미완료)
+  const hint = (t, err) => { suHint.textContent = t; suHint.classList.toggle('err', !!err); };
+  function resetVerify(){ clearInterval(vTimer); suCodeBox.hidden = true; suCode.value = ''; suCode.disabled = suVerify.disabled = true; suTimer.hidden = false; suSend.textContent = '인증요청'; vEmail = null; }
+  // 인증만 하고 가입을 끝내지 않으면 로그아웃 (비밀번호 없는 계정으로 남지 않게)
+  function dropVerify(){ if(vEmail && sb) authCall(sb.auth.signOut()).catch(()=>{}); resetVerify(); }
+  suSend.addEventListener('click', async ()=>{
+    const msg = document.getElementById('signupMsg'), email = suEmail.value.trim();
+    if(vBusy || !check(msg, [[suEmail, emailOk(email), '이메일 형식을 확인해 주세요.']])) return;
+    if(!sb){ msg.textContent = '지금은 가입할 수 없어요. 잠시 후 다시 시도해 주세요.'; return; }
+    vBusy = suSend.disabled = true;
+    let err = null;
+    try{ ({error: err} = await authCall(sb.auth.signInWithOtp({email, options:{shouldCreateUser:true}}))); }catch(e){ err = e; }
+    vBusy = suSend.disabled = false;
+    if(email !== suEmail.value.trim()) return;           // 기다리는 동안 주소가 바뀜
+    if(err){ msg.textContent = authErrMsg(err); return; }
+    clearInterval(vTimer); suCodeBox.hidden = false; suSend.textContent = '재전송'; suCode.value = ''; suCode.disabled = false; suVerify.disabled = true; suTimer.hidden = false;
+    hint('인증번호를 보냈어요. 메일이 오지 않으면 스팸함을 확인하거나 재전송을 눌러 주세요.');
+    let left = 180;
+    const tick = ()=>{ suTimer.textContent = String(left / 60 | 0).padStart(2, '0') + ':' + String(left % 60).padStart(2, '0'); };
+    tick(); suCode.focus({preventScroll:true});
+    vTimer = setInterval(()=>{
+      left--; tick();
+      if(left <= 0){ clearInterval(vTimer); suVerify.disabled = true; hint('인증 시간이 지났어요. 재전송을 눌러 주세요.', true); }
+    }, 1000);
+  });
+  suCode.addEventListener('input', ()=>{ suCode.value = suCode.value.replace(/\D/g, ''); suVerify.disabled = vBusy || suCode.value.length !== 6 || suTimer.textContent === '00:00'; });
+  suVerify.addEventListener('click', async ()=>{
+    const email = suEmail.value.trim(), token = suCode.value;
+    if(vBusy || !sb) return;
+    vBusy = suVerify.disabled = true;
+    let data = null, err = null;
+    try{ ({data, error: err} = await authCall(sb.auth.verifyOtp({email, token, type:'email'}))); }catch(e){ err = e; }
+    vBusy = false;
+    if(email !== suEmail.value.trim()) return;
+    if(err){ suVerify.disabled = suTimer.textContent === '00:00'; hint(authErrMsg(err), true); return; }
+    const u = data && data.user;
+    if(u && u.user_metadata && u.user_metadata.name){   // 가입을 마친 기존 회원: 비밀번호를 덮어쓰지 않음
+      authCall(sb.auth.signOut()).catch(()=>{});
+      clearInterval(vTimer); suTimer.hidden = true; suCode.disabled = true;
+      hint('이미 가입한 이메일이에요. 로그인해 주세요.', true); return;
+    }
+    vEmail = email; clearInterval(vTimer); suTimer.hidden = true; suCode.disabled = true;
+    hint('인증되었어요.');
+  });
+  suEmail.addEventListener('input', ()=>{ if(!suCodeBox.hidden) dropVerify(); });   // 주소를 바꾸면 처음부터
 
   // 로그인한 회원이 바뀌면 화면 상태를 정리하고 이번 달 일기를 불러옴
   function setUser(u){
