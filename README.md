@@ -112,7 +112,7 @@ cp config.example.js config.js   # 값을 채움
 | 대화 이어쓰기 | BE API가 없어 제공하지 않음 |
 | 저장 전 확인 화면에서 직접 고친 본문 저장 | BE API가 없어 AI 초안 글 그대로 저장 (저장 뒤 "일기 수정"으로 고침, 위 제안 API) |
 | 나무 물 주기 (화분 누르기) | v0.3 제안 API `POST /api/me/tree/water` 호출. 서버에 없으면 오류 안내만 표시. 그림은 `tree.asset_key`로만 고름 ([assets/tree/README.md](assets/tree/README.md)) |
-| 상점 (재화 옆 "상점" 버튼) | v0.3 제안 API `GET /api/shop/items`, `POST /api/shop/purchases` 호출. 상품 목록·가격은 아직 예시 (확정 목록은 FE가 정해 BE에 공유). 구매한 테마는 상점 "적용하기"에서 적용 |
+| 상점 (재화 옆 "상점" 버튼) | v0.3 제안 API `GET /api/shop/items`, `POST /api/shop/purchases` 호출. 탭은 `테마` / `가구·장식`(furniture + decoration, 가격 낮은 순). 판매 목록·가격 FE 확정안은 [assets/item/README.md](assets/item/README.md) (BE 상점 DB 등록 전). 구매한 테마는 상점 "적용하기"에서 적용 |
 | 테마 적용 (상점 "적용하기", 재화 옆 톱니바퀴 설정 창) | v0.3 제안 API `PUT /api/me/room/theme` 호출. 응답의 `background_asset_key`(방 장식·디자인 시스템), `diary_cover_asset_key`(일기장 표지), `tree.asset_key`(나무)로만 화면을 바꿈. 할로윈 등 전용 성체 그림이 없는 테마는 기본 성체 표시 |
 | 가구 배치 (재화 옆 "꾸미기", 가로 화면만) | v0.3 제안 API `PUT`·`DELETE /api/me/room/placements/{item_id}` 호출. 좌표는 1440×900 방 기준 (6-8). 꾸미기 모드에서 목록의 가구를 방으로 끌어 놓고, 방의 가구를 우클릭하면 치우기. 세로 화면은 가구 표시·편집 안 함 |
 | 가구·장식 환불 (꾸미기 모드에서 목록의 가구 우클릭) | v0.4 제안 API `POST /api/shop/refunds` 호출. 금액은 서버 `inventory[].refund_coins`(구매 당시 가격) 그대로 표시, 두 번 눌러 확인. 테마는 환불 없음 |

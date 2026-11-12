@@ -50,6 +50,18 @@
 | Laptop | `laptop.svg` | `assets/Laptop/Flat/laptop_flat.svg` (2026-11-11 받음) |
 | Television | `television.svg` | `assets/Television/Flat/television_flat.svg` (2026-11-11 받음) |
 
+## 판매 상품 목록 FE 확정안 (BE 상점 DB 등록 전)
+
+상점 탭은 `테마` / `가구·장식` 두 개. 판매 목록 = 아래 테마 3개 + 생활 가구·소품 9개 + 테마 장식·기본 방 가구 21개 (총 33개). 위 후보 표에만 있고 아래 표에 없는 그림(의자·침대·거울 등)은 판매하지 않음.
+
+테마 (`asset_key`·`width`·`height`는 `null`, 미리보기 그림은 FE `THEMES`, 영구 보유·환불 불가):
+
+| item_id | name | category | price_coins | background_asset_key | diary_cover_asset_key | adult_tree_asset_key |
+|---|---|---|---|---|---|---|
+| `theme_christmas` | 크리스마스 테마 | theme | 120 | `room_christmas` | `cover_christmas` | `tree_adult_christmas` |
+| `theme_halloween` | 핼러윈 테마 | theme | 120 | `room_halloween` | `cover_halloween` | `tree_adult_halloween` |
+| `theme_seollal` | 설날 테마 | theme | 120 | `room_seollal` | `cover_seollal` | `tree_adult_seollal` |
+
 ## 상품 데이터 제안 — 테마와 무관한 생활 가구·소품 (BE 등록 전, 팀 확인 필요)
 
 계약 7-6에 따라 FE가 정해 BE에 공유하는 상품 목록. 상점 DB의 `asset_key`는 이 폴더의 파일 이름과 같아야 함 (`assets/item/<asset_key>.svg`).
