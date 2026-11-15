@@ -1190,7 +1190,7 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
 <div class="log" id="water" hidden>
   <div class="log-card" role="dialog" aria-modal="true" aria-labelledby="twTitle">
     <div class="log-head">
-      <div><span class="date">물방울 1개로 하루 한 번</span><h2 id="twTitle">나무 키우기</h2></div>
+      <div><span class="date" id="twPolicy">물방울 1개로 하루 한 번</span><h2 id="twTitle">나무 키우기</h2></div>
       <button type="button" class="log-close" id="twClose">닫기</button>
     </div>
     <div class="tw-body">
@@ -3293,12 +3293,14 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
       box.replaceChildren(...orn.map(([f, x, y, w]) => { const el = document.createElement('span'), img = document.createElement('img'); el.className = 'lit'; img.src = `assets/tree/${f}.svg`; img.alt = ''; el.style.cssText = `left:${x}%;top:${y}%;width:${w}%`; el.style.setProperty('--src', `url("${img.src}")`); el.append(img); return el; }));
     });
     document.getElementById('twStage').textContent = t ? `${t.stage} / ${t.max_stage}단계` : '— / 7단계';
-    document.getElementById('twDays').textContent = `물 준 날 ${t ? t.days_watered : '—'}일`;
+    const dailyExempt = t?.daily_water_limit_exempt === true;
+    document.getElementById('twPolicy').textContent = dailyExempt ? '물주기 한 번에 물방울 1개' : '물방울 1개로 하루 한 번';
+    document.getElementById('twDays').textContent = dailyExempt ? `물 준 횟수 ${t.days_watered}회` : `물 준 날 ${t ? t.days_watered : '—'}일`;
     let why = '';
     if(!t) why = '나무 정보 확인 불가';
     else if(waterUnknown) why = '결과 불명 · 다시 확인 필요';
     else if(t.stage >= t.max_stage) why = '나무가 다 자랐어요';
-    else if(t.watered_today) why = '오늘은 이미 물을 줬어요';
+    else if(t.watered_today && !dailyExempt) why = '오늘은 이미 물을 줬어요';
     else if(!wallet || !wallet.water_drops) why = '물방울 없음 · 그림일기를 쓰면 받아요';
     twBtn.disabled = waterBusy || checking || waterUnknown || !!why;
     twBtn.textContent = '물 주기';
