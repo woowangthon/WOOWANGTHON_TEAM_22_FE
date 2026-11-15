@@ -3933,9 +3933,16 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
     wrFinish.disabled = wr.lock || wr.sending;
     wrComposer.hidden = true;
     if(!cur){
-      wrStateEl.textContent = v.data ? `${seoulTime(v.data.created_at)} · 읽기만 가능 · ${keep(v.data)}` : '지난 대화';
+      wrStateEl.textContent = v.data ? `${seoulTime(v.data.created_at)} · ${on && canType(v.data) ? '이어쓰기 가능' : '읽기만 가능'} · ${keep(v.data)}` : '지난 대화';
       if(v.state === 'loading') wrNote('불러오는 중…');
-      else if(v.state === 'ok') renderSnap(v.data);
+      else if(v.state === 'ok'){
+        renderSnap(v.data);
+        if(on && canType(v.data)){
+          wrMsgs.append(mk('p', 'wr-notice', P.notice));
+          wrNote('아직 끝나지 않은 대화예요.', [['이 대화 이어쓰기', resumePastWorry,
+            wr.lock || wr.sending || wr.starting || wr.checking || !!wr.req || !!(s && canType(s))]]);
+        }
+      }
       else wrNote(v.state === 'gone' ? '없거나 보관 기간이 지난 대화예요. 목록을 새로 불러왔어요.' : v.state === 'denied' ? '이용 권한이 없어 볼 수 없어요.' : '대화를 불러오지 못했어요. 다시 골라 줘.');
       return;
     }
@@ -4088,7 +4095,28 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
     }catch(e){ if(!wrLive(seq, uid)) return; wr.listErr = e; if(e.status === 401) handleAuth(e); }
     renderWorry();
   }
-  // 지난 기록: 읽기 전용. 404(없음·만료·타회원)·403(권한)은 내용 대신 상태 안내
+  // 지난 기록: 404(없음·만료·타회원)·403(권한)은 내용 대신 상태 안내.
+  // 재접속 후 진행 중인 대화만 최신 GET으로 확인해 이어쓴다. 종료 대화는 다시 열지 않는다.
+  async function resumePastWorry(){
+    const v = wr.view, P = wr.policy;
+    if(!user || !v || !P || !P.enabled || wr.lock || wr.sending || wr.starting || wr.checking || wr.req || canType(wr.snap)) return;
+    const seq = wr.seq, uid = user.id;
+    wr.lock = true; renderWorry();
+    try{
+      const r = await api('/api/worry/sessions/' + encodeURIComponent(v.id));
+      if(!wrLive(seq, uid) || wr.view !== v) return;
+      v.data = r; v.state = 'ok';
+      if(r.id !== v.id || !canType(r)) return;
+      Object.assign(wr, {snap:r, view:null, gone:false, startKey:null, startErr:null,
+        req:null, sendErr:null});
+      wrInput.value = '';
+    }catch(e){
+      if(!wrLive(seq, uid) || wr.view !== v) return;
+      v.state = e.code === 'WORRY_NOT_FOUND' || e.status === 404 ? 'gone' : e.status === 403 ? 'denied' : 'error';
+      if(v.state === 'gone') loadWorryList();
+      if(e.status === 401) handleAuth(e);
+    }finally{ if(wrLive(seq, uid)){ wr.lock = false; renderWorry(); } }
+  }
   async function openPastWorry(id){
     wrCard.classList.remove('side-open'); wrHistBtn.setAttribute('aria-expanded', 'false');
     if(wr.snap && id === wr.snap.id){ wr.view = null; renderWorry(); return; }
