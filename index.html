@@ -1190,7 +1190,7 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
 <div class="log" id="water" hidden>
   <div class="log-card" role="dialog" aria-modal="true" aria-labelledby="twTitle">
     <div class="log-head">
-      <div><span class="date">물방울 1개로 하루 한 번</span><h2 id="twTitle">나무 키우기</h2></div>
+      <div><span class="date" id="twPolicy">물방울 1개로 하루 한 번</span><h2 id="twTitle">나무 키우기</h2></div>
       <button type="button" class="log-close" id="twClose">닫기</button>
     </div>
     <div class="tw-body">
@@ -3293,12 +3293,14 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
       box.replaceChildren(...orn.map(([f, x, y, w]) => { const el = document.createElement('span'), img = document.createElement('img'); el.className = 'lit'; img.src = `assets/tree/${f}.svg`; img.alt = ''; el.style.cssText = `left:${x}%;top:${y}%;width:${w}%`; el.style.setProperty('--src', `url("${img.src}")`); el.append(img); return el; }));
     });
     document.getElementById('twStage').textContent = t ? `${t.stage} / ${t.max_stage}단계` : '— / 7단계';
-    document.getElementById('twDays').textContent = `물 준 날 ${t ? t.days_watered : '—'}일`;
+    const dailyExempt = t?.daily_water_limit_exempt === true;
+    document.getElementById('twPolicy').textContent = dailyExempt ? '물주기 한 번에 물방울 1개' : '물방울 1개로 하루 한 번';
+    document.getElementById('twDays').textContent = dailyExempt ? `물 준 횟수 ${t.days_watered}회` : `물 준 날 ${t ? t.days_watered : '—'}일`;
     let why = '';
     if(!t) why = '나무 정보 확인 불가';
     else if(waterUnknown) why = '결과 불명 · 다시 확인 필요';
     else if(t.stage >= t.max_stage) why = '나무가 다 자랐어요';
-    else if(t.watered_today) why = '오늘은 이미 물을 줬어요';
+    else if(t.watered_today && !dailyExempt) why = '오늘은 이미 물을 줬어요';
     else if(!wallet || !wallet.water_drops) why = '물방울 없음 · 그림일기를 쓰면 받아요';
     twBtn.disabled = waterBusy || checking || waterUnknown || !!why;
     twBtn.textContent = '물 주기';
@@ -3857,8 +3859,8 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
   tick();
 
   // ---- 우냥이 고민 상담 (제안 계약: BE feat/be-next docs/WORRY_API_PROPOSAL_20261112.txt) ----
-  // GET /api/worry/policy → 안내문(notice)·notice_version·enabled. 안내를 보여 주고 확인한 버전으로만 시작
-  // POST /api/worry/sessions (Idempotency-Key, {notice_version}) · POST …/{id}/messages {text, client_message_id}
+  // GET /api/worry/policy → 안내문(notice)·enabled. 안내는 표시만 하고 별도 동의 없이 시작
+  // POST /api/worry/sessions (Idempotency-Key, {}) · POST …/{id}/messages {text, client_message_id}
   // POST …/{id}/finish · GET …/{id} · GET /api/worry/sessions?limit=50&offset=0. 응답은 세션 전체 snapshot
   // AI 결과는 HTTP 성공 여부가 아니라 requests[].status·last_ai_status로 판단. unavailable·rejected·unknown은 재전송·새 키 우회 금지
   // 응답 유실만 같은 키·같은 글로 다시 보내거나 GET으로 확인. 대화 원문은 메모리에만 (브라우저 저장소 안 씀)
@@ -3868,13 +3870,13 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
   const wrFinish = document.getElementById('wrFinish'), wrBack = document.getElementById('wrBack'), wrStateEl = document.getElementById('wrState');
   const wrHistBtn = document.getElementById('wrHistBtn'), wrComposer = document.getElementById('wrComposer');
   const WR_ERR = {
-    WORRY_ACCESS_REQUIRED:'이용 권한이 없어요', WORRY_NOT_FOUND:'없거나 보관 기간이 지난 대화예요', WORRY_NOTICE_REQUIRED:'안내가 바뀌었어요 · 다시 확인해 줘',
+    WORRY_MEMBER_REQUIRED:'로그인한 정상 회원만 이용할 수 있어요', WORRY_NOT_FOUND:'없거나 보관 기간이 지난 대화예요',
     WORRY_FINISHED:'이미 끝난 대화예요', WORRY_HISTORY_LIMIT:'대화가 너무 길어졌어요 · 그만하기나 새 대화를 눌러 줘', WORRY_RECOVERY_REQUIRED:'상태 확인 필요',
     WORRY_NOT_ENABLED:'우냥이 상담은 아직 준비 중이에요', WORRY_STORE_UNAVAILABLE:'기록 저장소 연결 실패', WORRY_STORE_INVALID:'응답 형식 오류', VALIDATION_ERROR:'입력 형식 오류',
   };
   const wrErr = e => WR_ERR[e && e.code] || errText(e);
   const WR_DONE = {needs_adult:'도움 요청 안내', finished:'끝난 대화', reply:'끝난 대화', opening:'끝난 대화', unavailable:'끝난 대화'};
-  const newWr = () => ({policy:null, policyErr:null, noticeOk:null, snap:null, gone:false, startKey:null, starting:false, startErr:null,
+  const newWr = () => ({policy:null, policyErr:null, snap:null, gone:false, startKey:null, starting:false, startErr:null,
                         req:null, sending:false, sendErr:null, checking:false, lock:false, view:null, list:null, listErr:null, seq:(wr ? wr.seq : 0) + 1});
   let wr = null; wr = newWr();
   const wrLive = (seq, uid) => wr.seq === seq && !!user && user.id === uid;
@@ -3919,7 +3921,7 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
   function renderWorry(){
     const v = wr.view, s = wr.snap, cur = !v, P = wr.policy, on = !!(P && P.enabled);
     // 목록
-    wrNew.disabled = wr.lock || wr.starting || !on || wr.noticeOk !== P.notice_version;
+    wrNew.disabled = wr.lock || wr.starting || !on;
     wrListMsg.textContent = !on ? '' : wr.listErr ? '지난 대화를 불러오지 못했어요' : !wr.list ? '불러오는 중…' : wr.list.length ? '' : '아직 지난 대화가 없어요';
     wrItems.replaceChildren(...(wr.list || []).map(x => {
       const b = mk('button'); b.type = 'button'; b.dataset.id = x.id;
@@ -3933,9 +3935,16 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
     wrFinish.disabled = wr.lock || wr.sending;
     wrComposer.hidden = true;
     if(!cur){
-      wrStateEl.textContent = v.data ? `${seoulTime(v.data.created_at)} · 읽기만 가능 · ${keep(v.data)}` : '지난 대화';
+      wrStateEl.textContent = v.data ? `${seoulTime(v.data.created_at)} · ${on && canType(v.data) ? '이어쓰기 가능' : '읽기만 가능'} · ${keep(v.data)}` : '지난 대화';
       if(v.state === 'loading') wrNote('불러오는 중…');
-      else if(v.state === 'ok') renderSnap(v.data);
+      else if(v.state === 'ok'){
+        renderSnap(v.data);
+        if(on && canType(v.data)){
+          wrMsgs.append(mk('p', 'wr-notice', P.notice));
+          wrNote('아직 끝나지 않은 대화예요.', [['이 대화 이어쓰기', resumePastWorry,
+            wr.lock || wr.sending || wr.starting || wr.checking || !!wr.req || !!(s && canType(s))]]);
+        }
+      }
       else wrNote(v.state === 'gone' ? '없거나 보관 기간이 지난 대화예요. 목록을 새로 불러왔어요.' : v.state === 'denied' ? '이용 권한이 없어 볼 수 없어요.' : '대화를 불러오지 못했어요. 다시 골라 줘.');
       return;
     }
@@ -3945,10 +3954,10 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
     if(!on){ wrNote('우냥이 상담은 아직 준비 중이에요.'); return; }
     wrMsgs.append(mk('p', 'wr-notice', P.notice));            // 서버 안내문 그대로 (보관 기간·열람 범위·AI 전달)
     if(!s){
-      if(wr.noticeOk !== P.notice_version) wrNote('안내를 읽었으면 눌러 줘.', [['확인하고 시작하기', ()=>{ wr.noticeOk = P.notice_version; startWorry(); }]]);
-      else if(wr.starting) wrNote('우냥이를 부르는 중…');
+      if(wr.starting) wrNote('우냥이를 부르는 중…');
       else if(wr.startErr) wrNote(unknownResult(wr.startErr) ? '우냥이를 불렀는지 확인하지 못했어요.' : wrErr(wr.startErr) + '.',
-        unknownResult(wr.startErr) ? [['다시 부르기', startWorry]] : []);   // 결과 불명만 같은 키로 다시
+        unknownResult(wr.startErr) ? [['다시 부르기', startWorry]] : []);
+      else wrNote('편하게 이야기해 줘.', [['대화 시작하기', startWorry]]);   // 결과 불명만 같은 키로 다시
       return;
     }
     renderSnap(s);
@@ -3985,8 +3994,7 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
     try{
       const r = await api('/api/worry/policy');
       if(!wrLive(seq, uid)) return;
-      if(typeof r.notice !== 'string' || !r.notice_version) throw new ApiError(200, 'INVALID_RESPONSE', '', true);
-      if(wr.policy && wr.policy.notice_version !== r.notice_version) wr.noticeOk = null;   // 안내가 바뀌면 다시 확인
+      if(typeof r.notice !== 'string') throw new ApiError(200, 'INVALID_RESPONSE', '', true);
       wr.policy = r;
       if(r.enabled) loadWorryList();
     }catch(e){ if(!wrLive(seq, uid)) return; wr.policyErr = e; if(e.status === 401) handleAuth(e); }
@@ -3995,19 +4003,18 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
   // 시작: 같은 시작의 재시도는 같은 Idempotency-Key. 새 대화마다 새 키 (BE가 이전 진행 중 세션을 닫음)
   async function startWorry(){
     const P = wr.policy;
-    if(!user || wr.snap || wr.starting || !P || !P.enabled || wr.noticeOk !== P.notice_version) return;
+    if(!user || wr.snap || wr.starting || !P || !P.enabled) return;
     const seq = wr.seq, uid = user.id;
     if(!wr.startKey) wr.startKey = rid('worry');
     wr.starting = true; wr.startErr = null; renderWorry();
     try{
-      const r = await api('/api/worry/sessions', {method:'POST', headers:{'Idempotency-Key':wr.startKey}, json:{notice_version:wr.noticeOk}, timeout:AI_TIMEOUT});
+      const r = await api('/api/worry/sessions', {method:'POST', headers:{'Idempotency-Key':wr.startKey}, json:{}, timeout:AI_TIMEOUT});
       if(!wrLive(seq, uid)) return;
       takeSnap(r); wr.startKey = null; loadWorryList();
     }catch(e){
       if(!wrLive(seq, uid)) return;
       wr.startErr = e;
-      if(e.code === 'WORRY_NOTICE_REQUIRED'){ wr.noticeOk = null; wr.startKey = null; loadPolicy(); }
-      else if(!unknownResult(e)) wr.startKey = null;   // 확정 실패: 다음 시작은 새 요청
+      if(!unknownResult(e)) wr.startKey = null;   // 확정 실패: 다음 시작은 새 요청
       if(e.status === 401) handleAuth(e);
     }finally{ if(wrLive(seq, uid)){ wr.starting = false; renderWorry(); if(!wrComposer.hidden) wrInput.focus({preventScroll:true}); } }
   }
@@ -4090,7 +4097,28 @@ body.theme-seollal .wr-card > .log-head{padding-bottom:22px}   /* 색동 띠 자
     }catch(e){ if(!wrLive(seq, uid)) return; wr.listErr = e; if(e.status === 401) handleAuth(e); }
     renderWorry();
   }
-  // 지난 기록: 읽기 전용. 404(없음·만료·타회원)·403(권한)은 내용 대신 상태 안내
+  // 지난 기록: 404(없음·만료·타회원)·403(권한)은 내용 대신 상태 안내.
+  // 재접속 후 진행 중인 대화만 최신 GET으로 확인해 이어쓴다. 종료 대화는 다시 열지 않는다.
+  async function resumePastWorry(){
+    const v = wr.view, P = wr.policy;
+    if(!user || !v || !P || !P.enabled || wr.lock || wr.sending || wr.starting || wr.checking || wr.req || canType(wr.snap)) return;
+    const seq = wr.seq, uid = user.id;
+    wr.lock = true; renderWorry();
+    try{
+      const r = await api('/api/worry/sessions/' + encodeURIComponent(v.id));
+      if(!wrLive(seq, uid) || wr.view !== v) return;
+      v.data = r; v.state = 'ok';
+      if(r.id !== v.id || !canType(r)) return;
+      Object.assign(wr, {snap:r, view:null, gone:false, startKey:null, startErr:null,
+        req:null, sendErr:null});
+      wrInput.value = '';
+    }catch(e){
+      if(!wrLive(seq, uid) || wr.view !== v) return;
+      v.state = e.code === 'WORRY_NOT_FOUND' || e.status === 404 ? 'gone' : e.status === 403 ? 'denied' : 'error';
+      if(v.state === 'gone') loadWorryList();
+      if(e.status === 401) handleAuth(e);
+    }finally{ if(wrLive(seq, uid)){ wr.lock = false; renderWorry(); } }
+  }
   async function openPastWorry(id){
     wrCard.classList.remove('side-open'); wrHistBtn.setAttribute('aria-expanded', 'false');
     if(wr.snap && id === wr.snap.id){ wr.view = null; renderWorry(); return; }
